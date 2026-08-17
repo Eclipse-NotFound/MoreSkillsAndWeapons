@@ -250,7 +250,9 @@ package
                      {
                         // 蹲姿举枪：吞掉 W，阻止原版 unsit（起身由 SPACE 原生完成）
                         cfg.diagAdd("wSwallow");
-                        cfg.diagFlush();
+                        // 注：不在按键路径 flush——SharedObject.flush() 是同步
+                        // 磁盘 I/O，每次按键 flush 会造成可感知卡顿（2026-08-18
+                        // 玩家实测"第一次举枪卡顿"）；诊断由帧级 flush 落盘。
                         // 吞键失效兜底（D-030 实测：stopImmediatePropagation 在该
                         // 运行时不能阻止 Ctr 置位 keyBeUp）：直接改写 Ctr 状态。
                         // Ctr 的 keyDowns[87] 置 true 后，按住 W 期间的后续重复
@@ -281,12 +283,12 @@ package
             }
             keyN++;
             cfg.diagAdd("keys");
+            // 注：不再在按键路径 flush（同步磁盘 I/O 卡顿，2026-08-18 实测）；
+            // 诊断由帧级 flush（onFrame frameN%300）落盘。
             if((e.keyCode >= 117 && e.keyCode <= 123) || e.keyCode == 179)
             {
                cfg.diagAdd("hk" + e.keyCode);
-               cfg.diagFlush();
             }
-            if(keyN % 10 == 0) cfg.diagFlush();
             var w:* = MSWU.world();
             if(w != null && panel.pipPageActive(w))
             {

@@ -497,3 +497,15 @@
   条件；raiseBlocked>0 → 上方有墙（正确行为）。
 - **提示**：D-031 改键后举枪 = **按住 Shift 再按 W**；单独 W 保持原版
   （坐姿起身/梯子爬升）。
+
+## D-036 举枪首帧卡顿：按键路径高频 SharedObject.flush（2026-08-18 玩家实测）
+
+- **现象**：第一次蹲姿/梯子上举枪出现明显卡顿。
+- **根因**：KEY_DOWN 路径上的 `SharedObject.flush()`（同步磁盘 I/O）——
+  ① 坐姿 Shift+W 的 wSwallow 分支每次按键 flush；② 每 10 次按键
+  （keyN%10）flush；③ 每次 F 键（hk 分支）flush。按键瞬间的同步写盘
+  造成可感知卡顿。
+- **修复**：删除全部按键路径 flush；诊断落盘只保留帧级低频
+  （frameN%300 ≈ 5 秒，boot/首次 world/pip/异常 60 帧 各一次）。
+- **教训**：SharedObject.flush 是同步 I/O，诊断计数器落盘必须走帧级节流，
+  不能挂在按键/事件路径上。
