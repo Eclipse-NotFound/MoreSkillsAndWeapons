@@ -1,0 +1,11 @@
+# 行尾约定：
+# - .bat 必须 CRLF（cmd 解析）
+# - 源码/文档统一 LF
+# - SWF 二进制
+*.bat text eol=crlf
+*.as text eol=lf
+*.md text eol=lf
+*.xml text eol=lf
+*.txt text eol=lf
+*.swf binary
+*.ser binary

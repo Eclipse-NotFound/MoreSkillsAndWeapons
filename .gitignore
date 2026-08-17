@@ -1,0 +1,12 @@
+# 构建中间产物（可重新生成）
+build/pfe-patch/export/
+build/pfe-patch/pfe_merged.swf
+build/tmp_allData_current/
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+*.tmp
+
+# 日志与临时
+*.log

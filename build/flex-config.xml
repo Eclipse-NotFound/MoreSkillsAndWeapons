@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<flex-config xmlns="http://www.adobe.com/2006/flex-config">
+  <compiler>
+    <library-path append="true">
+      <path-element>C:/Program Files/Adobe/Adobe Animate 2024/Common/Configuration/ActionScript 3.0/FP11.1/playerglobal.swc</path-element>
+    </library-path>
+  </compiler>
+  <static-link-runtime-shared-libraries>true</static-link-runtime-shared-libraries>
+</flex-config>
