@@ -480,3 +480,20 @@
 - **副作用**：mswglau 永不损坏（耐久无限）——对模组武器可接受。
 - **提示用户**：若"散布异常"发生在其他武器，需确认技能等级/模块/磨损状态
   （均为原版机制，模组未干预）。
+
+## D-035 举枪"无法实现"排查（2026-08-18 玩家实测）
+
+- **诊断数据**（MSWConfig.sol 06:57）：aimSkill=true（开关已开）、
+  wSitDown/wSwallow=16005（跨版本累积，D-031 前普通 W 也计数——不能区分
+  当前版本行为）、keyBeUpLeak=15367（同样主要为旧累积）、**sitRestored=0
+  （坐姿从未被 unsit——keySit 帧内强制保护有效，坐姿保持链路自洽）**。
+- **发现 bug（已修）**：`!sitAim && !lazAim` 分支（站着按 Shift+W）执行
+  `release + heldW=false`——**"按住 Shift+W 再按 S 蹲下"的流程在蹲下后
+  heldW 已 false（无新按键事件）→ 举枪永远无法启动**。修复：该分支改为
+  温和 return（不 release、不清 heldW），蹲下后下一帧立即进入 sitAim。
+- **新增抬枪链路诊断**：sitAimF（坐姿瞄准帧数）/lazAimF（梯子瞄准帧数）/
+  raiseF（抬枪执行次数）/raiseBlocked（武器上方 40px 被墙挡）——下次实测
+  直接定位断点：sitAimF=0 → on 判定（heldShift/heldW）；raiseF=0 → 抬枪
+  条件；raiseBlocked>0 → 上方有墙（正确行为）。
+- **提示**：D-031 改键后举枪 = **按住 Shift 再按 W**；单独 W 保持原版
+  （坐姿起身/梯子爬升）。

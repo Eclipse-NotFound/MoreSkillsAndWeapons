@@ -108,11 +108,14 @@ package
             var lazAim:Boolean = !sitAim && MSWU.num(gg, "isLaz") != 0 && heldShift;
             if(!sitAim && !lazAim)
             {
-               // W 被吞后起身（SPACE）等情况：要求重新按 W
-               release(w, gg);
-               heldW = false;
+               // 非坐非梯（站着）按 Shift+W：不抬枪，但**不得 release / 清
+               // heldW**——否则"按住 Shift+W 再按 S 蹲下"的流程在蹲下后
+               // heldW 已是 false（无新按键事件），举枪永远无法启动
+               // （2026-08-18 玩家实测"无法实现"的根因之一）。
                return;
             }
+            if(sitAim) mod.cfg.diagAdd("sitAimF");
+            if(lazAim) mod.cfg.diagAdd("lazAimF");
             // 状态维持
             gg["noStairs"] = true;
             if(sitAim)
@@ -150,10 +153,15 @@ package
                      try
                      {
                         vis["y"] = MSWU.num(vis, "y") - off;
+                        mod.cfg.diagAdd("raiseF");
                      }
                      catch(e:*)
                      {
                      }
+                  }
+                  else
+                  {
+                     mod.cfg.diagAdd("raiseBlocked");
                   }
                }
             }
