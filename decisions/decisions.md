@@ -457,3 +457,26 @@
   血量扣减 + 视觉爆炸；常规游戏期 = 完整真实爆炸。
 - **边缘场景**：玩家平时开着 godMode + 用时停 → godMode=true 被误判回放期
   （技能禁），可接受。
+
+## D-034 散布异常增大：根因排查与根除（2026-08-17 用户反馈）
+
+- **排查（全部验证通过，无污染）**：
+  1. 备份干净原版（C:\Users\micha\Desktop\Remains）vs 当前游戏：sprite/texture/
+     text_*.xml 全部 SAME；pfe.swf 仅差模组 loader 补丁（当前 6 个 loader：
+     Sandevistan/RConnect/RealisticVision/MSW/TDFC/RandomRooms）；
+  2. 反编译当前 pfe.swf：Weapon/Bullet/PhisBullet/SmartBullet/WThrow 与
+     原版 src102 **diff=0**（散布公式零污染）；
+  3. 二进制字符串对比：备份 vs 当前 pfe.swf 的 deviation='N' 数据集合
+     **完全一致**（AllData 武器数据零污染）。
+- **根因 = 原版磨损机制（Weapon.as:1356-1361 + 1459）**：
+  `if(hp < maxhp/2) breaking = (maxhp-hp)/maxhp*2 - 1; else breaking = 0;`
+  散布公式 `deviation * (1 + breaking*2) / skillConf / ...` ——
+  **武器耐久低于 50% 后散布线性增大至 3 倍**（每发射扣 1 hp，原版所有
+  武器皆然）。另有技能等级（skillConf）、武器模块（devMult）、状态
+  （mazil）因素，均为原版机制。
+- **根除（模组内）**：mswglau 每帧 `hp = maxhp`（public 字段）→ breaking
+  恒 0 → 散布恒为基础值，不随磨损增大；面板第 11 行"散布恒定"开关
+  （默认开，仅对 mswglau 生效，不影响其他武器/游戏平衡）。
+- **副作用**：mswglau 永不损坏（耐久无限）——对模组武器可接受。
+- **提示用户**：若"散布异常"发生在其他武器，需确认技能等级/模块/磨损状态
+  （均为原版机制，模组未干预）。

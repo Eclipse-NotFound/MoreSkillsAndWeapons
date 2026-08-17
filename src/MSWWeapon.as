@@ -103,6 +103,13 @@ package
             wp["grav"] = mod.cfg.dropRate;
             wp["speed"] = mod.cfg.muzzleVel;
             wp["noTrass"] = true;
+            // 散布恒定（D-034）：武器 hp<maxhp/2 时 breaking>0 → 散布最高 3 倍
+            // （原版磨损机制）。钳 hp=maxhp → breaking 恒 0 → 散布恒为基础值，
+            // 彻底根除"散布随磨损异常增大"。
+            if(mod.cfg.spreadFix)
+            {
+               wp["hp"] = wp["maxhp"];
+            }
             if(mod.cfg.wallHits > 0)
             {
                // 飞行弹不带爆炸半径/破坏力/贴花：撞墙的 hitTile(0,..,0) 在

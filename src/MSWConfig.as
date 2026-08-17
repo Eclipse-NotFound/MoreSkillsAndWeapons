@@ -47,6 +47,9 @@ package
       /** 疾跑（按住 Shift）中数字键切第一组快捷槽（原 swaprun） */
       public var swapRun:Boolean = true;
 
+      /** 散布恒定（mswglau）：每帧 hp=maxhp → breaking=0 → 散布不随磨损增大（D-034） */
+      public var spreadFix:Boolean = true;
+
       private var so:SharedObject = null;
 
       public function MSWConfig()
@@ -72,6 +75,7 @@ package
             if(so.data.projHpOver != undefined) projHpOver = so.data.projHpOver;
             if(so.data.projArmorOver != undefined) projArmorOver = so.data.projArmorOver;
             if(so.data.swapRun != undefined) swapRun = so.data.swapRun;
+            if(so.data.spreadFix != undefined) spreadFix = so.data.spreadFix;
          }
          catch(e:*)
          {
@@ -142,6 +146,7 @@ package
             so.data.projHpOver = projHpOver;
             so.data.projArmorOver = projArmorOver;
             so.data.swapRun = swapRun;
+            so.data.spreadFix = spreadFix;
             so.flush();
          }
          catch(e:*)
