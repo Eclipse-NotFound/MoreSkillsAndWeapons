@@ -432,3 +432,28 @@
   映射（常见于多媒体键盘/笔记本 Fn 锁定），或被先注册的 stage 监听拦截
   （其他模组，隔离原则下不读取其源码）。多键兼容可同时规避两种情况；
   哔哔小马设置页仍是主入口。
+
+## D-033 迁移技能在斯安维斯坦时停期生效（2026-08-17 用户实测反馈）
+
+- **现象**：斯安维斯坦生效期间（时停/回放）手雷击落、疾跑切枪失效。
+- **根因**：迁移版 `MSWU.inGameplay()` 含 `onPause==true → 禁`——时停/回放
+  一律屏蔽。而 Sandevistan 原版行为（源码核对，本对话授权只读）：
+  - 手雷击落：时停期**照常判定**（stepSandy → stepProjHits(loc, true)，
+    isSandy 分支：damageExpl/destroy 清零做视觉爆炸 + liv=0 即杀 +
+    projBoom 记录回放重演）；仅回放期由重演接管；
+  - 疾跑切枪：时停期**允许**（onKey 拦截条件仅 `!replaying`）；仅回放期禁。
+- **修复（本模组内，不修改 Sandevistan）**：
+  1. `MSWU.inGameplay`：`onPause` 判定改为 `onPause && godMode`（回放期禁、
+     时停期放行）。回放期信号 = Sandy 回放开始置 `world.godMode=true`
+     （public，World.as:194），时停期 godMode=保存原值（玩家正常 false）。
+  2. `MSWProjHits`：新增自维护 origDam 缓存（常规帧捕获攻击体 damage>0
+     原值；时停期 Sandy 把玩家攻击体 damage/damageExpl 清零后用缓存恢复）；
+     时停期引爆走**视觉爆炸**（damageExpl/destroy 清零再恢复 + explosion +
+     liv=0，与 Sandy isSandy 分支一致）。
+  3. `MSWSwaprun`：无代码改动（inGameplay 修改后自动生效）。
+- **固有限制（需向用户说明）**：时停期击落的真实伤害不结算——Sandy 的
+  回放重演（projBoom/replayProjBoom）是其私有系统，不记录/不重演本模组
+  的引爆（迁移报告 §2 已明示未迁移该分支）。时停期击落 = 命中判定 +
+  血量扣减 + 视觉爆炸；常规游戏期 = 完整真实爆炸。
+- **边缘场景**：玩家平时开着 godMode + 用时停 → godMode=true 被误判回放期
+  （技能禁），可接受。

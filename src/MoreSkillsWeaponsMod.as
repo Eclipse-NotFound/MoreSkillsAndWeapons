@@ -331,7 +331,8 @@ package
             }
             // 2026-08-17 迁移：疾跑中切枪（swaprun）——事件层拦截。
             // 放在面板/浮层处理之后：面板打开时已提前 return，不会误触发；
-            // 斯安维斯坦时停/回放期间（onPause）由 MSWU.inGameplay 屏蔽。
+            // 斯安维斯坦回放期（onPause+godMode）由 MSWU.inGameplay 屏蔽，
+            // 时停期放行（D-033：对齐原版行为）。
             if(swaprun.intercept(e, MSWU.world()))
             {
                return;

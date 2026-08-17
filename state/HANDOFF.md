@@ -30,8 +30,8 @@
 | 榴弹参数（哔哔小马设置页） | ✅ 已实现 | 下坠速率/撞墙次数/初速度/反弹力度；SharedObject 持久化（MSWConfig） |
 | SATS 弹道覆盖层 | ✅ 已实现 | 按参数实时绘制，终点爆炸范围圈用原版 satsRadius 素材（绿色，已对齐） |
 | 跳弹技能 | ✅ 已实现 | 独立开关；镜面反射；破墙那发不弹跳；已修复大量反弹问题（见 D-013~D-025） |
-| 蹲姿/梯子举枪 | 🟡 待复测 | 面板第 6 行开关；**2026-08-17 改键（D-031）：举枪 = Shift+W，W 恢复原版（坐姿起身/梯子爬升）；D-032 已修失效根因（heldShift 同步 + keyDowns 阻断）**；待复测 |
-| 手雷击落 + 疾跑切枪 | ✅ 已迁入（2026-08-17） | 自 Sandevistan 迁移：`MSWProjHits`/`MSWSwaprun`（面板第 7-10 行）；**迁移报告**：`state/迁移报告-2026-08-17-Sandevistan技能迁入.md`；技术细节：`state/MIGRATION-Sandevistan-swaprun-projhits.md`；Sandevistan 侧已停用，游戏实际加载本模组实现 |
+| 蹲姿/梯子举枪 | 🟡 待复测 | 面板第 6 行开关（Shift+W）；**诊断注意：aimSkill 当前 false（需开启开关）**；D-031 改键 + D-032 失效修复已就位 |
+| 手雷击落 + 疾跑切枪 | 🟡 待复测 | 自 Sandevistan 迁移（面板第 7-10 行）；**D-033（2026-08-17）：斯安维斯坦时停期已放行**（inGameplay 改 onPause&&godMode 判据；projhits 加 origDam 恢复 + 时停视觉爆炸）；回放期仍禁 |
 | 设置面板 | ✅ 主入口=哔哔小马设置页；辅入口=F6 浮层 | F8 在该键盘无键事件；F10 已让出 |
 
 ## 3. 文件结构

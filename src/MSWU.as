@@ -90,14 +90,20 @@ package
       /**
        * 可操作状态判定（镜像 Sandevistan inGameplay，2026-08-17 迁移核对）：
        * 世界已运行、无控制台/哔哔小马/SATS/仓库界面、无游戏菜单暂停。
-       * 另加 onPause 判定——斯安维斯坦时停/回放期间世界冻结（onPause=true），
-       * 迁移自 Sandevistan 的"手雷击落/疾跑切枪"不得在世界冻结时生效
-       * （冻结期攻击体伤害被清零、回放期由斯安维斯坦自己重演）。
+       * 斯安维斯坦相关（2026-08-17 D-033 调整）：
+       * - 时停期（onPause=true 且 godMode=false）：**放行**——迁移技能
+       *   （手雷击落/疾跑切枪）在时停期间也要生效（对齐 Sandevistan 原版
+       *   行为：原版时停期间两者都工作，仅回放期禁止）；
+       * - 回放期（onPause=true 且 godMode=true，Sandevistan 回放开始置
+       *   world.godMode=true）：**禁止**——回放期爆炸由斯安维斯坦重演、
+       *   武器被其钉住，介入会造成双重结算。
+       * 注：godMode 判定在"玩家平时开着 godMode + 用时停"的边缘场景会误判
+       * 为回放期（技能禁），可接受。
        */
       public static function inGameplay(w:*):Boolean
       {
          if(w == null) return false;
-         if(w["onPause"] == true) return false;
+         if(w["onPause"] == true && w["godMode"] == true) return false;
          if(num(w, "allStat") < 1) return false;
          if(w["gg"] == null || w["loc"] == null) return false;
          if(w["onConsol"] == true) return false;

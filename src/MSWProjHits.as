@@ -14,15 +14,24 @@ package
     *
     * 行为：手雷（PhisBullet）/导弹（SmartBullet）/榴弹（Bullet，带爆炸半径）
     * 受击至血量归零直接爆炸；普通子弹（含天角兽闪电，explRadius=0）不参与。
-    * 护甲 = 伤害先减护甲。斯安维斯坦时停/回放期间世界冻结（onPause=true），
-    * 由 MSWU.inGameplay() 屏蔽——冻结期攻击体伤害被清零、回放期爆炸由
-    * 斯安维斯坦自己重演，本组件不得介入。
+    * 护甲 = 伤害先减护甲。
+    *
+    * 斯安维斯坦共存（2026-08-17 D-033 调整）：
+    * - 时停期（onPause=true 且 godMode=false）：**照常判定**——斯安维斯坦
+    *   时停中把玩家攻击体 damage/damageExpl 清零（origDam 机制），本组件
+    *   用自维护的 origDam 缓存恢复原始伤害；引爆走**视觉爆炸**（伤害/破坏
+    *   清零再恢复，与 Sandevistan isSandy 分支一致）。真实伤害不结算：
+    *   斯安维斯坦的回放重演（projBoom）是私有系统，不重演本组件的引爆。
+    * - 回放期（onPause=true 且 godMode=true）：由 MSWU.inGameplay 屏蔽——
+    *   回放期爆炸由斯安维斯坦重演，介入会造成双重结算。
     */
    public class MSWProjHits
    {
       private var mod:*;
       /** 投掷物 → 当前剩余血量 */
       private var projHp:Dictionary = new Dictionary(true);
+      /** 攻击体 → 原始伤害（清零前捕获；斯安维斯坦时停期 damage 被清零时恢复） */
+      private var origDam:Dictionary = new Dictionary(true);
       /** 近战攻击体（vel=0 静止在手上）不参与击落判定（v1.90） */
       private static const MELEE_VEL:Number = 1;
 
@@ -83,7 +92,7 @@ package
                o = nx;
                if(++g > 20000) break;
             }
-            // ---- 2. 清理已消失投掷物的血量记录 ----
+            // ---- 2. 清理已消失投掷物的血量记录 + 攻击体原始伤害缓存 ----
             var keySnap:Array = new Array();
             for(var kH:Object in projHp)
             {
@@ -92,6 +101,30 @@ package
             for each(var kD:Object in keySnap)
             {
                if(projs.indexOf(kD) < 0) delete projHp[kD];
+            }
+            var keySnap2:Array = new Array();
+            for(var kO:Object in origDam)
+            {
+               keySnap2.push(kO);
+            }
+            for each(var kO2:Object in keySnap2)
+            {
+               if(objs.indexOf(kO2) < 0) delete origDam[kO2];
+            }
+            // 捕获攻击体原始伤害（清零前记录；斯安维斯坦时停期玩家攻击体
+            // damage 被置 0，判定时用此缓存恢复，对齐 Sandevistan origDam）
+            for each(var bCap:Object in objs)
+            {
+               try
+               {
+                  if(origDam[bCap] == null && MSWU.num(bCap, "damage") > 0)
+                  {
+                     origDam[bCap] = MSWU.num(bCap, "damage");
+                  }
+               }
+               catch(e:*)
+               {
+               }
             }
             if(projs.length == 0 || objs.length == 0) return;
 
@@ -150,6 +183,9 @@ package
                      if(!hitOK) continue;
                      mod.cfg.diagAdd("projHit");
                      var dmg:Number = MSWU.num(b, "damage");
+                     // 斯安维斯坦时停期玩家攻击体 damage 被清零 → 用捕获的
+                     // 原始伤害恢复（对齐 Sandevistan origDam）
+                     if(dmg <= 0 && origDam[b] != null) dmg = Number(origDam[b]);
                      if(dmg <= 0) continue;
                      // v1.114 按发射武器 id 的护甲/血量覆盖（projarmor_<id>/
                      // projhp_<id>；无覆盖项用全局 projarmor/projhp）
@@ -175,9 +211,27 @@ package
                      {
                         delete projHp[p];
                         mod.cfg.diagAdd("projBoom");
-                        // 常规模式真实爆炸；引爆即杀（liv=0 → 下一世界步
-                        // vse→remObj），防爆炸后鬼影继续沿轨迹飞行（v1.92）
-                        try { p["explosion"](); } catch(e:*) { }
+                        // 斯安维斯坦时停期（onPause=true 且非回放）：引爆走
+                        // 视觉爆炸（伤害/破坏清零再恢复——真实结算由斯安维
+                        // 斯坦回放重演，但本组件的引爆不在其私有 projBoom
+                        // 记录内，真实伤害不结算，固有限制）；常规期真实爆炸。
+                        // 均引爆即杀（liv=0 → 下一世界步 vse→remObj），防
+                        // 爆炸后鬼影继续沿轨迹飞行（v1.92）。
+                        var frozenP:Boolean = w["onPause"] == true && w["godMode"] != true;
+                        if(frozenP)
+                        {
+                           var svExpl:Number = MSWU.num(p, "damageExpl");
+                           var svDest:Number = MSWU.num(p, "destroy");
+                           try { p["damageExpl"] = 0; } catch(e:*) { }
+                           try { p["destroy"] = 0; } catch(e:*) { }
+                           try { p["explosion"](); } catch(e:*) { }
+                           try { p["damageExpl"] = svExpl; } catch(e:*) { }
+                           try { p["destroy"] = svDest; } catch(e:*) { }
+                        }
+                        else
+                        {
+                           try { p["explosion"](); } catch(e:*) { }
+                        }
                         try { p["liv"] = 0; } catch(e:*) { }
                      }
                      else

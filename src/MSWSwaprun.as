@@ -16,11 +16,11 @@ package
     * 键位映射：解析 `world.ctr.keyXML`（public）的 def/alt 键码 → 键位 id
     * （形如 keyWeapon1），换挡槽位号 = id.substr(9) 的数字部分（1-10）。
     *
-    * 与斯安维斯坦的适配：inGameplay() 含 onPause 判定——斯安维斯坦时停/
-    * 回放期间世界冻结（onPause=true），本组件不拦截（回放期武器由
-    * 斯安维斯坦重演，时停期世界冻结，介入都会破坏其状态机）。
-    * 注意：Sandevistan 原版在"时停期间"仍允许疾跑切枪（仅回放期禁止）；
-    * 迁移后改为冻结期一律不介入（更安全，换取与回放系统的共存）。
+    * 与斯安维斯坦的适配（2026-08-17 D-033 调整）：inGameplay() 判定改为
+    * "时停期放行、回放期禁止"——斯安维斯坦时停期间（onPause=true 且
+    * godMode=false）疾跑切枪照常生效（对齐 Sandevistan 原版行为：原版
+    * 时停期间允许切枪、仅回放期禁止）；回放期（onPause=true 且
+    * godMode=true）不拦截（武器由斯安维斯坦重演钉住，介入会破坏其状态机）。
     */
    public class MSWSwaprun
    {
