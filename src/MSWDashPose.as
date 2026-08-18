@@ -165,6 +165,15 @@ package
                      gg["scX"] = MSWU.num(gg, "sitX");
                      gg["scY"] = MSWU.num(gg, "sitY");
                   }
+                  if(kdash > 0)
+                  {
+                     // 视觉钉扎（D-040）：冲刺中游戏 animate() 走空中分支
+                     // （"jump" 根帧，无 isSit 处理 → 渲染站姿跳，玩家实测
+                     // "冲刺中逐渐站起"）；钉回蹲姿移动姿态（"polz" 根帧，
+                     // 原版蹲姿移动渲染，body.play() 照搬原版 polz 分支）。
+                     // Flash 在所有 ENTER_FRAME 监听器之后渲染——当帧生效。
+                     pinPose(gg);
+                  }
                }
                else
                {
@@ -194,6 +203,25 @@ package
                mod.cfg.diagAdd("dashPoseF");
             }
             prevKdash = kdash;
+         }
+         catch(e:*)
+         {
+         }
+      }
+
+      /** 钉扎蹲姿移动姿态（polz 根帧 + 身体动画从头播放）。 */
+      private function pinPose(gg:*):void
+      {
+         try
+         {
+            var vis:* = gg["vis"];
+            if(vis == null) return;
+            var osn:* = vis["osn"];
+            if(osn == null) return;
+            osn["gotoAndStop"]("polz");
+            var body:* = osn["body"];
+            if(body != null) body["gotoAndPlay"](1);
+            mod.cfg.diagAdd("dashPosePin");
          }
          catch(e:*)
          {
