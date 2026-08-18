@@ -167,6 +167,14 @@ package
             {
                // 姿态接管（每帧强制，抵掉 actions() 的 stay=false 与解除路径）
                gg["stay"] = true;
+               if(kdash > 0)
+               {
+                  // D-044：原版 kdash 飞行期**无重力**（forces() 的 kdash 分支
+                  // 跳过重力分支，710-719 行）——玩家实测姿态滑行腾空时下落
+                  // 过缓（悬停滑翔）。接管期间补回重力，复刻 forces() 公式：
+                  // dy += World.ddy(=1) * tile.grav，按 loc.maxdy 钳制。
+                  applyGravity(w, gg);
+               }
                if(poseMode == 1)
                {
                   // 蹲姿：防 control() 2884/2889 的 unsit；碰撞盒保持坐姿尺寸
@@ -262,6 +270,41 @@ package
          catch(e:*)
          {
             mod.cfg.diagAdd("dashPosePinErr");
+         }
+      }
+
+      /**
+       * 补回冲刺飞行期重力（D-044）。复刻 forces() 公式：
+       * dy += World.ddy(=1) * tile.grav（采样点 Y - scY/4 同游戏），
+       * 按 loc.maxdy * grav 钳制（与游戏重力门一致）。
+       */
+      private function applyGravity(w:*, gg:*):void
+      {
+         try
+         {
+            var dyG:Number = MSWU.num(gg, "dy");
+            var gravV:Number = 1;
+            var maxdyV:Number = 20;
+            var locV:* = w["loc"];
+            if(locV != null)
+            {
+               maxdyV = MSWU.num(locV, "maxdy", 20);
+               var tileV:* = locV["getAbsTile"](MSWU.num(gg, "X"),
+                  MSWU.num(gg, "Y") - MSWU.num(gg, "scY") / 4);
+               if(tileV != null)
+               {
+                  var tgV:Number = MSWU.num(tileV, "grav", 1);
+                  if(tgV != 0) gravV = tgV;
+               }
+            }
+            if(gravV > 0 && dyG < maxdyV * gravV || gravV < 0 && dyG > maxdyV * gravV)
+            {
+               gg["dy"] = dyG + gravV;
+               mod.cfg.diagAdd("dashPoseGrav");
+            }
+         }
+         catch(e:*)
+         {
          }
       }
    }
