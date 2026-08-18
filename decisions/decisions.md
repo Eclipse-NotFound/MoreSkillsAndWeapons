@@ -538,3 +538,27 @@
   哔哔小马设置页 + F6 浮层同步。
 - **诊断**：dashPoseCast（接管次数）/dashPoseF（接管帧数）/dashPoseExit（解除次数）。
 - **构建**：15226 字节（swf v14，仅字符串引用游戏类）。
+
+## D-038 冲刺保持姿态扩展：蹲姿分支（2026-08-18 玩家实测"无效果"）
+
+- **现象**：D-037 实现后玩家实测无效果。
+- **根因**：玩家按 S"趴下"进入的是**蹲姿（isSit）**，不是 lurked 趴姿——
+  本游戏 S 的语义 = 蹲下（Ctr keySit→sit(true)，UnitPlayer.as:2836）；lurked
+  （趴伏/潜伏）需坐姿下按 W 且有 lurk box/tile 才进入（lurk()，2992 行），
+  日常不常用。D-037 只接管 lurked → 蹲姿路径完全未覆盖。
+- **原版蹲姿维护（逆向确认）**：
+  - 蹲姿是**粘性**的：松 S 不解除（Ctr KEY_UP 只清 keySit，Ctr.as:806）；
+  - 起身路径仅：W（2884 isSit&&keyBeUp&&!keySit→unsit）、SPACE（2706
+    jumpp>0&&isSit→unsit）、`isSit && !stay`（2889——**冲刺期间 stay=false
+    每帧触发**，即 bug 根源）、水/梯子/rat 边缘路径；
+  - 蹲姿动画：animate() stay 分支 + walk 分支 `else if(isSit)` → "polz"/
+    "roll" 爬行/翻滚姿势（4345-4430）——冲刺中保持 isSit 即显示蹲姿滑行。
+- **修复**：MSWDashPose 双分支（poseMode：1=蹲姿 isSit，2=趴姿 lurked）：
+  - 进入：kdash 0→>0 && work=="" && (isSit || lurked)；
+  - 蹲姿强制：isSit=true + stay=true + scX/scY=sitX/sitY（sit(true) 幂等早退
+    无法修碰撞盒，直接对齐；防 unsit 后盒尺寸残留 stayX/stayY）；
+  - 冲刺中（kdash>0）即使按 W/SPACE 也保持姿态（"全程保持"语义）；
+  - 退出：kdash==0 后游戏解除了姿态（isSit/lurked 变 false = 原版解除路径
+    已执行）或 sost>=2 死亡 / rat 变形——交还原版。
+- **配置**：沿用 dashKeepPose（默认开），面板第 11 行文案改"冲刺保持蹲/趴"。
+- **构建**：15329 字节。

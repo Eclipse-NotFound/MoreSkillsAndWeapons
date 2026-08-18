@@ -241,7 +241,7 @@ package
          s += (sel == 8 ? "> " : "  ") + "投掷物护甲 : " + c.projArmor + "\n";
          s += (sel == 9 ? "> " : "  ") + "疾跑切枪 : " + (c.swapRun ? "开" : "关") + "  (Shift+数字键)\n";
          s += (sel == 10 ? "> " : "  ") + "散布恒定 : " + (c.spreadFix ? "开" : "关") + "  (仅榴弹炮)\n";
-         s += (sel == 11 ? "> " : "  ") + "冲刺保持趴姿 : " + (c.dashKeepPose ? "开" : "关") + "  (魔法冲刺)\n";
+         s += (sel == 11 ? "> " : "  ") + "冲刺保持蹲/趴 : " + (c.dashKeepPose ? "开" : "关") + "  (魔法冲刺)\n";
          s += "←→/Enter 调整   ↑↓ 选择";
          if(pipTf != null) pipTf["text"] = s;
          if(ovTf != null) ovTf["text"] = s;
