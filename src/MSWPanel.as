@@ -29,7 +29,7 @@ package
       private var pipTf:TextField = null;
       private var ovTf:TextField = null;
 
-      private static const ROWS:int = 11;
+      private static const ROWS:int = 12;
       public static const KEY_F8:int = 119;
       public static const PAGE_QNAME:String = "fe.inter::PipPageOpt";
 
@@ -119,7 +119,8 @@ package
             else if(sel == 7) mod.cfg.projHp += d * 5;
             else if(sel == 8) mod.cfg.projArmor += d * 5;
             else if(sel == 9) mod.cfg.swapRun = !mod.cfg.swapRun;
-            else mod.cfg.spreadFix = !mod.cfg.spreadFix;
+            else if(sel == 10) mod.cfg.spreadFix = !mod.cfg.spreadFix;
+            else mod.cfg.dashKeepPose = !mod.cfg.dashKeepPose;
             mod.cfg.clamp();
             mod.cfg.save();
             refresh();
@@ -240,6 +241,7 @@ package
          s += (sel == 8 ? "> " : "  ") + "投掷物护甲 : " + c.projArmor + "\n";
          s += (sel == 9 ? "> " : "  ") + "疾跑切枪 : " + (c.swapRun ? "开" : "关") + "  (Shift+数字键)\n";
          s += (sel == 10 ? "> " : "  ") + "散布恒定 : " + (c.spreadFix ? "开" : "关") + "  (仅榴弹炮)\n";
+         s += (sel == 11 ? "> " : "  ") + "冲刺保持趴姿 : " + (c.dashKeepPose ? "开" : "关") + "  (魔法冲刺)\n";
          s += "←→/Enter 调整   ↑↓ 选择";
          if(pipTf != null) pipTf["text"] = s;
          if(ovTf != null) ovTf["text"] = s;

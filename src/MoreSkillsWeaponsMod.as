@@ -43,6 +43,8 @@ package
       /** 2026-08-17 自 Sandevistan 迁移：手雷击落 / 疾跑切枪 */
       public var projhits:MSWProjHits;
       public var swaprun:MSWSwaprun;
+      /** 2026-08-18 D-037：魔法冲刺保持趴姿 */
+      public var dashpose:MSWDashPose;
 
       private var stage_:* = null;
       private var booted:Boolean = false;
@@ -60,6 +62,7 @@ package
          aim = new MSWAim(this);
          projhits = new MSWProjHits(this);
          swaprun = new MSWSwaprun(this);
+         dashpose = new MSWDashPose(this);
       }
 
       /** 由游戏 loader 调用；main 为 MainFE 实例。 */
@@ -149,6 +152,7 @@ package
             projhits.process(w);  // 2026-08-17 迁移：手雷击落（投掷物可击落）
             trajectory.update(w); // SATS 弹道覆盖层
             aim.update(w);        // 蹲姿/梯子举枪
+            dashpose.update(w);   // 2026-08-18 D-037：魔法冲刺保持趴姿
             panel.update(w);      // 设置面板（哔哔小马设置页 + F6 浮层）
          }
          catch(err:*)

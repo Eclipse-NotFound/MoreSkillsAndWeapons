@@ -509,3 +509,32 @@
   （frameN%300 ≈ 5 秒，boot/首次 world/pip/异常 60 帧 各一次）。
 - **教训**：SharedObject.flush 是同步 I/O，诊断计数器落盘必须走帧级节流，
   不能挂在按键/事件路径上。
+
+## D-037 魔法冲刺保持趴姿（2026-08-18 新技能）
+
+- **需求**：原版魔法冲刺（sp_kdash）在趴着（lurked）时施放，冲刺结束时自动
+  站起；希望保持趴姿（用户确认：只做趴姿、默认开、趴姿动画滑行；验收场景：
+  只能趴姿进入的通道内全程保持趴姿）。
+- **原版机制（逆向确认）**：
+  - `cast_kdash()`（Spell.as:335-369）：方向=目标-玩家，`norma()` 钳速到
+    `dam*(1+(power-1)*0.5)`，冲量 dx/dy，`kdash_t`=帧数（默认 15、最小 7），
+    清 isLaz/levit；需 `loc.levitOn`（仅 @levitoff 房间关闭）；
+  - 施放门控：`control()` 在 work=="lurk"/"unlurk"/"res" 早退 → 只能从稳定趴姿
+    （work==""）施放；
+  - **根因**：`actions()`（1065-1069）冲刺期间每帧 `stay=false` → lurked 清理
+    （`!stay→lurked=false`，1045-1048）→ animate() 脱离趴姿。趴姿动画被
+    `t_work>0 && work=="lurk"` 分支延续到冲刺尾段（该分支在 lurked 判断之前），
+    所以视觉上"结束时站起"。
+- **实现（frame-late 姿态接管，不改游戏文件）**：`src/MSWDashPose.as`
+  - 进入：kdash_t 0→>0 且 lurked && work==""（稳定趴姿施放）；
+  - 冲刺中每帧强制 `stay=true / lurked=true / lurkX=X / lurkBox=null`
+    （抵掉三个 lurked 清理路径），`work="lurk"+t_work=20` + `animState=""`
+    迫使 animate() 重放趴姿动画（滑行）；
+  - 冲刺结束：停止刷新 work/t_work → t_work 自然衰减 → 身体冻结趴姿帧，
+    lurked 保持 → 可继续趴姿移动（lurkX 每帧跟随防位移清理）；
+  - 退出：work=="unlurk"（原版 W/空格/蹲 解除流程）或 sost>=2（死亡）或
+    玩家实例变化；回放期（onPause+godMode）经 MSWU.inGameplay 不介入（D-033）。
+- **配置**：`dashKeepPose`（默认开），面板第 11 行（ROWS 11→12），
+  哔哔小马设置页 + F6 浮层同步。
+- **诊断**：dashPoseCast（接管次数）/dashPoseF（接管帧数）/dashPoseExit（解除次数）。
+- **构建**：15226 字节（swf v14，仅字符串引用游戏类）。

@@ -50,6 +50,9 @@ package
       /** 散布恒定（mswglau）：每帧 hp=maxhp → breaking=0 → 散布不随磨损增大（D-034） */
       public var spreadFix:Boolean = true;
 
+      /** 魔法冲刺保持趴姿：趴着（lurked）施放 sp_kdash 后保持趴姿（D-037） */
+      public var dashKeepPose:Boolean = true;
+
       private var so:SharedObject = null;
 
       public function MSWConfig()
@@ -76,6 +79,7 @@ package
             if(so.data.projArmorOver != undefined) projArmorOver = so.data.projArmorOver;
             if(so.data.swapRun != undefined) swapRun = so.data.swapRun;
             if(so.data.spreadFix != undefined) spreadFix = so.data.spreadFix;
+            if(so.data.dashKeepPose != undefined) dashKeepPose = so.data.dashKeepPose;
          }
          catch(e:*)
          {
@@ -147,6 +151,7 @@ package
             so.data.projArmorOver = projArmorOver;
             so.data.swapRun = swapRun;
             so.data.spreadFix = spreadFix;
+            so.data.dashKeepPose = dashKeepPose;
             so.flush();
          }
          catch(e:*)

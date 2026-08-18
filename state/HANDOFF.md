@@ -32,6 +32,7 @@
 | 跳弹技能 | ✅ 已实现 | 独立开关；镜面反射；破墙那发不弹跳；已修复大量反弹问题（见 D-013~D-025） |
 | 蹲姿/梯子举枪 | 🟡 待复测 | 面板第 6 行开关（Shift+W）；**诊断注意：aimSkill 当前 false（需开启开关）**；D-031 改键 + D-032 失效修复已就位 |
 | 手雷击落 + 疾跑切枪 | 🟡 待复测 | 自 Sandevistan 迁移（面板第 7-10 行）；**D-033（2026-08-17）：斯安维斯坦时停期已放行**（inGameplay 改 onPause&&godMode 判据；projhits 加 origDam 恢复 + 时停视觉爆炸）；回放期仍禁 |
+| 魔法冲刺保持趴姿 | 🟡 待实机 | **D-037（2026-08-18）**：趴着（lurked）施放 sp_kdash 后保持趴姿（含冲刺中趴姿动画滑行、冲刺后继续趴姿移动——只能趴姿进入的通道全程趴姿）；面板第 11 行开关，默认开 |
 | 设置面板 | ✅ 主入口=哔哔小马设置页；辅入口=F6 浮层 | F8 在该键盘无键事件；F10 已让出 |
 
 ## 3. 文件结构
@@ -49,7 +50,8 @@ mods/MoreSkills&Weapons/
 │  ├─ MSWPanel.as           设置面板（PipPageOpt 叠加 + F6 浮层）
 │  ├─ MSWAim.as             蹲姿/梯子举枪
 │  ├─ MSWProjHits.as        手雷击落（2026-08-17 迁自 Sandevistan）
-│  └─ MSWSwaprun.as         疾跑切枪（2026-08-17 迁自 Sandevistan）
+│  ├─ MSWSwaprun.as         疾跑切枪（2026-08-17 迁自 Sandevistan）
+│  └─ MSWDashPose.as        魔法冲刺保持趴姿（2026-08-18 D-037）
 ├─ design/                  features.md（功能设计）、mechanics-notes.md（机制清单）、
 │                           skill-aim-sit-ladder.md（举枪技能设计）
 ├─ decisions/decisions.md   D-001 ~ D-030 技术决策（含每轮实测 bug 的根因与教训）
@@ -97,6 +99,18 @@ mods/MoreSkills&Weapons/
   `weapUp` internal 但效果可由"贴图抬高→vis.emit 枪口同步"复刻；
   `stay` 是 Pt 基类 public 字段；`isLaz/noStairs/sit()/unsit()` public。
 
+**魔法冲刺保持趴姿（D-037，2026-08-18）**：新技能已实现，**待实机验证**：
+- 设计：`state/design/design-冲刺保持趴姿.md`（含原版机制链与实现方案）；
+- 用户确认：只做趴姿（lurked）、默认开、趴姿动画滑行；验收场景 = 只能趴姿
+  进入的通道内全程保持趴姿；
+- 实现：`src/MSWDashPose.as`——kdash_t 0→>0 且 lurked 时进入接管，每帧强制
+  stay/lurked/lurkX/lurkBox=null，冲刺中 work="lurk"+t_work=20 播趴姿动画，
+  冲刺后自然落定冻结趴姿；退出 = work=="unlurk"（W/空格/蹲原版解除）或死亡；
+- 配置：`dashKeepPose` 默认开，面板第 11 行；
+- 诊断：dashPoseCast（接管次数）/dashPoseF（接管帧数）/dashPoseExit（解除次数）；
+- 验证清单：趴着施放冲刺→全程趴姿滑行→结束后仍趴着→W 正常解除；站着/蹲着
+  施放→原版行为不变；通道场景→全程趴姿；面板开关关闭→原版行为；
+
 **迁移技能审核（2026-08-17 已完成）**：手雷击落 + 疾跑切枪迁移报告已审核
 通过（文件/产物真实性、游戏字段引用存在性、逻辑正确性均验证）；
 待实机复测清单见迁移报告 §7。已知风险：Sandevistan 侧停用无法独立验证
@@ -140,6 +154,8 @@ D-031 举枪改键 Shift+W / D-032 举枪失效根因（heldShift 同步 + keyDo
 
 1. **举枪（D-031/D-032）待复测**——Shift+W 举枪、W 起身/爬升；D-032 已修复
    失效根因（heldShift 同步 + keyDowns 阻断），需实机确认不再站起；
+2. **魔法冲刺保持趴姿（D-037）待实机**——趴着施放冲刺全程保持趴姿；验收
+   场景：只能趴姿进入的通道内滑行；诊断读 dashPoseCast/dashPoseF/dashPoseExit；
 2. 蹲姿举枪历史遗留：吞键失效（keyBeUpLeak）+ 恢复兜底（sitRestored）
    ——Shift+W 时三保险仍依赖兜底闭环，复测时读诊断确认；
 3. 榴弹"偶发原路回弹/陷地"：经多轮修复（D-014/017/019/020/021/022/023/024/025）
@@ -147,7 +163,8 @@ D-031 举枪改键 Shift+W / D-032 举枪失效根因（heldShift 同步 + keyDo
 4. 诊断读取法：`%APPDATA%\pfe\Local Store\#SharedObjects\
    mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf\MSWConfig.sol`
    （AMF 明文可 grep；diag 计数：frames/keys/hk<code>/wDown/wSitDown/wSwallow/
-   keyBeUpLeak/sitRestored/bounce/explode/errBounce/lastErr/projHit/projBoom/swapRun）；
+   keyBeUpLeak/sitRestored/bounce/explode/errBounce/lastErr/projHit/projBoom/swapRun/
+   dashPoseCast/dashPoseF/dashPoseExit）；
 5. 跳弹/榴弹/举枪均未接入游戏技能系统（用户要求独立开关先行，后续适配）；
 6. DLC/pfe.swf、DLC/pfeUI.swf（1.03/1.04）未合并本模组 loader（如需支持按 D-010 流程）；
 7. 发枪可能重复 +12 发 gren40（读档时序，可接受，后续优化）；
