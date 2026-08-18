@@ -38,9 +38,13 @@ package
       private var curGg:* = null;
       /** internal 访问探针（一次性，留档验证） */
       private var probed:Boolean = false;
-      /** 蹲姿身体帧跟踪（每帧记录，进入时取上一帧=冲刺前坐姿帧） */
-      private var lastBodyFrame:int = 2;
-      /** 钉扎用的坐姿身体帧（进入时快照 lastBodyFrame） */
+      /**
+       * 钉扎坐姿身体帧（D-042：硬编码 getStayFrame 对 isSit 的默认值 2——
+       * 开阔地坐姿；贴墙坐姿为 49+，冲刺时已离墙，用开阔地坐姿正确）。
+       * 历史：D-041 曾"施放帧快照 body.currentFrame"——但施放帧游戏已把身体
+       * 播进 polz/down/up 过渡段（3-26 帧），快照抓到站起过渡帧 → 钉扎冻在
+       * 半站起姿态 = 玩家实测的"站起动画抽搐"。
+       */
       private var sitFrame:int = 2;
       /** 落地检测（Y 稳定帧数） */
       private var prevY:Number = 0;
@@ -96,22 +100,6 @@ package
             var workStr:String = MSWU.str(gg, "work");       // public
             var lurkedProxy:Boolean = (sloyNow == 0 || sloyNow == 1);
 
-            // 身体帧跟踪（每帧，供进入时快照坐姿帧；读取放独立 try）
-            try
-            {
-               var bvis:* = gg["vis"];
-               if(bvis != null)
-               {
-                  var bosn:* = bvis["osn"];
-                  if(bosn != null)
-                  {
-                     var bbody:* = bosn["body"];
-                     if(bbody != null) lastBodyFrame = bbody["currentFrame"];
-                  }
-               }
-            }
-            catch(e:*) {}
-
             // ---- 退出接管 ----
             if(active)
             {
@@ -156,8 +144,6 @@ package
                   active = true;
                   poseMode = 1;
                   curGg = gg;
-                  // 快照冲刺前坐姿身体帧（上一帧跟踪值；开阔地=2，贴墙=49+）
-                  sitFrame = lastBodyFrame;
                   stableFrames = 0;
                   prevY = MSWU.num(gg, "Y");
                   mod.cfg.diagAdd("dashEntrySit");
@@ -243,7 +229,7 @@ package
          }
       }
 
-      /** 钉扎坐姿（根帧 "stay" + 身体冻结在坐姿帧——零动画零抽搐）。 */
+      /** 钉扎坐姿（根帧 "stay" + 身体冻结在坐姿帧 2——零动画零抽搐）。 */
       private function pinPose(gg:*, frame:int):void
       {
          try
@@ -259,6 +245,7 @@ package
          }
          catch(e:*)
          {
+            mod.cfg.diagAdd("dashPosePinErr");
          }
       }
    }
