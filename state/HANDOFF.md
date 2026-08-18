@@ -64,6 +64,12 @@ mods/MoreSkills&Weapons/
 
 ## 4. 进行中的问题（接续点）
 
+**分发包（2026-08-18，D-045）**：`dist/MoreSkillsWeapons_mod_v1.zip`——
+只含本模组 loader 的干净 1.02 pfe.swf + 模组 SWF + README。基于
+`pfe_1.02_before_msw_merge_20260815.swf` 用 FFDec importScript（注意参数顺序
+<in> <out> <folder>，用 ffdec.jar 非 cli 桩）定向替换 MainFE 生成；
+`dist/` 与 `build/pfe-patch/dist_build/` 已入 .gitignore。
+
 **新迁入技能（2026-08-17，Sandevistan 开发者交付）**：`手雷击落`+`疾跑切枪`
 已迁入（MSWProjHits/MSWSwaprun，面板第 7-10 行）。与斯安维斯坦共存约定：
 `MSWU.inGameplay()` 含 onPause 判定——斯安维斯坦时停/回放期间本模组不介入。

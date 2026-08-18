@@ -669,3 +669,29 @@
   冲刺结束后（kdash==0）游戏自然施加重力，无需干预。
 - **诊断**：dashPoseGrav（补重力帧数）。
 - **构建**：16246 字节。
+
+## D-045 分发版 pfe.swf：只含本模组 loader 的干净构建（2026-08-18）
+
+- **需求**：将模组分发给他人。对方需要 (1) 模组 SWF
+  `mods/MoreSkills&Weapons/release/MoreSkillsWeaponsMod.swf`，
+  (2) 打过 loader 补丁的 `pfe.swf`（对方原版没有 loader，不会加载模组）。
+- **约束**：当前共享 `pfe.swf` 是 6 模组合并文件（Sandy/RConnect/RVision/MSW/
+  TDFC/RandomRooms）——直接分发会连带其他开发者 loader 代码（越界+授权问题），
+  接收方没装那些模组也会有静默 IO 报错。
+- **做法（干净+安全）**：从 1.02 基础副本
+  `pfe_1.02_before_msw_merge_20260815.swf`（已复制到
+  `build/pfe-patch/dist_build/base_102.swf`，不改共享 pfe.swf）用 FFDec
+  `importScript` 把**只含 `loadMSWMod()` 的 MainFE** 定向合并进去：
+  ```
+  java -jar ffdec.jar -importScript <in.swf> <out.swf> <scriptsfolder>
+  ```
+  **注意参数顺序是 <in> <out> <folder>**（<folder> 放最后；放错顺序报
+  "I/O error during reading"）。且用真正的 `ffdec.jar`（`ffdec-cli.jar` 只是
+  1581B 启动桩），否则报 I/O error。
+- **验证**：`-export script <outdir> <in.swf>` 导出 → `MainFE.as` 仅有
+  `loadMSWMod()`（无 sandy/rconnect/rvision）；`-dumpSWF` 可正常解析。
+- **产物**：`dist/` 分发包 → `dist/MoreSkillsWeapons_mod_v1.zip`
+  （pfe.swf + mods/MoreSkills&Weapons/release/...SWF + README.txt 安装说明）；
+  `dist/` 与 `build/pfe-patch/dist_build/` 已加入 .gitignore（15MB 二进制不入库）。
+- **注意**：分发版 pfe 基于 1.02；接收方版本需匹配；Steam 校验文件会还原
+  pfe.swf 需重覆盖；本包不含其他模组 loader，勿与其他 pfe 补丁混用。
