@@ -183,14 +183,30 @@ package
                   if(Math.abs(yNow - prevY) < 0.3) stableFrames++;
                   else stableFrames = 0;
                   prevY = yNow;
-                  // 视觉钉扎（D-040/D-041）：冲刺中游戏 animate() 走空中分支
+                  // 视觉钉扎（D-040~D-043）：冲刺中游戏 animate() 走空中分支
                   // （"jump"/"pinok" 根帧，无 isSit 处理 → 渲染站姿）；钉回
-                  // 坐姿（根帧 "stay" + 身体冻结在冲刺前坐姿帧——零动画零抽搐；
-                  // D-040 的 polz+body.play() 会让身体播进 down/up 过渡帧段
-                  // = "站起动画抽搐"）。钉扎窗口 = 冲刺全程 + 落地前（修
-                  // "最后一刻才恢复"）。Flash 在所有 ENTER_FRAME 监听器之后
-                  // 渲染——当帧生效。
-                  if(kdash > 0 || !(stableFrames >= 3))
+                  // 坐姿（根帧 "stay" + 身体冻结坐姿帧 2——零动画零抽搐）。
+                  // 钉扎窗口（D-043 修正）：冲刺中 || 未落地 || 未落定——
+                  // 落地后若仍在滑行（dx>4），游戏 polz 分支 body.play() 会把
+                  // 身体从帧 2 播进 3-26 过渡段（起身动画），且近静止分支的
+                  // gotoAndStop(2) 被 3-26 守卫挡住 → 完整播一遍 = 玩家实测
+                  // "滑行后期一次起身动画"。改为等游戏把姿态落定为坐姿
+                  // （animState=="down"/"downjump" 且已落地）才停；按移动键
+                  // 视为主动移动（交还蹲姿爬行）。
+                  var pin:Boolean = kdash > 0;
+                  if(!pin)
+                  {
+                     var ctr:* = w["ctr"];
+                     var moving:Boolean = ctr != null &&
+                        (ctr["keyLeft"] == true || ctr["keyRight"] == true);
+                     var settled:String = MSWU.str(gg, "animState");
+                     if(!(stableFrames >= 3 && (settled == "down" || settled == "downjump")) &&
+                        !moving)
+                     {
+                        pin = true;
+                     }
+                  }
+                  if(pin)
                   {
                      pinPose(gg, sitFrame);
                   }
