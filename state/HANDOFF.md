@@ -32,7 +32,7 @@
 | 跳弹技能 | ✅ 已实现 | 独立开关；镜面反射；破墙那发不弹跳；已修复大量反弹问题（见 D-013~D-025） |
 | 蹲姿/梯子举枪 | 🟡 待复测 | 面板第 6 行开关（Shift+W）；**诊断注意：aimSkill 当前 false（需开启开关）**；D-031 改键 + D-032 失效修复已就位 |
 | 手雷击落 + 疾跑切枪 | 🟡 待复测 | 自 Sandevistan 迁移（面板第 7-10 行）；**D-033（2026-08-17）：斯安维斯坦时停期已放行**（inGameplay 改 onPause&&godMode 判据；projhits 加 origDam 恢复 + 时停视觉爆炸）；回放期仍禁 |
-| 魔法冲刺保持蹲/趴姿 | 🟡 待实机 | **D-037/D-038（2026-08-18）**：蹲下（isSit，按 S）或趴着（lurked）施放 sp_kdash 后保持姿态（冲刺中姿态动画滑行、冲刺后继续姿态移动——只能蹲/趴进入的通道全程保持）；面板第 11 行开关，默认开 |
+| 魔法冲刺保持蹲/趴姿 | 🟡 待实机 | **D-037/D-038/D-039（2026-08-18）**：蹲下（isSit，按 S）施放 sp_kdash 后保持蹲姿（冲刺中蹲姿滑行、冲刺后继续蹲姿移动）；**D-039 修复两轮"无效果"根因：internal 字段 lurked 不可访问致组件每帧死亡 → 全 public 字段重构**（趴姿分支尽力而为：冲刺中保姿，位移>10px 的冲刺结束后原版站起）；面板第 11 行开关，默认开 |
 | 设置面板 | ✅ 主入口=哔哔小马设置页；辅入口=F6 浮层 | F8 在该键盘无键事件；F10 已让出 |
 
 ## 3. 文件结构
@@ -99,18 +99,21 @@ mods/MoreSkills&Weapons/
   `weapUp` internal 但效果可由"贴图抬高→vis.emit 枪口同步"复刻；
   `stay` 是 Pt 基类 public 字段；`isLaz/noStairs/sit()/unsit()` public。
 
-**魔法冲刺保持蹲/趴姿（D-037/D-038，2026-08-18）**：新技能已实现，**待实机验证**：
-- 设计：`state/design/design-冲刺保持趴姿.md`（含原版机制链与实现方案）；
-- 用户确认：默认开、姿态动画滑行；**实测按 S 进入的是蹲姿 isSit → 蹲姿+趴姿
-  双分支（D-038）**；验收场景 = 只能蹲/趴进入的通道内全程保持姿态；
-- 实现：`src/MSWDashPose.as`——kdash_t 0→>0 且 isSit/lurked 时进入接管；
-  蹲姿强制 isSit/stay/scX/scY=sitX/sitY；趴姿强制 lurked/stay/lurkX/lurkBox=null
-  + work="lurk"+t_work=20 播趴姿动画；冲刺后自然落定冻结，可继续姿态移动；
-  退出 = kdash==0 后游戏解除了姿态（W/SPACE/水/梯子原版路径）或死亡/rat；
-- 配置：`dashKeepPose` 默认开，面板第 11 行"冲刺保持蹲/趴"；
-- 诊断：dashPoseCast（接管次数）/dashPoseF（接管帧数）/dashPoseExit（解除次数）；
-- 验证清单：蹲下（S）施放冲刺→全程蹲姿滑行→结束后仍蹲着→W/空格正常解除；
-  站着施放→原版行为不变；通道场景→全程保持；面板开关关闭→原版行为；
+**魔法冲刺保持蹲/趴姿（D-037/D-038/D-039，2026-08-18）**：新技能已实现，**待实机验证**：
+- 设计：`state/design/design-冲刺保持趴姿.md`；决策：D-037/D-038/D-039；
+- **D-039 关键根因**：internal 字段（lurked/lurkX/lurkTip/lurkBox）从模组侧
+  bracket 访问抛 #1069 被 catch 吞掉 → 组件每帧死亡 → 两轮"无效果"；
+  **游戏密封类 internal 成员一律不可访问**（Sandevistan 5921 行同证）——
+  后续组件引用游戏字段必须先确认 public（grep "var <字段>"）；
+- 实现（public-only）：蹲姿分支 = isSit/stay/scX/scY 每帧强制（完整支持，
+  含冲刺后蹲姿移动）；趴姿分支 = sloy∈{0,1} 代理 lurked + work="lurk" 冲刺
+  中维持（位移>10px 冲刺后原版站起回归——已知限制）；退出 = kdash==0 后
+  游戏解除姿态（isSit=false / work=="unlurk" / sloy==2）或死亡/rat；
+- 诊断：kdashSeen（kdash 是否触发——区分"技能不是 sp_kdash"）、
+  dashEntrySit/dashEntryLurk/dashEntryBlockWork/dashEntryBlockPose、
+  dashPoseCast/dashPoseF/dashPoseExit、lurkProbeOK/lurkProbeErr；
+- 验证清单：按 S 蹲下施放冲刺→全程蹲姿滑行→结束后仍蹲着→W/空格解除；
+  面板开关关闭→原版行为；通道场景→蹲姿全程保持；
 
 **迁移技能审核（2026-08-17 已完成）**：手雷击落 + 疾跑切枪迁移报告已审核
 通过（文件/产物真实性、游戏字段引用存在性、逻辑正确性均验证）；

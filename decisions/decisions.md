@@ -562,3 +562,32 @@
     已执行）或 sost>=2 死亡 / rat 变形——交还原版。
 - **配置**：沿用 dashKeepPose（默认开），面板第 11 行文案改"冲刺保持蹲/趴"。
 - **构建**：15329 字节。
+
+## D-039 冲刺保持姿态两轮"无效果"根因：internal 成员不可访问（2026-08-18 诊断）
+
+- **现象**：D-037/D-038 两轮实现玩家实测均"无效果"。
+- **诊断**：读 MSWConfig.sol（17:12 落盘，晚于 16:57 的 D-038 构建——用户确实
+  用新构建玩过）——`dashPoseCast` **完全不存在** → 接管从未进入。且最后写入的
+  诊断仍是举枪时代计数（lazAimF/raiseF/raiseBlocked——证明 MSWAim 组件正常）。
+- **根因**：MSWDashPose.update() 顶部 `gg["lurked"] == true` —— `lurked` 是
+  UnitPlayer **internal** 字段（UnitPlayer.as:165）。密封类 internal 成员从模组
+  侧 bracket 访问抛 #1069 → 被外层 catch 吞掉 → **update() 每帧死掉**，任何
+  分支（含纯 public 的蹲姿分支）都不执行 → dashPoseCast 永不计数。
+- **佐证**：Sandevistan 源码 5921-5923 行明确记载"keyDowns 是 internal 无法
+  访问"，并为卡键自愈改为"按 keyXML 强制 public 键布尔"（同一困境）。
+- **修复（D-039）**：全部改用 **public 字段**——
+  - 蹲姿分支（用户实测场景 S）：isSit/stay/scX/scY/sitX/sitY（均 public）；
+  - 趴姿分支（尽力而为）：sloy∈{0,1}（public，Pt.as:23）代理 lurked 检测；
+    lurked/lurkX/lurkBox internal 不可写 → 冲刺中 work="lurk"+t_work=20+stay
+    强制（抵 !stay 与 |X-lurkX| 清理）；冲刺结束 t_work=1 快速收尾——位移
+    >10px 的冲刺结束后趴姿无法保持（原版站起回归，lurkX 无法跟随）；
+    box 趴伏（lurkBox!=null）冲刺中可能被 box 清理——已知限制；
+  - 退出：kdash==0 后游戏解除了姿态（isSit=false / work=="unlurk" / sloy==2）
+    或死亡/rat；
+  - 诊断：kdashSeen（kdash 是否真的触发——区分"用户技能不是 sp_kdash"）、
+    dashEntrySit/dashEntryLurk/dashEntryBlockWork/dashEntryBlockPose（进入链路）、
+    lurkProbeOK/lurkProbeErr（internal 访问一次性探针，留档验证）；
+- **教训**：游戏密封类成员必须先查可见性——internal 一律视为不可访问
+  （bracket 会抛），public 才可读写。后续新增组件引用游戏字段前先 grep
+  "var <字段>" 确认 public。
+- **构建**：15631 字节。
