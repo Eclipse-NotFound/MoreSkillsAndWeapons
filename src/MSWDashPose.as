@@ -38,6 +38,13 @@ package
       private var curGg:* = null;
       /** internal 访问探针（一次性，留档验证） */
       private var probed:Boolean = false;
+      /** 蹲姿身体帧跟踪（每帧记录，进入时取上一帧=冲刺前坐姿帧） */
+      private var lastBodyFrame:int = 2;
+      /** 钉扎用的坐姿身体帧（进入时快照 lastBodyFrame） */
+      private var sitFrame:int = 2;
+      /** 落地检测（Y 稳定帧数） */
+      private var prevY:Number = 0;
+      private var stableFrames:int = 0;
 
       public function MSWDashPose(m:*)
       {
@@ -89,6 +96,22 @@ package
             var workStr:String = MSWU.str(gg, "work");       // public
             var lurkedProxy:Boolean = (sloyNow == 0 || sloyNow == 1);
 
+            // 身体帧跟踪（每帧，供进入时快照坐姿帧；读取放独立 try）
+            try
+            {
+               var bvis:* = gg["vis"];
+               if(bvis != null)
+               {
+                  var bosn:* = bvis["osn"];
+                  if(bosn != null)
+                  {
+                     var bbody:* = bosn["body"];
+                     if(bbody != null) lastBodyFrame = bbody["currentFrame"];
+                  }
+               }
+            }
+            catch(e:*) {}
+
             // ---- 退出接管 ----
             if(active)
             {
@@ -133,6 +156,10 @@ package
                   active = true;
                   poseMode = 1;
                   curGg = gg;
+                  // 快照冲刺前坐姿身体帧（上一帧跟踪值；开阔地=2，贴墙=49+）
+                  sitFrame = lastBodyFrame;
+                  stableFrames = 0;
+                  prevY = MSWU.num(gg, "Y");
                   mod.cfg.diagAdd("dashEntrySit");
                   mod.cfg.diagAdd("dashPoseCast");
                }
@@ -165,14 +192,21 @@ package
                      gg["scX"] = MSWU.num(gg, "sitX");
                      gg["scY"] = MSWU.num(gg, "sitY");
                   }
-                  if(kdash > 0)
+                  // 落地检测（Y 稳定 3 帧=已落地；冲刺中/落地前 Y 持续变化）
+                  var yNow:Number = MSWU.num(gg, "Y");
+                  if(Math.abs(yNow - prevY) < 0.3) stableFrames++;
+                  else stableFrames = 0;
+                  prevY = yNow;
+                  // 视觉钉扎（D-040/D-041）：冲刺中游戏 animate() 走空中分支
+                  // （"jump"/"pinok" 根帧，无 isSit 处理 → 渲染站姿）；钉回
+                  // 坐姿（根帧 "stay" + 身体冻结在冲刺前坐姿帧——零动画零抽搐；
+                  // D-040 的 polz+body.play() 会让身体播进 down/up 过渡帧段
+                  // = "站起动画抽搐"）。钉扎窗口 = 冲刺全程 + 落地前（修
+                  // "最后一刻才恢复"）。Flash 在所有 ENTER_FRAME 监听器之后
+                  // 渲染——当帧生效。
+                  if(kdash > 0 || !(stableFrames >= 3))
                   {
-                     // 视觉钉扎（D-040）：冲刺中游戏 animate() 走空中分支
-                     // （"jump" 根帧，无 isSit 处理 → 渲染站姿跳，玩家实测
-                     // "冲刺中逐渐站起"）；钉回蹲姿移动姿态（"polz" 根帧，
-                     // 原版蹲姿移动渲染，body.play() 照搬原版 polz 分支）。
-                     // Flash 在所有 ENTER_FRAME 监听器之后渲染——当帧生效。
-                     pinPose(gg);
+                     pinPose(gg, sitFrame);
                   }
                }
                else
@@ -209,8 +243,8 @@ package
          }
       }
 
-      /** 钉扎蹲姿移动姿态（polz 根帧 + 身体动画从头播放）。 */
-      private function pinPose(gg:*):void
+      /** 钉扎坐姿（根帧 "stay" + 身体冻结在坐姿帧——零动画零抽搐）。 */
+      private function pinPose(gg:*, frame:int):void
       {
          try
          {
@@ -218,9 +252,9 @@ package
             if(vis == null) return;
             var osn:* = vis["osn"];
             if(osn == null) return;
-            osn["gotoAndStop"]("polz");
+            osn["gotoAndStop"]("stay");
             var body:* = osn["body"];
-            if(body != null) body["gotoAndPlay"](1);
+            if(body != null) body["gotoAndStop"](frame);
             mod.cfg.diagAdd("dashPosePin");
          }
          catch(e:*)
