@@ -10,7 +10,10 @@
 ## 0. 一句话
 
 《辐射小马国》同人游戏 **Remains** 的模组 **MoreSkills&Weapons**：
-跳弹技能 + 可编程榴弹炮（下坠/撞墙次数/初速度/反弹力度可调）+ 蹲姿/梯子举枪技能。
+跳弹 + 可编程榴弹炮（下坠/撞墙/初速度/反弹可调）+ 蹲/梯举枪 +
+**魔法冲刺保持蹲/趴姿**（D-037~D-044）+ 迁移自 Sandevistan 的
+**手雷击落/疾跑切枪** + **散布恒定**。
+已生成只含本模组 loader 的干净 1.02 分发包：`dist/MoreSkillsWeapons_mod_v1.zip`（D-045）。
 
 ## 1. 权限与协作（重要）
 
@@ -22,18 +25,19 @@
   有改动则先合并。** 本模组只动过 `pfe.swf`（追加 loader），DLC 两个文件从未动。
 - 不读取其他模组源码（隔离原则）；F10 曾与其他模组热键冲突 → 本模组热键只用 F6。
 
-## 2. 当前功能状态（截至 2026-08-17）
+## 2. 当前功能状态（截至 2026-08-18）
 
 | 功能 | 状态 | 说明 |
 | --- | --- | --- |
-| 可编程榴弹炮 `mswglau` | ✅ 已实现 | 运行时注入 AllData.d 克隆自 glau；进游戏自动发放+12 发 gren40；存档/HUD/修理兼容 |
-| 榴弹参数（哔哔小马设置页） | ✅ 已实现 | 下坠速率/撞墙次数/初速度/反弹力度；SharedObject 持久化（MSWConfig） |
-| SATS 弹道覆盖层 | ✅ 已实现 | 按参数实时绘制，终点爆炸范围圈用原版 satsRadius 素材（绿色，已对齐） |
-| 跳弹技能 | ✅ 已实现 | 独立开关；镜面反射；破墙那发不弹跳；已修复大量反弹问题（见 D-013~D-025） |
-| 蹲姿/梯子举枪 | 🟡 待复测 | 面板第 6 行开关（Shift+W）；**诊断注意：aimSkill 当前 false（需开启开关）**；D-031 改键 + D-032 失效修复已就位 |
-| 手雷击落 + 疾跑切枪 | 🟡 待复测 | 自 Sandevistan 迁移（面板第 7-10 行）；**D-033（2026-08-17）：斯安维斯坦时停期已放行**（inGameplay 改 onPause&&godMode 判据；projhits 加 origDam 恢复 + 时停视觉爆炸）；回放期仍禁 |
-| 魔法冲刺保持蹲/趴姿 | 🟡 待实机 | **D-037~D-041（2026-08-18）**：蹲下（isSit，按 S）施放 sp_kdash 保持蹲姿；D-039 修 internal 不可访问根因、D-040 修"冲刺中逐渐站起"（空中分支无 isSit 处理）、D-041 修"站起动画抽搐"（冻结坐姿帧钉扎 + 落地窗口）；趴姿分支尽力而为（位移>10px 冲刺后站起回归）；面板第 11 行开关，默认开 |
+| 可编程榴弹炮 `mswglau` | ✅ 已实机验证 | 运行时注入 AllData.d 克隆自 glau；进游戏自动发放+12 发 gren40；存档/HUD/修理兼容 |
+| 榴弹参数（哔哔小马设置页） | ✅ 已实机验证 | 下坠速率/撞墙次数/初速度/反弹力度；SharedObject 持久化（MSWConfig） |
+| SATS 弹道覆盖层 | ✅ 已实机验证 | 按参数实时绘制，终点爆炸范围圈用原版 satsRadius 素材（绿色，已对齐） |
+| 跳弹技能 | ✅ 已实机验证 | 独立开关；镜面反射；破墙那发不弹跳；已修复大量反弹问题（见 D-013~D-025） |
+| 蹲姿/梯子举枪 | ✅ 已实机验证 | 面板第 6 行开关（Shift+W）；D-031 改键 + D-035/036（heldW 流程 + flush 卡顿）已修 |
+| 手雷击落 + 疾跑切枪 | ✅ 已实机验证 | 自 Sandevistan 迁移（面板第 7-10 行）；**D-033**：时停期放行/回放期禁（inGameplay onPause&&godMode） |
+| 魔法冲刺保持蹲/趴姿 | 🟡 D-044 待最终确认 | **D-037~D-044（2026-08-18）**：蹲下（S）或趴着施放 sp_kdash 保持姿态；internal 不可访问（D-039）、逐渐站起（D-040）、抽搐（D-041）、初始化帧 bug（D-042）、滑行后期起身（D-043）、腾空下落过缓补重力（D-044）全链路已修；趴姿分支尽力而为（位移>10px 后站起回归——已知限制）；面板第 11 行开关，默认开 |
 | 设置面板 | ✅ 主入口=哔哔小马设置页；辅入口=F6 浮层 | F8 在该键盘无键事件；F10 已让出 |
+| 分发包 `dist/` | ✅ 已生成（2026-08-18 D-045） | `MoreSkillsWeapons_mod_v1.zip`：干净 1.02 pfe.swf（仅本模组 loader）+ 模组 SWF + README；`.gitignore` 已排除 dist/ |
 
 ## 3. 文件结构
 
@@ -63,6 +67,18 @@ mods/MoreSkills&Weapons/
 ```
 
 ## 4. 进行中的问题（接续点）
+
+**当前接续点（2026-08-18 新会话）**：
+1. **D-044 实机确认**：蹲姿魔法冲刺腾空应抛物线下落（补重力，诊断读 dashPoseGrav）；
+   用户最后反馈"所有项目都验证完成"，仅剩此重力项待最终确认。
+2. **分发包**：`dist/MoreSkillsWeapons_mod_v1.zip` 已就绪；发送前可（可选）在本机
+   用干净 pfe.swf 单独回归一次（确认只加载本模组一切正常），再由用户分发。
+3. 共享知识已沉淀（2026-08-18）：新增
+   `shared-knowledge/entities/facts/player-pose-states.md`、
+   `shared-knowledge/weapons-projectiles/facts/magic-dash-kdash.md`；增强
+   `rendering/facts/player-vis-anim-pipeline.md`、
+   `knowledge-validation/facts/diag-sampling-rules.md`、
+   `knowledge-validation/facts/modding-interop.md`。
 
 **分发包（2026-08-18，D-045）**：`dist/MoreSkillsWeapons_mod_v1.zip`——
 只含本模组 loader 的干净 1.02 pfe.swf + 模组 SWF + README。基于

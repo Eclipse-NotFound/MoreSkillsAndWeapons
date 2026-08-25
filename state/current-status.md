@@ -1,115 +1,46 @@
 # 当前开发状态
 
-> 频繁变化，不代表长期游戏事实。更新日期：2026-08-17
+> 频繁变化，不代表长期游戏事实。更新日期：2026-08-18
 
 ## 版本
-- 模组版本：0.1.0（开发中，未进游戏实测）
-- **2026-08-17：迁入 Sandevistan 的两技能**——手雷击落（MSWProjHits）+ 疾跑切枪
-  （MSWSwaprun），构建产物已更新（release/MoreSkillsWeaponsMod.swf 14348 字节，
-  面板新增第 7-10 行）。**待实机复测**；迁移报告：
-  `state/迁移报告-2026-08-17-Sandevistan技能迁入.md`；技术细节：
-  `state/MIGRATION-Sandevistan-swaprun-projhits.md`。迁移已审核通过（2026-08-17）。
-- **2026-08-17：D-032 修复举枪失效**（heldShift 事件顺序同步 + Ctr keyDowns
-  阻断吞键失效），与 D-031 改键（Shift+W）一起包含在当前构建中。
+- 模组版本：1.0（功能完整，全量实机验证通过——用户 2026-08-18 确认"所有项目都
+  验证完成"）；release SWF 16246 字节（D-044，git `910cdce`）。
+- 唯一未闭环节：**D-044 魔法冲刺腾空补重力**的最终落感确认（已修复，待玩家
+  一次实机确认；诊断读 `dashPoseGrav`）。
+- 分发包：`dist/MoreSkillsWeapons_mod_v1.zip`（D-045）已生成。
 
 ## 已完成
-- [x] 上下文恢复与机制研究（Bullet 撞墙/下坠/爆炸、SATS 弹道、武器工厂、Mod 加载）
-- [x] design/features.md、design/mechanics-notes.md、decisions/decisions.md
-- [x] 构建工具链打通（Animate 2024 自带 mxmlc 4.6 + FP11.1 playerglobal，见 build/README.md）
-- [x] 源码 v0.1：入口 / 配置 / 武器注入与发放 / 跳弹 / 可编程榴弹 / SATS 弹道 / 设置面板
-- [x] release/MoreSkillsWeaponsMod.swf 构建产物（swf v14，文档类 symbol 0 已验证，
-      游戏类仅以字符串引用、无嵌入）
-- [x] shared-knowledge 贡献 4 条 discoveries（撞墙/下坠、SATS 弹道、运行时武器创建、
-      Mod loader 补丁结构）
-- [x] **pfe.swf loader 合并（2026-08-15）**：检查了其他开发者的改动
-      （Sandevistan/RConnect/RealisticVision 三个 loader），按同模式为
-      MoreSkills&Weapons 追加第四个 loader 并部署（FFDec 定向导入，仅重编译
-      MainFE；合并前备份 `pfe_1.02_before_msw_merge_20260815.swf`，
-      其他开发者的备份 `pfe_1.02_before_rvision_merge_20260815.swf` 未动）。
-      反编译回读 + dumpSWF 结构验证通过。
-- [x] **举枪改键（D-031）与失效修复（D-032）**：Shift+W 举枪、W 原版起身/爬升；
-      heldShift 事件顺序同步 + ctr.keyDowns[87] 阻断吞键失效。待实机复测。
-- [x] **Sandevistan 两技能迁移（2026-08-17）**：手雷击落（MSWProjHits）+
-      疾跑切枪（MSWSwaprun），面板第 7-10 行，SharedObject 持久化；
-      迁移报告已审核通过（文件/引用/逻辑全部验证）。待实机复测。
+- [x] 全部功能实现并通过实机验证：
+  跳弹（D-013~D-025）/ 可编程榴弹炮 mswglau（下坠/撞墙/初速度/反弹 + SATS 实时
+  弹道）/ 蹲梯举枪（Shift+W，D-026~D-036）/ 迁移技能手雷击落+疾跑切枪
+  （MSWProjHits/MSWSwaprun，D-033）/ 散布恒定（D-034）/ **魔法冲刺保持蹲趴姿**
+  （MSWDashPose，D-037~D-044）/ 设置面板（哔哔小马设置页 + F6 浮层，ROWS=12）。
+- [x] git 仓库：功能相关提交 D-037~D-045（`dd0b7e5`…`910cdce`），工作区干净。
+- [x] shared-knowledge 沉淀（2026-08-18）：新增 `entities/facts/player-pose-states.md`、
+  `weapons-projectiles/facts/magic-dash-kdash.md`；增强
+  `rendering/facts/player-vis-anim-pipeline.md`（姿态分支门/空中无 isSit）、
+  `knowledge-validation/facts/diag-sampling-rules.md`（flush 同步 I/O）、
+  `knowledge-validation/facts/modding-interop.md`（D-039 实证）。
+- [x] 分发包（D-045）：干净 1.02 pfe.swf（FFDec importScript 定向替换 MainFE，
+  仅 `loadMSWMod()`，已反编译验证）+ 模组 SWF + README；`dist/` 已入 .gitignore。
 
-## 待办 / 阻塞
-- [ ] **实机复测（2026-08-17 D-033）**：
-      1. 举枪：面板第 6 行"蹲/梯举枪 (Shift+W)"**需确认开关已开**（诊断
-         MSWConfig.sol：aimSkill 当前 false=关）——开启后 Shift+W 坐姿/梯子
-         举枪；单独 W 起身/爬升（原版）；
-      2. 斯安维斯坦时停期间：手雷击落（判定+视觉爆炸）与疾跑切枪应生效
-         （D-033 已修：inGameplay 时停放行/回放禁；origDam 恢复伤害）；
-         回放期间两者仍不介入（防双重结算）；
-      3. 读诊断：projHit/projBoom/swapRun/keyBeUpLeak/sitRestored。
-- [ ] 跳弹与游戏技能系统的后续适配（用户指示延缓）
+## 待办
+- [ ] D-044 重力补回最终实机确认（蹲姿冲刺腾空应抛物线下落，悬停感消除）。
+- [ ] 分发包发送（用户分发；可选先在本机用干净 pfe.swf 单独回归一次）。
+- [ ] 跳弹/举枪等接入游戏技能系统（用户此前要求延缓，未做）。
 
-## 当前 bug / 风险
-- **已修复：爆炸连锁卡死（D-013）、跳弹原路回弹（D-014）、榴弹物理/动画（D-015）、
-  热键多键兼容（D-016，实测 hk117=9/hk118=1 到达，F8/F10 无键事件）**
-- **已修复（2026-08-16 实测反馈，D-017/D-018/D-019）**：
-  1. 落地即爆（原静止等引信被判定"爆炸不及时"）；
-  2. 角点只弹 X 轴 + 榴弹 Y 贴出碰撞体（消除"原路反弹"与"陷地"残余）；
-  3. 反弹/落点按贴图半尺寸定位（消除"贴图陷地"）；
-  4. 无历史位置（出生帧内撞墙）不再猜测反弹——跳弹按原版消亡、榴弹直接引爆
-     （消除 min-t 估计的偶发错误反弹）；
-  5. 边界墙兜底（重生点钳制后仍在矩形内 → 直接引爆/消亡，防循环）；
-  6. 初速度设置替代射速（weapon.speed，10-100）；
-  7. **热键收敛为仅 F6**（F10 与其他模组冲突；F8 无键事件）。
-- **已修复（2026-08-16 再反馈，D-020）：榴弹"穿模陷地"**——根因是死亡弹
-  在 babah 滞留 4 帧期间，游戏每步强制 vis.visible=true 并把贴图渲染在
-  死亡点（地板/墙矩形内部）；现反弹/引爆时立即摘除旧弹贴图。站在地上
-  朝正下方发射的场景应恢复正常。待复测。
-- **已修复（2026-08-16 三反馈，D-021）**：
-  1. 反弹零墙损——wallHits>0 时 weapon.destroy/tipDecal 置 0，未爆炸的
-     反弹不再对墙壁造成伤害或破坏动画；爆炸时按注册表原值完整结算；
-  2. 净空改为贴图对角线半径（旋转包围盒下探超过半高导致的残余"陷地"）。
-- **已修复（2026-08-16 五反馈，D-023）：近距离地面无法反弹/陷地的真正根因**
-  ——classify 的 `liv>3` 守卫（排除冲击弹用）误伤了出生帧内死亡（babah 后
-  liv 恒为 3）的榴弹/枪弹：不反弹、不引爆、旧弹贴图滞留（陷地视觉）。
-  现 babah 状态豁免该守卫（冲击弹仍被 damage/damageExpl 特征排除）。
-- **已修复（2026-08-16 六反馈，D-024）：无限小回弹**——根因是 step 2 的
-  for-in 遍历会扫到本轮新建的重生弹条目并误删 → 撞墙次数每弹重置 → 无限
-  小回弹直到引信耗尽。现先对键快照再处理；另加视觉贴地钳制（vis.y 不越过
-  地面矩形上沿），消除小回弹/下降末段的"陷地"残余。
-- **已修复（2026-08-16 七反馈，D-025）**：
-  1. 接近垂直入射的角点"原路回弹"——角点规则改为按占优分量选轴
-     （水平占优弹 X、垂直占优弹 Y）；
-  2. 新增"反弹力度"设置（弹性 0..1，默认 0.4），SATS 预览同步。
-- **已对齐（2026-08-16 八反馈）：SATS 爆炸范围显示**——自绘红色圆圈改为
-  原版同款素材 `satsRadius`（绿色圆，缩放公式 scale=explRadius/100 与原版
-  一致，cacheAsBitmap 同步）。待复测。
-- **待定位：墙边开炮炮弹偶发消失**：已有 errBounce/lastErr/bounce/explode
-  诊断与边界墙兜底；无历史撞墙现在直接引爆（可见爆炸），"消失"应已缓解；
-  若仍偶发，测试后读 MSWConfig.sol 定位。
-- 未实机验证；以下为设计已知风险：
-  1. 贴墙开火/水中/门等边界场景的反弹表现待实测（实现已按原版条件镜像）；
-  2. 哔哔小马设置页的"按键绑定"子页上，若 visSetKey 对话框检测失效会干扰
-     按键绑定（已有显示树扫描保护，待实测）；
-  3. 若存档读档发生在发枪之后，可能重复发初始 12 发 gren40（可接受，后续优化）；
-  4. DLC/pfe.swf、DLC/pfeUI.swf（1.03/1.04）未合并本模组 loader
-     （与 RealisticVision 覆盖范围一致；如需支持按 decisions D-010 合并）。
+## 当前 bug / 已知限制
+- **趴姿（lurked）分支尽力而为**（D-039 后 public-only 约束）：lurked/lurkX/
+  lurkBox 均 internal 不可写——冲刺后位移>10px 会站起回归；box 趴伏可能被
+  box 清理。蹲姿分支无此限制（完整支持）。
+- 发枪可能重复 +12 发 gren40（读档时序，可接受）。
+- DLC/pfe.swf、pfeUI.swf（1.03/1.04）未合并本模组 loader（如需支持按 D-010）。
+- 诊断读取法：`%APPDATA%\pfe\Local Store\#SharedObjects\
+  mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf\MSWConfig.sol`
+  （紧凑 AMF 格式：键长度字节 L=2n+1 + n 字节 ASCII 键名；值 04=U29 整数 /
+  05=double / 03=true / 02=false / 01=null；diag 是 AMF3 对象）。
+  dashPose*：Cast/EntrySit/EntryLurk/F/Pin/Exit/Grav；kdashSeen；lurkProbe*。
 
 ## 下一步
-1. 实机测试（见上）；
-2. **新技能"蹲姿/梯子举枪"已实施（D-026），实测加固（D-027/D-028）**：
-   - 梯子第一帧爬升已修（KEY_DOWN 即置 noStairs）；爬升/爬降/脱离正常；
-   - 坐姿起身已修（诊断证实 W 吞键有效但起身仍在 → 根因是起身路径2
-     `isSit && !stay`，stay 被向下运动一帧清零；现帧内三保险：
-     keyBeUp=false + keySit=true + stay=true）；
-   - 三保险后仍站起 → 实测证据（D-029/D-030）：keyBeUpLeak=7 证明吞键
-     失效（Ctr 收到被吞的 W）；恢复兜底 prevSit 维护 bug 已修（!on 分支
-     不再清 prevSit）。待复测；
-3. **2026-08-17 改键（D-031，用户需求）**：举枪改为 **Shift+W**，
-   W 恢复原版（坐姿起身/梯子爬升）——已改代码并构建，**待实机复测**：
-   - Shift+W 坐姿举枪（三保险+恢复兜底保留）；
-   - 单独 W 起身/爬升无拦截；
-   - 松 Shift 或 W 退出瞄准；
-4. **2026-08-17 D-032 举枪失效修复**（用户实测"完全失效"后定位）：
-   - heldShift 事件顺序同步（W 的 KEY_DOWN 先于 Shift 到达时 on=false →
-     prevSit 污染 → 恢复兜底失效）；KEY_DOWN(87) 用 e.shiftKey 同步；
-   - ctr.keyDowns[87]=true 阻断 Ctr 重复置位 keyBeUp（吞键失效根本解法）；
-   - sol 中 aimSkill 曾为 02=false（AMF0 布尔 03=true/02=false），需重开开关。
-   已构建，**待实机复测**；
-5. 按实测结果修订实现与文档；将已实测的 discoveries 提升为 facts；
-6. 视需要把 loader 合并到 DLC 版本。
+1. 玩家确认 D-044 后，若满意即可分发（dist zip）。
+2. 如需 DLC 支持、技能系统接入、或把发现提升为 facts，见 HANDOFF §4。
