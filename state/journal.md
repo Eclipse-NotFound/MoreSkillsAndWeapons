@@ -2,6 +2,14 @@
 
 > 协议见 GOVERNANCE.md §8：只追加不改写，**新条目插在最上面**。
 
+## 2026-08-28 诊断复核 + SOL 解析工具 + 知识提升
+
+- 做了什么：逐字节破解本机 Flash 写出的 .sol（AMF3 方言：顶层名 2 字节变长 / 回引用表空串不入表 / 文件尾 0x00），落地解析器 `build/tools/read_sol.py`；实机诊断复核——D-044 补重力实机触发 6 次、击落 projHit/projBoom=2/2、kdashSeen=399、ricochet bounce=159（玩家迁移新机后持续游玩中）；shared-knowledge 七篇 discoveries 提升 facts（bullet-wall-impact / explosion-blast-bullets / phisbullet-grenade-physics / runtime-weapon-creation / sats-trajectory-arc / pippageopt-overlay / mod-loader-patch-structure），修正 2 处库内交叉引用 + swf-patching 技能路径。
+- 关键决定/发现：SOL 格式规律与解析法沉淀至 shared-knowledge `knowledge-validation/methods/sol-diag-reading.md`；**diag 计数器跨会话累积、换机/换用户即重置**——迁移前旧诊断不可得，"举枪/切枪迁移后复测"需以新触发记录为准。
+- 遗留/下一步：D-044 落感待玩家主观确认（数据已佐证）；举枪/疾跑切枪实机各用一次即闭环；玩家满意后可启动"接入游戏技能系统"设计。AGENTS.md:45 仍指向旧 discoveries 路径（受保护文件，已报告待用户改）。
+
+---
+
 ## 2026-08-27 外置记忆迁移
 
 - 由 state/current-status.md + state/HANDOFF.md 拆分迁移（原文在 git 历史）：现行状态 → state\MEMORY.md；state\design\design-冲刺保持趴姿.md 移至 design\；两份迁移报告浓缩为下方 journal 条目后删除。

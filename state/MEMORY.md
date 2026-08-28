@@ -17,10 +17,12 @@
 
 - **v1.0**：全部功能实机验证通过（用户 2026-08-18 确认），release SWF 16246 字节（git `910cdce`），工作树干净。
 - 分发包 `dist/MoreSkillsWeapons_mod_v1.zip`（D-045）已生成：只含本模组 loader 的干净 1.02 pfe.swf + 模组 SWF + README。
+- **2026-08-28 实机诊断复核**（玩家迁移新机后持续游玩中，kdashSeen=399）：D-044 补重力实机触发 6 次、手雷击落 projHit/projBoom=2/2、 ricochet 反弹 159 次——主力功能实战活跃无回归。
 
 ## 4. 正在进行与卡点
 
-- 唯一未闭环：**D-044 魔法冲刺腾空补重力**的最终落感确认（已修复，待玩家一次实机确认；诊断读 `dashPoseGrav`）。
+- **D-044 魔法冲刺腾空补重力**：机制数据已佐证（dashPoseGrav=6），只差玩家对落感的**主观**确认（满意即分发 dist zip）。
+- 举枪/疾跑切枪：迁移换机后 SOL 重置，**尚无触发记录**（sitRestored/keyBeUpLeak/swap 计数未出现）——待玩家实机各用一次即闭环。
 
 ## 5. 已知问题
 
@@ -30,9 +32,9 @@
 
 ## 6. 下一步（优先级排序）
 
-1. 玩家确认 D-044 落感 → 满意即分发 dist zip（可选先在本机用干净 pfe.swf 单独回归一次）；
-2. 举枪/迁移技能复测收尾（读 sitRestored / keyBeUpLeak / projHit / projBoom / swapRun 诊断）；
-3. 视需要把 discoveries 提升为 facts；如玩家满意可启动"接入游戏技能系统"设计（跳弹/举枪）。
+1. 玩家确认 D-044 落感（机制数据已佐证）→ 满意即分发 dist zip；
+2. 举枪/疾跑切枪实机各用一次（迁移后尚无触发记录），读 SOL 确认计数增长；
+3. 如玩家满意可启动"接入游戏技能系统"设计（跳弹/举枪）。
 
 ## 7. 深入了解
 
@@ -40,6 +42,6 @@
 - **决策**：decisions/decisions.md（D-001~D-045；关键索引：D-001 动态架构 / D-002 帧后重生 / D-007 构建链 / D-010 pfe 合并 / D-016 F6-only / D-026~D-032 举枪演进 / D-037~D-044 冲刺姿态 / D-045 分发）
 - **设计**：design/features.md、mechanics-notes.md、skill-aim-sit-ladder.md、design-冲刺保持趴姿.md
 - **源码结构**：11 个 MSW*.as（入口/防御访问工具/配置/武器注入/子弹核心/SATS 弹道/面板/举枪/击落/切枪/冲刺姿态）
-- **诊断读取法**：`%APPDATA%\pfe\Local Store\#SharedObjects\mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf\MSWConfig.sol`（AMF 明文可 grep；计数器清单见原 HANDOFF §7，git 历史）
+- **诊断读取法**：`python build/tools/read_sol.py "%APPDATA%\pfe\Local Store\#SharedObjects\mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf\MSWConfig.sol"`——完整解析 AMF3 键值（格式规律沉淀在 shared-knowledge `knowledge-validation/methods/sol-diag-reading.md`）；diag 计数器跨会话累积、换机/换用户重置
 - **构建/部署**：`cd build && build.bat`（Animate mxmlc）；部署只需替换 release SWF；改 loader 走 FFDec 定向替换（备份 pfe_1.02_before_msw_merge_20260815.swf）
 - **共享知识贡献清单**：原 HANDOFF §6（bullet-wall-impact / explosion-blast-bullets / phisbullet-grenade-physics / runtime-weapon-creation / sats-trajectory-arc / pippageopt-overlay / mod-loader-patch-structure 等）
