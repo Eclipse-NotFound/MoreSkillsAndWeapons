@@ -2,6 +2,14 @@
 
 > 协议见 GOVERNANCE.md §8：只追加不改写，**新条目插在最上面**。
 
+## 2026-08-28（深夜） v1.2：模组面板迁入主菜单页 + 原版控件（D-046 v2）
+
+- 做了什么：按用户反馈重做——移除主页签栏按钮，"模组"按钮改为克隆 Opt 页（主菜单页）子按钮类挂 but5 旁（与载入/保存/选项/控制/记录并列）；设置行改为实例化 visPipOptItem（自带 fl.controls.CheckBox 复选框与 ScrollBar 滑块，与原版选项页同款控件），数值滑块拖动实时生效、关面板统一 save（防高频 flush，D-035 教训）；F6 在哔哔小马任意子页直接跳 Opt 页并展开面板（pip.onoff(5) public）。MSWPanel 移除文字宿主，模组面板纯鼠标交互。
+- 关键决定/发现：Opt 页复用 visPipInv 布局（class 名与物品页相同，按 (165,72)+可见 判定页视觉）；原版选项控件 = visPipOptItem 行自带 CheckBox/ScrollBar，同域下 new 即白嫖全套原生控件；游戏 setStatItems 会复显行 → 面板打开期间每帧压制。详见 decisions D-046 v2 修订。
+- 遗留/下一步：玩家实机点击验收（tabOn/tabOff）；D-044 落感 + 举枪/切枪触发确认；验收后重打 dist zip（当前 dist 是 v1.0）。
+
+---
+
 ## 2026-08-28（晚） v1.1：哔哔小马"模组"页签（D-046）
 
 - 做了什么：按用户需求把模组设置整合进哔哔小马主页签栏——新建 MSWPipTab（克隆 but5 页签类挂栏尾，点击后接管页面显示 pip 绿设置内容），MSWPanel 移除 PipPageOpt 叠加宿主改页签宿主，主类按键门控改页签 + F6 语义更新（pip 开着时 F6=开关页签）。build.bat/flex-config.xml 修复本机工具链路径（C 盘旧路径→D 盘 Animate 2024）。发布门禁走完（构建/版本标记 diagSet ver=1.1-piptab/部署/冒烟/D-046/记忆/提交）。

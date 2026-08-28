@@ -720,3 +720,19 @@
   点击接管（tabOn/内容显示）待玩家实机一次点击确认。
 - **发布**：v1.1，release SWF 18036 字节；回滚 = `git checkout 910cdce --
   release/MoreSkillsWeaponsMod.swf`（v1.0 构建）。
+
+### D-046 v2 修订（同日）：按钮迁入"主菜单"页 + 原版控件（2026-08-28 用户反馈）
+
+- **反馈**：v1 的按钮与"主菜单"按钮并列不对，应与主菜单页的
+  载入/保存/选项/控制/记录 并列；文字调整控件繁琐，要原版样式的按钮/滑块。
+- **修正**（关键新知识）：
+  - "主菜单"页 = PipPageOpt（pip 默认页 page=5），其子按钮是页 vis 内
+    `but1..but5`（`PipPage.page2Click` public），按钮类可克隆；
+  - 原版选项控件 = `visPipOptItem` 行自带 `fl.controls.CheckBox`（check）与
+    `fl.controls.ScrollBar` 充当滑块（scr，min/maxScrollPosition + "scroll" 事件）
+    ——同域加载下直接实例化 `visPipOptItem` 即可白嫖全套原生控件与样式；
+  - Opt 页复用 visPipInv 布局（class 名与物品页相同），页视觉定位
+    按"vpip 内 (165,72) 且当前可见"判定；
+  - 滑块拖动期不落盘（"scroll" 连续触发，flush 卡顿见 D-035），关面板统一 save。
+- **验证**：v1.2（19365 字节）冒烟通过：ver=1.2-optpanel、tabBuild=1
+  （主菜单态 pip 默认即 Opt 页，按钮+12 行控件构建成功）、心跳正常、无 lastErr。

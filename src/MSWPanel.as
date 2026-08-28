@@ -6,16 +6,14 @@ package
    import flash.utils.getQualifiedClassName;
 
    /**
-    * 设置面板：两个宿主，同一份状态。
+    * 设置面板：两个宿主，同一份配置。
     *
-    * 1) 哔哔小马"模组"页签（主，2026-08-28 起）：
-    *    PipBuck 主页签栏末尾克隆的"模组"页签（见 MSWPipTab），点击后整页
-    *    接管显示本面板内容（pip 绿透明风格，与原版页面一致）。取代原先
-    *    "叠加在 PipPageOpt 上的文字面板"（该方案已移除）。
-    *    页面 UI 纯鼠标驱动（PipPage/PipBuck 无键盘监听），方向键可安全消费。
+    * 1) 哔哔小马"模组"子页（主，2026-08-28 v2）：Opt 页子按钮栏的"模组"按钮
+    *    （见 MSWPipTab），点击后以原版控件（CheckBox/滑块）显示设置行。
+    *    取代 v1 的主页签栏按钮与文字面板。纯鼠标交互。
     *
-    * 2) F6 浮层宿主（辅）：挂在 World.w.main 左上角，纯游戏中快速调参。
-    *    pip 打开期间 F6 改为开/关"模组"页签，不再叠加浮层（避免两层 UI）。
+    * 2) F6 浮层宿主（辅）：挂在 World.w.main 左上角，纯游戏中快速调参（键盘）。
+    *    pip 打开期间 F6 = 开/关"模组"面板，浮层不叠加。
     */
    public class MSWPanel
    {
@@ -25,8 +23,7 @@ package
 
       private var sel:int = 0;
       private var tab:MSWPipTab;
-      private var pageTf:TextField = null; // 模组页签内容（pip 绿）
-      private var ovTf:TextField = null;   // F6 浮层内容（黑底白字框）
+      private var ovTf:TextField = null; // F6 浮层内容（黑底白字框）
 
       private static const ROWS:int = 12;
 
@@ -38,7 +35,7 @@ package
 
       // ---------------- 状态查询 ----------------
 
-      /** 原版选项页是否打开（诊断计数用；面板宿主已改模组页签）。 */
+      /** 原版选项页是否打开（诊断计数用）。 */
       public function pipPageActive(w:*):Boolean
       {
          if(w == null) return false;
@@ -57,13 +54,13 @@ package
          return false;
       }
 
-      /** 模组页签是否正接管显示。 */
+      /** 模组面板是否展开。 */
       public function tabActive():Boolean
       {
          return tab.isActive();
       }
 
-      /** pip 开着时 F6 开/关模组页签。 */
+      /** pip 开着时 F6 开/关模组面板。 */
       public function tabToggle(w:*):void
       {
          tab.toggle(w);
@@ -97,7 +94,7 @@ package
          return false;
       }
 
-      // ---------------- 按键 ----------------
+      // ---------------- 按键（F6 浮层用） ----------------
 
       /** 返回 true = 已消费。 */
       public function handleKey(code:int):Boolean
@@ -161,21 +158,9 @@ package
             catch(e0:*)
             {
             }
-            // pip 打开时不保留 F6 浮层（避免与哔哔小马 UI 叠加；F6 改开模组页签）
+            // pip 打开时不保留 F6 浮层（避免与哔哔小马 UI 叠加；F6 改开模组面板）
             if(pipOn && overlayOpen) overlayOpen = false;
             tab.update(w);
-            if(tab.isActive())
-            {
-               if(pageTf == null)
-               {
-                  pageTf = makePageTf();
-                  tab.bindContent(pageTf);
-               }
-            }
-            else if(pageTf != null)
-            {
-               pageTf["visible"] = false;
-            }
             if(overlayOpen)
             {
                var main:* = w["main"];
@@ -210,25 +195,6 @@ package
 
       // ---------------- 渲染 ----------------
 
-      /** 模组页签内容：透明底 pip 绿，贴原版页面观感。 */
-      private function makePageTf():TextField
-      {
-         var tf:TextField = new TextField();
-         var fmt:TextFormat = new TextFormat();
-         fmt.font = "SimHei";
-         fmt.size = 15;
-         fmt.color = 0x00FF99;
-         tf.defaultTextFormat = fmt;
-         tf.multiline = true;
-         tf.wordWrap = false;
-         tf.selectable = false;
-         tf.mouseEnabled = false;
-         tf.background = false;
-         tf.border = false;
-         tf.autoSize = TextFieldAutoSize.LEFT;
-         return tf;
-      }
-
       /** F6 浮层：黑底白字框（游戏中一眼可辨是模组 UI）。 */
       private function makeOverlayTf():TextField
       {
@@ -253,6 +219,7 @@ package
 
       private function refresh():void
       {
+         if(ovTf == null) return;
          var c:* = mod.cfg;
          var s:String = "";
          s += MSWWeapon.WEAPON_NAME + " 模组设置\n";
@@ -262,7 +229,7 @@ package
          s += (sel == 2 ? "> " : "  ") + "撞墙次数 : " + c.wallHits + "  (0=撞墙即爆)\n";
          s += (sel == 3 ? "> " : "  ") + "初速度   : " + c.muzzleVel + "  (10-100, 原版 35)\n";
          s += (sel == 4 ? "> " : "  ") + "反弹力度 : " + c.bounce.toFixed(1) + "  (0-1, 原版 0.4)\n";
-          s += (sel == 5 ? "> " : "  ") + "蹲/梯举枪 : " + (c.aimSkill ? "开" : "关") + "  (Shift+W)\n";
+         s += (sel == 5 ? "> " : "  ") + "蹲/梯举枪 : " + (c.aimSkill ? "开" : "关") + "  (Shift+W)\n";
          // 2026-08-17 自 Sandevistan 迁移（MSWProjHits / MSWSwaprun）
          s += (sel == 6 ? "> " : "  ") + "手雷击落 : " + (c.projHits ? "开" : "关") + "\n";
          s += (sel == 7 ? "> " : "  ") + "投掷物血量 : " + c.projHp + "\n";
@@ -271,8 +238,7 @@ package
          s += (sel == 10 ? "> " : "  ") + "散布恒定 : " + (c.spreadFix ? "开" : "关") + "  (仅榴弹炮)\n";
          s += (sel == 11 ? "> " : "  ") + "冲刺保持蹲/趴 : " + (c.dashKeepPose ? "开" : "关") + "  (魔法冲刺)\n";
          s += "←→/Enter 调整   ↑↓ 选择";
-         if(pageTf != null) pageTf["text"] = s;
-         if(ovTf != null) ovTf["text"] = s;
+         ovTf["text"] = s;
       }
    }
 }
