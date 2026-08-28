@@ -12,3 +12,4 @@ Thumbs.db
 *.log
 dist/
 build/pfe-patch/dist_build/
+build_out.txt
