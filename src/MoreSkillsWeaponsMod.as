@@ -110,6 +110,7 @@ package
          {
          }
          cfg.load();
+         cfg.diagSet("ver", "1.1-piptab"); // 发布门禁#2：线上构建指纹（read_sol 可读）
          weapon.injectXml();
          stage_.addEventListener(Event.ENTER_FRAME, onFrame, false, 0, true);
          stage_.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown, false, 0, true);
@@ -153,7 +154,7 @@ package
             trajectory.update(w); // SATS 弹道覆盖层
             aim.update(w);        // 蹲姿/梯子举枪
             dashpose.update(w);   // 2026-08-18 D-037/D-038：魔法冲刺保持蹲/趴姿
-            panel.update(w);      // 设置面板（哔哔小马设置页 + F6 浮层）
+            panel.update(w);      // 设置面板（哔哔小马"模组"页签 + F6 浮层）
          }
          catch(err:*)
          {
@@ -294,9 +295,9 @@ package
                cfg.diagAdd("hk" + e.keyCode);
             }
             var w:* = MSWU.world();
-            if(w != null && panel.pipPageActive(w))
+            if(w != null && panel.tabActive())
             {
-               // 哔哔小马设置页打开：方向键/回车直接调参；
+               // 模组页签接管中：方向键/回车直接调参；
                // 按键绑定对话框（visSetKey）显示期间不消费，避免干扰绑定。
                if(!panel.setkeyDialogVisible(w))
                {
@@ -307,13 +308,30 @@ package
                      return;
                   }
                }
-               // 设置页打开时热键不再切换浮层面板（避免两层叠加）
+               // F6 = 关闭模组页签（回到原页面）
                if(isHotKey(e.keyCode))
                {
+                  panel.tabToggle(w);
                   e.stopImmediatePropagation();
                   e.preventDefault();
                }
                return;
+            }
+            if(w != null)
+            {
+               var pip0:* = w["pip"];
+               if(pip0 != null && pip0["active"] == true)
+               {
+                  // 哔哔小马开着（任意页）：F6 = 打开"模组"页签。
+                  // （2026-08-28 整合：原方案是叠 F6 浮层/选项页面板，均已由模组页签取代）
+                  if(isHotKey(e.keyCode))
+                  {
+                     panel.tabToggle(w);
+                     e.stopImmediatePropagation();
+                     e.preventDefault();
+                  }
+                  return;
+               }
             }
             if(panel.overlayOpen)
             {

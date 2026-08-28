@@ -8,16 +8,14 @@ package
    /**
     * 设置面板：两个宿主，同一份状态。
     *
-    * 1) 哔哔小马（PipBuck）设置页宿主（主）：
-    *    检测 `pip.active && currentPage 是 fe.inter::PipPageOpt`（public 可读；
-    *    page2/internal 不可读，故不区分子页，页面顶部横幅对所有子页可见）。
-    *    挂到 `World.w.vpip`（public）内 (185,80)（页面 vis 位于 vpip 内
-    *    (165,72)，顶部 statHead 横幅在该页恒隐藏，此区域空闲）。
-    *    页面 UI 纯鼠标驱动（PipPage/PipBuck 无键盘监听），方向键可安全消费；
-    *    唯一例外是"按键绑定"对话框（visSetKey），显示期间不消费按键。
+    * 1) 哔哔小马"模组"页签（主，2026-08-28 起）：
+    *    PipBuck 主页签栏末尾克隆的"模组"页签（见 MSWPipTab），点击后整页
+    *    接管显示本面板内容（pip 绿透明风格，与原版页面一致）。取代原先
+    *    "叠加在 PipPageOpt 上的文字面板"（该方案已移除）。
+    *    页面 UI 纯鼠标驱动（PipPage/PipBuck 无键盘监听），方向键可安全消费。
     *
-    * 2) F8 浮层宿主（辅）：挂在 World.w.main 左上角。设置页打开时 F8 被忽略
-    *    （避免两个面板叠加）。
+    * 2) F6 浮层宿主（辅）：挂在 World.w.main 左上角，纯游戏中快速调参。
+    *    pip 打开期间 F6 改为开/关"模组"页签，不再叠加浮层（避免两层 UI）。
     */
    public class MSWPanel
    {
@@ -26,20 +24,21 @@ package
       public var overlayOpen:Boolean = false;
 
       private var sel:int = 0;
-      private var pipTf:TextField = null;
-      private var ovTf:TextField = null;
+      private var tab:MSWPipTab;
+      private var pageTf:TextField = null; // 模组页签内容（pip 绿）
+      private var ovTf:TextField = null;   // F6 浮层内容（黑底白字框）
 
       private static const ROWS:int = 12;
-      public static const KEY_F8:int = 119;
-      public static const PAGE_QNAME:String = "fe.inter::PipPageOpt";
 
       public function MSWPanel(m:*)
       {
          mod = m;
+         tab = new MSWPipTab(m);
       }
 
-      // ---------------- 检测 ----------------
+      // ---------------- 状态查询 ----------------
 
+      /** 原版选项页是否打开（诊断计数用；面板宿主已改模组页签）。 */
       public function pipPageActive(w:*):Boolean
       {
          if(w == null) return false;
@@ -49,13 +48,25 @@ package
          if(page == null) return false;
          try
          {
-            return getQualifiedClassName(page) == PAGE_QNAME;
+            return getQualifiedClassName(page) == "fe.inter::PipPageOpt";
          }
          catch(e:*)
          {
             return false;
          }
          return false;
+      }
+
+      /** 模组页签是否正接管显示。 */
+      public function tabActive():Boolean
+      {
+         return tab.isActive();
+      }
+
+      /** pip 开着时 F6 开/关模组页签。 */
+      public function tabToggle(w:*):void
+      {
+         tab.toggle(w);
       }
 
       /** 按键绑定对话框（visSetKey）是否可见：可见期间不消费键盘。 */
@@ -142,38 +153,35 @@ package
          try
          {
             if(w == null) return;
-            var pipOn:Boolean = pipPageActive(w);
-            if(pipOn)
+            var pipOn:Boolean = false;
+            try
             {
-               var vpip:* = w["vpip"];
-               if(vpip != null)
+               pipOn = w["pip"] != null && w["pip"]["active"] == true;
+            }
+            catch(e0:*)
+            {
+            }
+            // pip 打开时不保留 F6 浮层（避免与哔哔小马 UI 叠加；F6 改开模组页签）
+            if(pipOn && overlayOpen) overlayOpen = false;
+            tab.update(w);
+            if(tab.isActive())
+            {
+               if(pageTf == null)
                {
-                  if(pipTf == null) pipTf = makeTf();
-                  if(pipTf["parent"] != vpip)
-                  {
-                     try
-                     {
-                        vpip.addChild(pipTf);
-                     }
-                     catch(e:*)
-                     {
-                     }
-                  }
-                  pipTf["visible"] = true;
-                  pipTf["x"] = 185;
-                  pipTf["y"] = 80;
+                  pageTf = makePageTf();
+                  tab.bindContent(pageTf);
                }
             }
-            else if(pipTf != null)
+            else if(pageTf != null)
             {
-               pipTf["visible"] = false;
+               pageTf["visible"] = false;
             }
             if(overlayOpen)
             {
                var main:* = w["main"];
                if(main != null)
                {
-                  if(ovTf == null) ovTf = makeTf();
+                  if(ovTf == null) ovTf = makeOverlayTf();
                   if(ovTf["parent"] != main)
                   {
                      try
@@ -202,7 +210,27 @@ package
 
       // ---------------- 渲染 ----------------
 
-      private function makeTf():TextField
+      /** 模组页签内容：透明底 pip 绿，贴原版页面观感。 */
+      private function makePageTf():TextField
+      {
+         var tf:TextField = new TextField();
+         var fmt:TextFormat = new TextFormat();
+         fmt.font = "SimHei";
+         fmt.size = 15;
+         fmt.color = 0x00FF99;
+         tf.defaultTextFormat = fmt;
+         tf.multiline = true;
+         tf.wordWrap = false;
+         tf.selectable = false;
+         tf.mouseEnabled = false;
+         tf.background = false;
+         tf.border = false;
+         tf.autoSize = TextFieldAutoSize.LEFT;
+         return tf;
+      }
+
+      /** F6 浮层：黑底白字框（游戏中一眼可辨是模组 UI）。 */
+      private function makeOverlayTf():TextField
       {
          var tf:TextField = new TextField();
          var fmt:TextFormat = new TextFormat();
@@ -243,7 +271,7 @@ package
          s += (sel == 10 ? "> " : "  ") + "散布恒定 : " + (c.spreadFix ? "开" : "关") + "  (仅榴弹炮)\n";
          s += (sel == 11 ? "> " : "  ") + "冲刺保持蹲/趴 : " + (c.dashKeepPose ? "开" : "关") + "  (魔法冲刺)\n";
          s += "←→/Enter 调整   ↑↓ 选择";
-         if(pipTf != null) pipTf["text"] = s;
+         if(pageTf != null) pageTf["text"] = s;
          if(ovTf != null) ovTf["text"] = s;
       }
    }

@@ -695,3 +695,28 @@
   `dist/` 与 `build/pfe-patch/dist_build/` 已加入 .gitignore（15MB 二进制不入库）。
 - **注意**：分发版 pfe 基于 1.02；接收方版本需匹配；Steam 校验文件会还原
   pfe.swf 需重覆盖；本包不含其他模组 loader，勿与其他 pfe 补丁混用。
+
+## D-046 哔哔小马"模组"页签：克隆页签按钮 + 自行接管页面（2026-08-28）
+
+- **需求**：用户要求把模组设置整合进哔哔小马既有界面——在主页签栏新开一个
+  "模组"栏存放模组设置（取代原 PipPageOpt 叠加面板方案）。
+- **约束**：`PipBuck.pages/page/kolPages/vis` 均 internal（D-039：#1069），
+  无法把自定义 PipPage 注册进 pages 数组——"真页面"路线不可行。
+- **做法（纯模组侧，零游戏文件改动）**：
+  - 页签栏 = `pip.vis`（= `World.w.vpip`，public）下 `but0..but5`；loader 同域
+    加载 → `getDefinitionByName(getQualifiedClassName(but5))` 克隆页签按钮类，
+    `new` 实例改名"模组"，`x = but5.x + but5.width + 2`，挂进 vpip。
+  - 点击后自行接管：隐藏 vpip 下非 chrome 可见子级（页面视觉是匿名
+    instance* 子级；具名件与 visSetKey/visPipHelp 算 chrome）、本页签
+    `gotoAndStop(2)` 高亮 + 其余 `gotoAndStop(1)`、`pip.snd(2)` 原版音效、
+    显示 pip 绿内容（`PipPage.setStyle` 主色 #00FF99 + SimHei）。
+  - 失活：点原版页签（后挂监听在游戏 pageClick 之后跑；已切页则不恢复旧页
+    ——`PipPage.setStatus` 会自己重显页面）/ pip 关闭 / currentPage 引用变化
+    / 再点本页签或 F6。恢复仅限"未切页的失活"（F6/重点击），防止复活旧页。
+  - 键盘：模组页签激活时方向键/回车调参（原 Opt 页门控改页签门控）；
+    pip 开着时 F6 = 开/关模组页签（原 F6 叠浮层方案废止）。
+- **验证**：门禁 #3 冒烟（pfe-msw-test 隔离实例）：loader 无错、
+  `ver=1.1-piptab`、frames 心跳、`tabBuild=1`（页签构建成功）、无 lastErr。
+  点击接管（tabOn/内容显示）待玩家实机一次点击确认。
+- **发布**：v1.1，release SWF 18036 字节；回滚 = `git checkout 910cdce --
+  release/MoreSkillsWeaponsMod.swf`（v1.0 构建）。

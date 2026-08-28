@@ -2,6 +2,14 @@
 
 > 协议见 GOVERNANCE.md §8：只追加不改写，**新条目插在最上面**。
 
+## 2026-08-28（晚） v1.1：哔哔小马"模组"页签（D-046）
+
+- 做了什么：按用户需求把模组设置整合进哔哔小马主页签栏——新建 MSWPipTab（克隆 but5 页签类挂栏尾，点击后接管页面显示 pip 绿设置内容），MSWPanel 移除 PipPageOpt 叠加宿主改页签宿主，主类按键门控改页签 + F6 语义更新（pip 开着时 F6=开关页签）。build.bat/flex-config.xml 修复本机工具链路径（C 盘旧路径→D 盘 Animate 2024）。发布门禁走完（构建/版本标记 diagSet ver=1.1-piptab/部署/冒烟/D-046/记忆/提交）。
+- 关键决定/发现：PipBuck.pages 等均 internal，"真页面"不可行 → 克隆页签按钮 + 自行接管（隐藏 vpip 非 chrome 子级，切页失活时靠 PipPage.setStatus 自恢复）。冒烟（pfe-msw-test 隔离实例）：loader 无错、tabBuild=1（页签构建成功）、心跳正常、无 lastErr。
+- 遗留/下一步：玩家实机点击页签验收（读 tabOn/tabOff）；D-044 落感 + 举枪/切枪触发确认；验收后重打 dist zip（当前 dist 是 v1.0）。
+
+---
+
 ## 2026-08-28 诊断复核 + SOL 解析工具 + 知识提升
 
 - 做了什么：逐字节破解本机 Flash 写出的 .sol（AMF3 方言：顶层名 2 字节变长 / 回引用表空串不入表 / 文件尾 0x00），落地解析器 `build/tools/read_sol.py`；实机诊断复核——D-044 补重力实机触发 6 次、击落 projHit/projBoom=2/2、kdashSeen=399、ricochet bounce=159（玩家迁移新机后持续游玩中）；shared-knowledge 七篇 discoveries 提升 facts（bullet-wall-impact / explosion-blast-bullets / phisbullet-grenade-physics / runtime-weapon-creation / sats-trajectory-arc / pippageopt-overlay / mod-loader-patch-structure），修正 2 处库内交叉引用 + swf-patching 技能路径。
