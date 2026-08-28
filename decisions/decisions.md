@@ -736,3 +736,25 @@
   - 滑块拖动期不落盘（"scroll" 连续触发，flush 卡顿见 D-035），关面板统一 save。
 - **验证**：v1.2（19365 字节）冒烟通过：ver=1.2-optpanel、tabBuild=1
   （主菜单态 pip 默认即 Opt 页，按钮+12 行控件构建成功）、心跳正常、无 lastErr。
+
+### D-046 v2.1/v2.3 加固（2026-08-29）：实机排查"主菜单找不到模组设置"
+
+- **现象**：v1.2 在玩家实机的主菜单页里没有"模组"按钮；SOL 里
+  `tabBuild=2`（陈旧值）曾误导冒烟结论，`lastErr=pipTab:#1010` 为更早会话遗留。
+- **根因**（运行时探针实证，见 shared-knowledge
+  ui-systems/discoveries/pip-ui-localized-structure.md）：
+  v1.2 的 findOptVis 要求页面视觉类名含 "visPip" 且位于 (165,72)——
+  实机页面视觉确实是 visPipInv@165,72（9 个），但 v1.2 冒烟的
+  "tabBuild=1" 是 TDFC 自动驱动测试实例进游戏后的**陈旧 SOL 值**，
+  实际在玩家会话中 findOptVis 从未成功（构建从未执行）。次级风险：
+  汉化补丁把主栏按钮类改名为 ButPage_1536，硬编码类名/坐标不可靠。
+- **修正**（v1.2.3）：
+  - findOptVis 改为按**结构特征**定位：vpip 下"可见且含具名 but1/but5
+    子件"的子级（探针 *PAGE 标记已验证 9 个页面全部命中）；
+  - 行类优先从页面现成无名内容行（含 nazv 子件者）克隆，不再硬查符号名；
+  - 全链路 null 安全 + 分阶段 lastErr（pipTab.stage0-5）+ tabStage/tabSnap/
+    tabProbe 诊断落 SOL；行构建失败自动回退 pip 绿文字面板；
+  - 坐标匹配放宽至 ±2px。
+- **验证**：全新 SOL 冒烟——ver=1.2.3、tabProbe 的 *PAGE 标记全中、
+  标题态不构建（页面视觉全隐藏，符合预期）；进游戏后的构建/显示
+  待玩家一次实机复现（诊断已可全链路定位）。

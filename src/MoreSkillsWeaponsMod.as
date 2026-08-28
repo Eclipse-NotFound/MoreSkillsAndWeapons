@@ -110,7 +110,7 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.2-optpanel"); // 发布门禁#2：线上构建指纹（read_sol 可读）
+         cfg.diagSet("ver", "1.2.3-optpanel"); // 发布门禁#2：线上构建指纹（read_sol 可读）
          weapon.injectXml();
          stage_.addEventListener(Event.ENTER_FRAME, onFrame, false, 0, true);
          stage_.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown, false, 0, true);
