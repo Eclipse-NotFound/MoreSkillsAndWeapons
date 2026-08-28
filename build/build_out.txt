@@ -1,0 +1,3 @@
+正在加载配置文件“D:\Program Files\Steam\steamapps\common\Remains\mods\MoreSkills&Weapons\build\flex-config.xml”
+D:\Program Files\Steam\steamapps\common\Remains\mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf（22154 字节）
+[OK] MoreSkillsWeaponsMod.swf built

@@ -758,3 +758,24 @@
 - **验证**：全新 SOL 冒烟——ver=1.2.3、tabProbe 的 *PAGE 标记全中、
   标题态不构建（页面视觉全隐藏，符合预期）；进游戏后的构建/显示
   待玩家一次实机复现（诊断已可全链路定位）。
+
+### D-046 v2.5 定稿（2026-08-29）：自绘按钮 + fl.controls 原版组件
+
+- **决定性实验**：模组内自动驱动（MSWAutoTest，appid≠pfe 才激活）把测试实例
+  开进游戏并打开主菜单页，配合截图与 snap 诊断：克隆按钮 `wh=0x0`（空壳实锤）
+  → 弃克隆；自绘按钮 `wh=140x33` 正常渲染；自动派发 CLICK → `tabOn=1`；
+  截图确认：模组按钮入列、12 行设置全部可见，CheckBox/ScrollBar 为原版组件
+  观感，滑块位置与配置值一致。
+- **定稿方案**：
+  - 按钮：自绘（绿框深底 140x33，两态高亮），尺寸取 but5 实测宽高，位置
+    but5 右侧 +2；
+  - 行：MovieClip 容器（Sprite 密封挂不了动态属性，#1056）+ 深底 700x28 +
+    SimHei 标签；开关 = fl.controls.CheckBox（"change"），数值 = 
+    fl.controls.ScrollBar 横向（min/maxScrollPosition + "scroll"，拖动实时
+    生效、关面板统一 save）；组件类取不到时手绘开关/◀▶步进兜底；
+  - 值换算：dropRate/bounce ×10，muzzleVel -10，projHp (v-1)/5，projArmor /5。
+- **测试基建**：MSWAutoTest 常驻（用户实例零影响）：自动开档 →
+  pip.onoff(5) 开主菜单页 → debugClick 派发真实点击；为后续 UI 迭代提供
+  "全自动复现 + 截图 + SOL 断言"闭环。
+- **验证**：全自动链路全绿（ver=1.2.5 / tabBuild=1 / tabOn=1 / 无 lastErr /
+  截图人审通过）。

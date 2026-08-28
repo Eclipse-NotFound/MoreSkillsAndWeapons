@@ -66,6 +66,12 @@ package
          tab.toggle(w);
       }
 
+      /** 自动测试用：对模组按钮派发真实点击。 */
+      public function debugClick():void
+      {
+         tab.debugClick();
+      }
+
       /** 按键绑定对话框（visSetKey）是否可见：可见期间不消费键盘。 */
       public function setkeyDialogVisible(w:*):Boolean
       {

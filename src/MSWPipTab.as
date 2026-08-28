@@ -1,39 +1,43 @@
 package
 {
+   import flash.display.MovieClip;
+   import flash.display.Sprite;
    import flash.events.MouseEvent;
-   import flash.text.TextFormat;
    import flash.text.TextField;
    import flash.text.TextFieldAutoSize;
+   import flash.text.TextFormat;
+   import flash.geom.Point;
    import flash.utils.getDefinitionByName;
-   import flash.utils.getQualifiedClassName;
 
    /**
-    * 哔哔小马"模组"子页按钮 + 原版控件设置面板（v2.1，加固版）。
+    * 哔哔小马"模组"子页按钮 + 设置面板（v1.2.5，全自绘控件）。
     *
-    * 机制与 v2 相同（见 decisions D-046 v2），v2.1 加固（2026-08-28 实机
-    * `pipTab:TypeError #1010` 排查）：
-    * - 行类不再 getDefinitionByName 硬查符号名，而是**克隆 Opt 页现成的游戏行**
-    *   （页面内容行的类就是 visPipOptItem，克隆其 constructor 类必然可得）；
-    * - 所有子件访问 null 安全（缺子件跳过该子件而不是 #1010）；
-    * - 行构建失败时回退 v1 式 pip 绿文字面板（保证"至少能看到设置"）；
-    * - update 各阶段独立 try/catch，lastErr 带阶段前缀 + getStackTrace 落 SOL，
-    *   关键状态快照存 diag（tabStage/tabSnap），实机问题可离线诊断。
+    * 教训链（decisions D-046）：汉化补丁把游戏 UI 符号类改名（ButPage_1536），
+    * 且 new 其类得到的是零尺寸空壳（美术靠运行时初始化）——**克隆游戏类不可行**。
+    * v1.2.5 改为：
+    * - 按钮自绘（绿框深底 + SimHei 文字，两态高亮），尺寸取自 but5 实测宽高；
+    * - 控件行自绘容器 + fl.controls.CheckBox / fl.controls.ScrollBar（原版
+    *   选项页的组件类，自带程序化皮肤，反编译确认在 SWF 内，同域可实例化）；
+    * - 组件类不可用时退化为手绘开关/步进按钮；
+    * - 页面视觉按结构特征定位（含具名 but1/but5 的可见子级，与类名坐标无关）；
+    * - 全链路 null 安全 + 分阶段诊断（pipTab.stageN/tabStage/tabSnap/tabProbe）。
     */
    public class MSWPipTab
    {
       private var mod:*;
 
       private var built:Boolean = false;
-      private var myBut:* = null;          // "模组"子按钮（克隆 Opt 子按钮类）
-      private var head:* = null;           // 标题行
-      private var rows:Array = null;       // 设置行（visPipOptItem 克隆）
-      private var rowsOk:Boolean = false;  // 行构建是否成功（失败则用文字兜底）
-      private var fbTf:TextField = null;   // 文字兜底面板
+      private var myBut:Sprite = null;     // "模组"按钮（自绘）
+      private var myButHi:Sprite = null;   // 高亮层（显示 = 高亮态）
+      private var head:* = null;           // 标题 TextField
+      private var rows:Array = null;       // 设置行容器（Sprite）
+      private var rowsOk:Boolean = false;
       private var panelOpen:Boolean = false;
       private var hiddenVis:Array = null;
       private var cfgDirty:Boolean = false;
       private var cachedVpip:* = null;
 
+      // key / 标签 / "check"|"slider" / 滑块最小刻度 / 最大刻度 / 提示
       private static const SPEC:Array = [
          ["ricochet",     "跳弹技能",      "check",  0,   0,   ""],
          ["dropRate",     "下坠速率",      "slider", 0,  30,   "0.1步进 0-3"],
@@ -59,6 +63,22 @@ package
          return panelOpen;
       }
 
+      /** 自动测试用：对按钮派发真实 CLICK（走 onButClick 完整路径）。 */
+      public function debugClick():void
+      {
+         if(myBut == null) return;
+         myBut.dispatchEvent(new MouseEvent(MouseEvent.CLICK));
+      }
+
+      /** 自动测试用：强制挪按钮位置做渲染判别实验。 */
+      public function debugPlace(x:Number, y:Number):void
+      {
+         if(myBut == null) return;
+         myBut["x"] = x;
+         myBut["y"] = y;
+         snap();
+      }
+
       // ---------------- 诊断 ----------------
 
       private function err(prefix:String, e:*):void
@@ -78,13 +98,64 @@ package
       {
          try
          {
-            mod.cfg.diagSet("tabSnap", "but=" + (myBut == null ? "null" : myBut["x"] + "," + myBut["y"] + ",v" + myBut["visible"] + ",p" + (myBut["parent"] != null)) +
+            var s:String = "but=" + (myBut == null ? "null" : myBut["x"] + "," + myBut["y"] + ",v" + myBut["visible"]) +
                " rows=" + (rows == null ? "null" : rows.length) +
-               " rowsOk=" + rowsOk + " open=" + panelOpen);
+               " rowsOk=" + rowsOk + " open=" + panelOpen;
+            try
+            {
+               var pt:* = new flash.geom.Point(myBut["x"], myBut["y"]);
+               pt = myBut["localToGlobal"](pt);
+               s += " g=" + int(pt["x"]) + "," + int(pt["y"]);
+            }
+            catch(e1:*)
+            {
+            }
+            try
+            {
+               s += " wh=" + int(myBut["width"]) + "x" + int(myBut["height"]);
+            }
+            catch(e1b:*)
+            {
+            }
+            try
+            {
+               var ov:* = myBut == null ? null : myBut["parent"];
+               if(ov != null) s += " sr=" + ov["scrollRect"] + " mask=" + (ov["mask"] != null);
+            }
+            catch(e2:*)
+            {
+            }
+            mod.cfg.diagSet("tabSnap", s);
          }
          catch(e:*)
          {
          }
+      }
+
+      private function qname(o:*):String
+      {
+         try
+         {
+            return flash.utils.getQualifiedClassName(o);
+         }
+         catch(e:*)
+         {
+         }
+         return "";
+      }
+
+      private function mainVpip():*
+      {
+         if(cachedVpip != null) return cachedVpip;
+         try
+         {
+            var w:* = MSWU.world();
+            if(w != null) cachedVpip = w["vpip"];
+         }
+         catch(e:*)
+         {
+         }
+         return cachedVpip;
       }
 
       // ---------------- 每帧 ----------------
@@ -132,7 +203,7 @@ package
          try
          {
             ov = findOptVis(w);
-            if(ov == null && !built) probeVpip(w); // 实机诊断：为何找不到页面视觉
+            if(ov == null && !built) probeVpip(w);
          }
          catch(e3:*)
          {
@@ -202,10 +273,8 @@ package
          for(var i:int = 0; i < n; i++)
          {
             var c:* = vpip["getChildAt"](i);
-            if(c == myBut || c == head || c == fbTf || isMine(c)) continue;
+            if(c == myBut || c == head || isMine(c)) continue;
             if(c["visible"] != true) continue;
-            // 页面视觉的可靠特征：内部有子页按钮 but1..but5（具名子件），
-            // 与类名/坐标无关（汉化补丁重命名了 UI 类：实测为 ButPage_1536 系）
             try
             {
                if(c["getChildByName"]("but1") == null) continue;
@@ -220,12 +289,24 @@ package
          return null;
       }
 
-      /** 诊断：在 Opt 页却找不到页面视觉时，把 vpip 子级清单写进 SOL（一次性覆盖写）。 */
+      private function isMine(c:*):Boolean
+      {
+         if(rows != null)
+         {
+            for(var i:int = 0; i < rows.length; i++)
+            {
+               if(rows[i] === c) return true;
+            }
+         }
+         return false;
+      }
+
+      /** 诊断：在 Opt 页却找不到页面视觉时，把 vpip 子级清单写进 SOL。 */
       private function probeVpip(w:*):void
       {
          try
          {
-            if(mod.cfg.diag["tabProbe"] != null) return; // 只记首次
+            if(mod.cfg.diag["tabProbe"] != null) return;
          }
          catch(e0:*)
          {
@@ -261,42 +342,35 @@ package
          }
       }
 
-      private function isMine(c:*):Boolean
+      // ---------------- 自绘按钮 ----------------
+
+      private static const COL_BORDER:int = 0x1E8C5A;
+      private static const COL_BORDER_HI:int = 0x00FF99;
+      private static const COL_FILL:int = 0x03170E;
+      private static const COL_FILL_HI:int = 0x0A3A24;
+
+      private function drawButtonFace(g:*, w:Number, h:Number, hi:Boolean):void
       {
-         if(rows != null)
-         {
-            for(var i:int = 0; i < rows.length; i++)
-            {
-               if(rows[i] === c) return true;
-            }
-         }
-         return false;
+         g.clear();
+         g.beginFill(hi ? COL_FILL_HI : COL_FILL, 0.92);
+         g.lineStyle(2, hi ? COL_BORDER_HI : COL_BORDER, 1);
+         g.drawRect(0, 0, w, h);
+         g.endFill();
       }
 
-      private function qname(o:*):String
+      private function makeLabel(text:String, size:int, color:int):TextField
       {
-         try
-         {
-            return getQualifiedClassName(o);
-         }
-         catch(e:*)
-         {
-         }
-         return "";
-      }
-
-      private function mainVpip():*
-      {
-         if(cachedVpip != null) return cachedVpip;
-         try
-         {
-            var w:* = MSWU.world();
-            if(w != null) cachedVpip = w["vpip"];
-         }
-         catch(e:*)
-         {
-         }
-         return cachedVpip;
+         var tf:TextField = new TextField();
+         var fmt:TextFormat = new TextFormat();
+         fmt.font = "SimHei";
+         fmt.size = size;
+         fmt.color = color;
+         tf.defaultTextFormat = fmt;
+         tf.text = text;
+         tf.selectable = false;
+         tf.mouseEnabled = false;
+         tf.autoSize = TextFieldAutoSize.LEFT;
+         return tf;
       }
 
       // ---------------- 构建 ----------------
@@ -306,54 +380,43 @@ package
          if(built) return;
          mod.cfg.diagSet("tabStage", "build");
          var b5:* = ov["getChildByName"]("but5");
+         var bw:Number = 120;
+         var bh:Number = 34;
          if(b5 != null)
          {
-            var cls:Class = null;
             try
             {
-               cls = getDefinitionByName(getQualifiedClassName(b5)) as Class;
+               if(Number(b5["width"]) > 40) bw = Number(b5["width"]);
+               if(Number(b5["height"]) > 14) bh = Number(b5["height"]);
             }
-            catch(eb:*)
+            catch(e0:*)
             {
-            }
-            if(cls != null)
-            {
-               var t:* = new cls();
-               t["mouseChildren"] = false;
-               if(t["id"] != null)
-               {
-                  t["id"]["visible"] = false;
-                  t["id"]["text"] = "msw";
-               }
-               var lt:* = t["text"];
-               if(lt != null)
-               {
-                  try
-                  {
-                     lt["defaultTextFormat"] = lt["getTextFormat"]();
-                  }
-                  catch(e1:*)
-                  {
-                     try
-                     {
-                        var f2:TextFormat = new TextFormat();
-                        f2.font = "SimHei";
-                        f2.size = 13;
-                        lt["defaultTextFormat"] = f2;
-                     }
-                     catch(e2:*)
-                     {
-                     }
-                  }
-                  lt["text"] = "模组";
-               }
-               t["x"] = b5["x"] + b5["width"] + 2;
-               t["y"] = b5["y"];
-               t.addEventListener(MouseEvent.CLICK, onButClick);
-               ov["addChild"](t);
-               myBut = t;
             }
          }
+         myBut = new Sprite();
+         myButHi = new Sprite();
+         drawButtonFace(myButHi["graphics"], bw, bh, true);
+         drawButtonFace(myBut["graphics"], bw, bh, false);
+         myButHi["visible"] = false;
+         var lt:TextField = makeLabel("模组", 15, 0xE8FFE8);
+         lt["x"] = (bw - lt["width"]) / 2;
+         lt["y"] = (bh - lt["height"]) / 2;
+         myBut["addChild"](myButHi);
+         myBut["addChild"](lt);
+         myBut["mouseChildren"] = false;
+         myBut["buttonMode"] = true;
+         if(b5 != null)
+         {
+            myBut["x"] = Number(b5["x"]) + bw + 2;
+            myBut["y"] = Number(b5["y"]);
+         }
+         else
+         {
+            myBut["x"] = 30;
+            myBut["y"] = 40;
+         }
+         myBut.addEventListener(MouseEvent.CLICK, onButClick);
+         ov["addChild"](myBut);
          var vpip:* = mainVpip();
          for(var j:int = 0; j <= 5; j++)
          {
@@ -371,161 +434,148 @@ package
          snap();
       }
 
-      /** 行类来源：优先克隆 Opt 页现成内容行（无名 instance* 子级中带 nazv 子件的）。
-       *  汉化补丁可能重命名了符号类（实测按钮类为 ButPage_1536 系），
-       *  硬查 visPipOptItem 不可靠。 */
-      private function rowDonorClass(ov:*):Class
-      {
-         var n:int = ov["numChildren"];
-         for(var i:int = 0; i < n; i++)
-         {
-            var c:* = ov["getChildAt"](i);
-            if(c == myBut || c == head || c == fbTf) continue;
-            if(isChrome(c)) continue;
-            try
-            {
-               if(c["getChildByName"] == null) continue;
-               if(c["getChildByName"]("nazv") != null) return c["constructor"] as Class;
-            }
-            catch(e:*)
-            {
-            }
-         }
-         return null;
-      }
-
       private function buildRows(ov:*):void
       {
-         var itemCls:Class = rowDonorClass(ov);
-         if(itemCls == null)
-         {
-            try
-            {
-               itemCls = getDefinitionByName("visPipOptItem") as Class;
-            }
-            catch(e0:*)
-            {
-            }
-         }
-         rows = [];
-         if(itemCls != null)
-         {
-            try
-            {
-               buildWidgetRows(ov, itemCls);
-            }
-            catch(er:*)
-            {
-               err("pipTab.buildRows", er);
-               snap();
-            }
-         }
-         if(rows.length < SPEC.length)
-         {
-            // 兜底：pip 绿文字面板（至少设置可见可用）
-            rowsOk = false;
-            mod.cfg.diagSet("tabStage", "fallback");
-            try
-            {
-               fbTf = makeFallbackTf();
-               ov["addChild"](fbTf);
-               fbTf["visible"] = false;
-               refreshFallback();
-            }
-            catch(ef:*)
-            {
-               err("pipTab.fallback", ef);
-            }
-         }
-         else
-         {
-            rowsOk = true;
-            setRowsVisible(false);
-         }
-      }
-
-      private function buildWidgetRows(ov:*, itemCls:Class):void
-      {
-         head = new itemCls();
-         initRow(head);
-         show(head, "back", true);
-         setText(head, "nazv", "模组设置  MoreSkills&Weapons");
+         head = makeLabel(MSWWeapon.WEAPON_NAME + "  模组设置", 17, 0x00FF99);
          head["x"] = 30;
-         head["y"] = 70;
+         head["y"] = 66;
+         head["visible"] = false;
          ov["addChild"](head);
+         rows = [];
          for(var i:int = 0; i < SPEC.length; i++)
          {
-            var r:* = new itemCls();
-            initRow(r);
+            var r:MovieClip = new MovieClip();
             r["x"] = 30;
             r["y"] = 100 + i * 30;
+            var bg:Sprite = new Sprite();
+            bg["graphics"].beginFill(0x000000, 0.45);
+            bg["graphics"].drawRect(0, 0, 700, 28);
+            bg["graphics"].endFill();
+            bg["mouseEnabled"] = false;
+            r["addChild"](bg);
             var key:String = SPEC[i][0];
-            setText(r, "nazv", SPEC[i][1]);
+            var lt:TextField = makeLabel(SPEC[i][1], 15, 0x9FE8C8);
+            lt["x"] = 10;
+            lt["y"] = 4;
+            r["addChild"](lt);
             r["mswKey"] = key;
             r["mswHint"] = SPEC[i][5];
-            var cb:* = r["check"];
-            var sc:* = r["scr"];
-            if(SPEC[i][2] == "check" && cb != null)
-            {
-               show(r, "check", true);
-               cb["selected"] = mod.cfg[key] == true;
-               cb["addEventListener"]("change", onCheck);
-            }
-            else if(SPEC[i][2] == "slider" && sc != null)
-            {
-               show(r, "scr", true);
-               sc["minScrollPosition"] = SPEC[i][3];
-               sc["maxScrollPosition"] = SPEC[i][4];
-               sc["scrollPosition"] = posOf(key);
-               sc["addEventListener"]("scroll", onScroll);
-               setText(r, "numb", valText(key));
-            }
+            if(SPEC[i][2] == "check") buildCheck(r, key);
+            else buildSlider(r, key, SPEC[i][3], SPEC[i][4]);
+            r["visible"] = false;
             ov["addChild"](r);
             rows[rows.length] = r;
          }
+         rowsOk = rows.length == SPEC.length;
+         setRowsVisible(false);
       }
 
-      private function initRow(r:*):void
+      private function buildCheck(r:Sprite, key:String):void
       {
+         var cb:* = null;
          try
          {
-            var st:* = getDefinitionByName("fe.inter::PipPage") as Class;
-            if(st != null && r["nazv"] != null) st["setStyle"](r["nazv"]);
+            var cls:Class = getDefinitionByName("fl.controls::CheckBox") as Class;
+            if(cls != null) cb = new cls();
          }
-         catch(e:*)
+         catch(e0:*)
          {
          }
-         show(r, "id", false);
-         show(r, "scr", false);
-         show(r, "check", false);
-         show(r, "key1", false);
-         show(r, "key2", false);
-         show(r, "ramka", false);
-         setText(r, "land", "");
-         setText(r, "ggName", "");
-         setText(r, "numb", "");
+         if(cb != null)
+         {
+            cb["selected"] = mod.cfg[key] == true;
+            cb["x"] = 560;
+            cb["y"] = 3;
+            cb["addEventListener"]("change", onCheck);
+            r["addChild"](cb);
+         }
+         else
+         {
+            // 手绘开关（组件不可用时）
+            var box:MovieClip = new MovieClip();
+            drawToggle(box, mod.cfg[key] == true);
+            box["x"] = 570;
+            box["y"] = 4;
+            box["buttonMode"] = true;
+            box["mswKey"] = key;
+            box.addEventListener(MouseEvent.CLICK, onHandToggle);
+            r["addChild"](box);
+         }
       }
 
-      private function show(obj:*, name:String, v:Boolean):void
+      private function drawToggle(box:Sprite, on:Boolean):void
       {
-         try
+         box["graphics"].clear();
+         box["graphics"].lineStyle(2, on ? COL_BORDER_HI : COL_BORDER, 1);
+         box["graphics"].beginFill(on ? COL_FILL_HI : COL_FILL, 1);
+         box["graphics"].drawRect(0, 0, 20, 20);
+         box["graphics"].endFill();
+         if(on)
          {
-            if(obj[name] != null) obj[name]["visible"] = v;
-         }
-         catch(e:*)
-         {
+            box["graphics"].lineStyle(3, 0x00FF99, 1);
+            box["graphics"].moveTo(4, 10);
+            box["graphics"].lineTo(9, 15);
+            box["graphics"].lineTo(16, 5);
          }
       }
 
-      private function setText(obj:*, name:String, s:String):void
+      private function buildSlider(r:Sprite, key:String, min:Number, max:Number):void
       {
+         var sc:* = null;
          try
          {
-            if(obj[name] != null) obj[name]["text"] = s;
+            var cls:Class = getDefinitionByName("fl.controls::ScrollBar") as Class;
+            if(cls != null) sc = new cls();
          }
-         catch(e:*)
+         catch(e0:*)
          {
          }
+         var numb:TextField = makeLabel(valText(key) + (r["mswHint"] != "" ? "  " + r["mswHint"] : ""), 13, 0xE8FFE8);
+         numb["x"] = 560;
+         numb["y"] = 5;
+         r["addChild"](numb);
+         r["mswNumb"] = numb;
+         if(sc != null)
+         {
+            sc["direction"] = "horizontal";
+            sc["width"] = 200;
+            sc["height"] = 18;
+            sc["x"] = 330;
+            sc["y"] = 5;
+            sc["minScrollPosition"] = min;
+            sc["maxScrollPosition"] = max;
+            sc["scrollPosition"] = posOf(key);
+            sc["addEventListener"]("scroll", onScroll);
+            r["addChild"](sc);
+         }
+         else
+         {
+            // 手绘步进：◀ ▶
+            var less:Sprite = miniBtn("◀", 330);
+            var more:Sprite = miniBtn("▶", 530);
+            less["mswKey"] = key;
+            more["mswKey"] = key;
+            less["mswDir"] = -1;
+            more["mswDir"] = 1;
+            less.addEventListener(MouseEvent.CLICK, onStep);
+            more.addEventListener(MouseEvent.CLICK, onStep);
+            r["addChild"](less);
+            r["addChild"](more);
+         }
+      }
+
+      private function miniBtn(txt:String, x:Number):MovieClip
+      {
+         var s:MovieClip = new MovieClip();
+         drawButtonFace(s["graphics"], 40, 20, false);
+         var lt:TextField = makeLabel(txt, 12, 0xE8FFE8);
+         lt["x"] = (40 - lt["width"]) / 2;
+         lt["y"] = 2;
+         s["addChild"](lt);
+         s["x"] = x;
+         s["y"] = 4;
+         s["buttonMode"] = true;
+         return s;
       }
 
       // ---------------- 值换算 ----------------
@@ -560,14 +610,24 @@ package
 
       // ---------------- 控件事件 ----------------
 
+      private function rowOf(o:*):*
+      {
+         while(o != null)
+         {
+            if(o["mswKey"] != null) return o;
+            o = o["parent"];
+         }
+         return null;
+      }
+
       private function onCheck(e:*):void
       {
          try
          {
             var cb:* = e["currentTarget"];
-            var row:* = cb["parent"];
-            var key:String = row["mswKey"];
-            mod.cfg[key] = cb["selected"] == true;
+            var row:* = rowOf(cb);
+            if(row == null) return;
+            mod.cfg[row["mswKey"]] = cb["selected"] == true;
             mod.cfg.clamp();
             mod.cfg.save();
          }
@@ -577,22 +637,66 @@ package
          }
       }
 
+      private function onHandToggle(e:*):void
+      {
+         try
+         {
+            var box:* = e["currentTarget"];
+            var row:* = rowOf(box);
+            if(row == null) return;
+            var key:String = row["mswKey"];
+            mod.cfg[key] = !(mod.cfg[key] == true);
+            mod.cfg.clamp();
+            mod.cfg.save();
+            drawToggle(box, mod.cfg[key] == true);
+         }
+         catch(err2:*)
+         {
+            err("tabToggleBox", err2);
+         }
+      }
+
       private function onScroll(e:*):void
       {
          try
          {
             var sc:* = e["currentTarget"];
-            var row:* = sc["parent"];
+            var row:* = rowOf(sc);
+            if(row == null) return;
             var key:String = row["mswKey"];
             mod.cfg[key] = valOf(key, Number(sc["scrollPosition"]));
             mod.cfg.clamp();
             var hint:String = row["mswHint"] == null ? "" : row["mswHint"];
-            setText(row, "numb", valText(key) + (hint != "" ? "  " + hint : ""));
-            cfgDirty = true;
+            row["mswNumb"]["text"] = valText(key) + (hint != "" ? "  " + hint : "");
+            cfgDirty = true; // 拖动期间不落盘（D-035），关面板统一 save
          }
          catch(err2:*)
          {
             err("tabScroll", err2);
+         }
+      }
+
+      private function onStep(e:*):void
+      {
+         try
+         {
+            var btn:* = e["currentTarget"];
+            var row:* = rowOf(btn);
+            if(row == null) return;
+            var key:String = row["mswKey"];
+            var d:Number = Number(btn["mswDir"]);
+            if(key == "dropRate" || key == "bounce") mod.cfg[key] = Number(mod.cfg[key]) + d * 0.1;
+            else if(key == "muzzleVel") mod.cfg[key] = Number(mod.cfg[key]) + d * 5;
+            else if(key == "projHp" || key == "projArmor") mod.cfg[key] = Number(mod.cfg[key]) + d * 5;
+            else mod.cfg[key] = Number(mod.cfg[key]) + d;
+            mod.cfg.clamp();
+            mod.cfg.save();
+            var hint:String = row["mswHint"] == null ? "" : row["mswHint"];
+            row["mswNumb"]["text"] = valText(key) + (hint != "" ? "  " + hint : "");
+         }
+         catch(err2:*)
+         {
+            err("tabStep", err2);
          }
       }
 
@@ -659,13 +763,8 @@ package
             var b:* = ov["getChildByName"]("but" + i);
             if(b != null) b["gotoAndStop"](1);
          }
-         if(myBut != null) myBut["gotoAndStop"](2);
-         if(rowsOk) setRowsVisible(true);
-         else if(fbTf != null)
-         {
-            refreshFallback();
-            fbTf["visible"] = true;
-         }
+         if(myBut != null) myButHi["visible"] = true;
+         setRowsVisible(true);
          try
          {
             pip["snd"](2);
@@ -680,7 +779,7 @@ package
       private function close(pip:*):void
       {
          panelOpen = false;
-         if(myBut != null) myBut["gotoAndStop"](1);
+         if(myBut != null) myButHi["visible"] = false;
          if(hiddenVis != null)
          {
             for(var i:int = 0; i < hiddenVis.length; i++)
@@ -695,8 +794,7 @@ package
             }
             hiddenVis = null;
          }
-         if(rowsOk) setRowsVisible(false);
-         else if(fbTf != null) fbTf["visible"] = false;
+         setRowsVisible(false);
          if(cfgDirty)
          {
             mod.cfg.clamp();
@@ -712,7 +810,7 @@ package
          for(var i:int = n - 1; i >= 0; i--)
          {
             var c:* = ov["getChildAt"](i);
-            if(c == myBut || c == head || c == fbTf || isMine(c)) continue;
+            if(c == myBut || c == head || isMine(c)) continue;
             if(isChrome(c)) continue;
             if(c["visible"] != true) continue;
             c["visible"] = false;
@@ -729,8 +827,7 @@ package
       private function enforce(ov:*):void
       {
          suppressGameContent(ov, false);
-         if(rowsOk) setRowsVisible(true);
-         else if(fbTf != null) fbTf["visible"] = true;
+         setRowsVisible(true);
       }
 
       private function isChrome(c:*):Boolean
@@ -757,47 +854,6 @@ package
                rows[i]["visible"] = v;
             }
          }
-      }
-
-      // ---------------- 文字兜底 ----------------
-
-      private function makeFallbackTf():TextField
-      {
-         var tf:TextField = new TextField();
-         var fmt:TextFormat = new TextFormat();
-         fmt.font = "SimHei";
-         fmt.size = 15;
-         fmt.color = 0x00FF99;
-         tf.defaultTextFormat = fmt;
-         tf.multiline = true;
-         tf.wordWrap = false;
-         tf.selectable = false;
-         tf.mouseEnabled = false;
-         tf.autoSize = TextFieldAutoSize.LEFT;
-         return tf;
-      }
-
-      private function refreshFallback():void
-      {
-         if(fbTf == null) return;
-         var c:* = mod.cfg;
-         var s:String = "";
-         s += MSWWeapon.WEAPON_NAME + " 模组设置\n";
-         s += "--------------------------------\n";
-         s += "跳弹技能 : " + (c.ricochet ? "开" : "关") + "\n";
-         s += "下坠速率 : " + c.dropRate.toFixed(1) + "  (0-3)\n";
-         s += "撞墙次数 : " + c.wallHits + "  (0=撞墙即爆)\n";
-         s += "初速度   : " + c.muzzleVel + "  (10-100)\n";
-         s += "反弹力度 : " + c.bounce.toFixed(1) + "  (0-1)\n";
-         s += "蹲/梯举枪 : " + (c.aimSkill ? "开" : "关") + "\n";
-         s += "手雷击落 : " + (c.projHits ? "开" : "关") + "\n";
-         s += "投掷物血量 : " + c.projHp + "\n";
-         s += "投掷物护甲 : " + c.projArmor + "\n";
-         s += "疾跑切枪 : " + (c.swapRun ? "开" : "关") + "\n";
-         s += "散布恒定 : " + (c.spreadFix ? "开" : "关") + "\n";
-         s += "冲刺保持蹲/趴 : " + (c.dashKeepPose ? "开" : "关") + "\n";
-         s += "(控件行初始化失败，此为文字兜底；数值用 F6 浮层调整)";
-         fbTf["text"] = s;
       }
    }
 }

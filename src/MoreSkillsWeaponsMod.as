@@ -45,6 +45,8 @@ package
       public var swaprun:MSWSwaprun;
       /** 2026-08-18 D-037/D-038：魔法冲刺保持蹲/趴姿 */
       public var dashpose:MSWDashPose;
+      /** 2026-08-29 测试实例自动驱动（仅 appid≠pfe 激活，用户实例零影响） */
+      public var autotest:MSWAutoTest;
 
       private var stage_:* = null;
       private var booted:Boolean = false;
@@ -63,6 +65,7 @@ package
          projhits = new MSWProjHits(this);
          swaprun = new MSWSwaprun(this);
          dashpose = new MSWDashPose(this);
+         autotest = new MSWAutoTest(this);
       }
 
       /** 由游戏 loader 调用；main 为 MainFE 实例。 */
@@ -110,7 +113,7 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.2.3-optpanel"); // 发布门禁#2：线上构建指纹（read_sol 可读）
+         cfg.diagSet("ver", "1.2.5-optpanel"); // 发布门禁#2：线上构建指纹（read_sol 可读）
          weapon.injectXml();
          stage_.addEventListener(Event.ENTER_FRAME, onFrame, false, 0, true);
          stage_.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown, false, 0, true);
@@ -134,6 +137,7 @@ package
             if(w == null) return;
             frameN++;
             cfg.diagAdd("frames");
+            autotest.update(w); // 测试实例自动驱动（用户实例空转）
             if(frameN % 300 == 0) cfg.diagFlush();
             if(!worldSeen)
             {
