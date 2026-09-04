@@ -122,6 +122,17 @@ package
             }
             try
             {
+               if(rows != null && rows.length > 1)
+               {
+                  var sc0:* = rows[1]["mswSc"];
+                  s += " rowOf=" + (rowOf(sc0) != null);
+               }
+            }
+            catch(e1c:*)
+            {
+            }
+            try
+            {
                var ov:* = myBut == null ? null : myBut["parent"];
                if(ov != null) s += " sr=" + ov["scrollRect"] + " mask=" + (ov["mask"] != null);
             }
@@ -361,22 +372,51 @@ package
          g.endFill();
       }
 
-      private function makeLabel(text:String, size:int, color:int, forButton:Boolean = false):TextField
+      /** kind: "label"=行标签 / "value"=数值 / "button"=按钮 —— 字体规格分别
+       *  抄自游戏行的 nazv / numb / 按钮标签；label/value 另挂原版样式表
+       *  （PipPage.setStyle），渲染机制与原版一致。 */
+      private function makeLabel(text:String, size:int, color:int, kind:String = "label"):TextField
       {
          var tf:TextField = new TextField();
          var fmt:TextFormat = new TextFormat();
-         var fname:String = forButton ? butFont : rowFont;
+         var fname:String = rowFont;
+         var fsize:* = rowFontSize;
+         var fcolor:* = rowColor != null ? rowColor : color;
+         var fembed:Boolean = rowEmbed;
+         if(kind == "value")
+         {
+            if(numFont != null) fname = numFont;
+            if(numFontSize != null) fsize = numFontSize;
+            if(numColor != null) fcolor = numColor;
+            fembed = numEmbed;
+         }
+         else if(kind == "button")
+         {
+            if(butFont != null) fname = butFont;
+            if(butFontSize != null) fsize = butFontSize;
+            fembed = butEmbed;
+         }
          if(fname != null) fmt.font = fname; else fmt.font = "SimHei";
-         var fsize:* = forButton ? butFontSize : rowFontSize;
          if(fsize != null) fmt.size = fsize; else fmt.size = size;
-         fmt.color = color;
+         fmt.color = fcolor;
          tf.defaultTextFormat = fmt;
          try
          {
-            tf.embedFonts = forButton ? butEmbed : rowEmbed; // 内嵌字体必须开
+            tf.embedFonts = fembed; // 内嵌字体必须开
          }
          catch(ee:*)
          {
+         }
+         if(kind != "button")
+         {
+            try
+            {
+               var st:Class = getDefinitionByName("fe.inter::PipPage") as Class;
+               if(st != null) st["setStyle"](tf); // 原版样式表（同游戏行 nazv/numb）
+            }
+            catch(es:*)
+            {
+            }
          }
          tf.text = text;
          tf.selectable = false;
@@ -391,6 +431,11 @@ package
       private var rowFont:String = null;      // 行标签字体名
       private var rowFontSize:* = null;       // 行标签字号
       private var rowEmbed:Boolean = false;   // 是否内嵌字体
+      private var rowColor:* = null;          // 行标签颜色
+      private var numFont:String = null;      // 数值字体名
+      private var numFontSize:* = null;       // 数值字号
+      private var numEmbed:Boolean = false;   // 数值是否内嵌
+      private var numColor:* = null;          // 数值颜色
       private var butFont:String = null;      // 按钮标签字体名
       private var butFontSize:* = null;
       private var butEmbed:Boolean = false;   // 按钮字体是否内嵌
@@ -419,7 +464,7 @@ package
          drawButtonFace(myButHi["graphics"], bw, bh, true);
          drawButtonFace(myBut["graphics"], bw, bh, false);
          myButHi["visible"] = false;
-         var lt:TextField = makeLabel("模组", 15, 0xE8FFE8);
+         var lt:TextField = makeLabel("模组", 15, 0xE8FFE8, "button");
          lt["x"] = (bw - lt["width"]) / 2;
          lt["y"] = (bh - lt["height"]) / 2;
          myBut["addChild"](myButHi);
@@ -486,6 +531,28 @@ package
                rowFont = tf["font"];
                rowFontSize = tf["size"];
                rowEmbed = nz["embedFonts"] == true;
+               try
+               {
+                  rowColor = tf["color"];
+               }
+               catch(e3:*)
+               {
+               }
+               var nb:* = c["getChildByName"]("numb");
+               if(nb != null)
+               {
+                  var nf:* = nb["getTextFormat"]();
+                  numFont = nf["font"];
+                  numFontSize = nf["size"];
+                  numEmbed = nb["embedFonts"] == true;
+                  try
+                  {
+                     numColor = nf["color"];
+                  }
+                  catch(e4:*)
+                  {
+                  }
+               }
                break;
             }
          }
@@ -506,7 +573,8 @@ package
          catch(eb:*)
          {
          }
-         mod.cfg.diagSet("tabFont", (rowFont == null ? "?" : rowFont + "/" + rowFontSize + "/embed" + rowEmbed) +
+         mod.cfg.diagSet("tabFont", (rowFont == null ? "?" : rowFont + "/" + rowFontSize + "/embed" + rowEmbed + "/c" + rowColor) +
+            " num=" + (numFont == null ? "?" : numFont + "/" + numFontSize + "/c" + numColor) +
             " but=" + (butFont == null ? "?" : butFont + "/" + butFontSize + "/embed" + butEmbed));
       }
 
@@ -541,7 +609,7 @@ package
             bg["mouseEnabled"] = false;
             r["addChild"](bg);
             var key:String = SPEC[i][0];
-            var lt:TextField = makeLabel(SPEC[i][1], 14, 0xD8FFE8);
+            var lt:TextField = makeLabel(SPEC[i][1], 14, 0xD8FFE8, "label");
             lt["x"] = 10;
             lt["y"] = 3;
             r["addChild"](lt);
@@ -577,6 +645,7 @@ package
             cb["y"] = 2;
             cb["addEventListener"]("change", onCheck);
             r["addChild"](cb);
+            r["mswSc"] = cb; // 供 snap 自检引用
          }
          else
          {
@@ -619,7 +688,7 @@ package
          catch(e0:*)
          {
          }
-         var numb:TextField = makeLabel(valText(key), 13, 0xE8FFE8);
+         var numb:TextField = makeLabel(valText(key), 13, 0xE8FFE8, "value");
          numb["x"] = 505;
          numb["y"] = 4;
          r["addChild"](numb);
@@ -636,6 +705,7 @@ package
             sc["scrollPosition"] = posOf(key);
             sc["addEventListener"]("scroll", onScroll);
             r["addChild"](sc);
+            r["mswSc"] = sc; // 供 snap 自检引用
          }
          else
          {
@@ -703,15 +773,17 @@ package
       {
          while(o != null)
          {
+            var k:* = null;
             try
             {
-               // 密封类（fl.controls.*）访问缺失属性抛 #1069，MovieClip 动态类不抛
-               if(o["mswKey"] != null) return o;
+               // 密封类（fl.controls.*）访问缺失属性抛 #1069：跳过并继续向父级找
+               k = o["mswKey"];
             }
             catch(e:*)
             {
-               return null;
+               k = null;
             }
+            if(k != null) return o;
             o = o["parent"];
          }
          return null;

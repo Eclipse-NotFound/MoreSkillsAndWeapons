@@ -2,6 +2,13 @@
 
 > 协议见 GOVERNANCE.md §8：只追加不改写，**新条目插在最上面**。
 
+## 2026-08-29（五续） v1.2.11：数字字形/颜色对齐 + 修调参静默失效
+
+- 用户特写对比指出：数字字形/颜色不一致、拖滑块数字不动。根因：①原版 nazv/numb 实为 `_sans/16/#00FF99`（探针实证），我此前近白色 + 自选字号；②rowOf 修密封类时"抛异常即 return null"——滑块/复选框事件永远找不到所属行，**调参全部静默失效**。修正：rowOf 抛异常改继续向父级；字体/颜色/样式表全套照抄（makeLabel 按 label/value/button 三源，PipPage.setStyle 挂原版样式表）；行上挂 mswSc/mswCb 供 snap 自检（rowOf=true）。
+- 验证：全自动回归全绿（tabFont 探针 num=_sans/16/c65433、tabOn=1、rowOf=true、无 lastErr）。
+- 遗留：玩家实机验收；D-044 落感与举枪/切枪仍待玩家。
+
+
 ## 2026-08-29（四续） v1.2.9：字体与背景对齐原版
 
 - 用户指出背景/字体仍差很多。根因：①suppress 把页面视觉自带的背景/边框美术（大尺寸子件）也藏了——模组页只剩外层粗纹理；②标签用 SimHei，原版行标签实为 `_sans/16`（按钮 `_sans/20`，均非内嵌——探针 tabFont 实证）。修正：suppress 保留大尺寸子件（背景美术）；makeLabel 从游戏现成行 nazv/but5.text 抄字体名/字号/内嵌标志（tabFont 诊断落 SOL）；顺修 rowOf 在密封类（fl.controls.*）上访问动态属性的 #1069。
