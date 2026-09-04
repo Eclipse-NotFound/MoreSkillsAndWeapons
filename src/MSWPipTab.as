@@ -36,6 +36,9 @@ package
       private var hiddenVis:Array = null;
       private var cfgDirty:Boolean = false;
       private var cachedVpip:* = null;
+      private var helpTf:TextField = null;
+
+      private static const HELP_DEFAULT:String = "鼠标悬停某行可查看说明。";
 
       // key / 标签 / "check"|"slider" / 滑块最小刻度 / 最大刻度 / 提示
       private static const SPEC:Array = [
@@ -436,11 +439,21 @@ package
 
       private function buildRows(ov:*):void
       {
-         head = makeLabel(MSWWeapon.WEAPON_NAME + "  模组设置", 17, 0x00FF99);
-         head["x"] = 30;
-         head["y"] = 66;
+         // 右侧帮助栏（对齐原版：行悬停说明显示在此处）
+         head = makeLabel(MSWWeapon.WEAPON_NAME + " 模组设置", 16, 0x00FF99);
+         head["x"] = 745;
+         head["y"] = 104;
          head["visible"] = false;
          ov["addChild"](head);
+         helpTf = makeLabel(HELP_DEFAULT, 13, 0x9FE8C8);
+         helpTf["x"] = 745;
+         helpTf["y"] = 134;
+         helpTf["width"] = 250;
+         helpTf["wordWrap"] = true;
+         helpTf["autoSize"] = TextFieldAutoSize.NONE;
+         helpTf["height"] = 300;
+         helpTf["visible"] = false;
+         ov["addChild"](helpTf);
          rows = [];
          for(var i:int = 0; i < SPEC.length; i++)
          {
@@ -448,18 +461,21 @@ package
             r["x"] = 30;
             r["y"] = 100 + i * 30;
             var bg:Sprite = new Sprite();
-            bg["graphics"].beginFill(0x000000, 0.45);
+            bg["graphics"].beginFill(0x000000, 1);
+            bg["graphics"].lineStyle(1, 0x0F4A2E, 1);
             bg["graphics"].drawRect(0, 0, 700, 28);
             bg["graphics"].endFill();
             bg["mouseEnabled"] = false;
             r["addChild"](bg);
             var key:String = SPEC[i][0];
-            var lt:TextField = makeLabel(SPEC[i][1], 15, 0x9FE8C8);
-            lt["x"] = 10;
+            var lt:TextField = makeLabel(SPEC[i][1], 15, 0xD8FFE8);
+            lt["x"] = 12;
             lt["y"] = 4;
             r["addChild"](lt);
             r["mswKey"] = key;
             r["mswHint"] = SPEC[i][5];
+            r.addEventListener(MouseEvent.MOUSE_OVER, onRowHover);
+            r.addEventListener(MouseEvent.MOUSE_OUT, onRowOut);
             if(SPEC[i][2] == "check") buildCheck(r, key);
             else buildSlider(r, key, SPEC[i][3], SPEC[i][4]);
             r["visible"] = false;
@@ -484,7 +500,7 @@ package
          if(cb != null)
          {
             cb["selected"] = mod.cfg[key] == true;
-            cb["x"] = 560;
+            cb["x"] = 440;
             cb["y"] = 3;
             cb["addEventListener"]("change", onCheck);
             r["addChild"](cb);
@@ -494,7 +510,7 @@ package
             // 手绘开关（组件不可用时）
             var box:MovieClip = new MovieClip();
             drawToggle(box, mod.cfg[key] == true);
-            box["x"] = 570;
+            box["x"] = 445;
             box["y"] = 4;
             box["buttonMode"] = true;
             box["mswKey"] = key;
@@ -530,17 +546,17 @@ package
          catch(e0:*)
          {
          }
-         var numb:TextField = makeLabel(valText(key) + (r["mswHint"] != "" ? "  " + r["mswHint"] : ""), 13, 0xE8FFE8);
-         numb["x"] = 560;
-         numb["y"] = 5;
+         var numb:TextField = makeLabel(valText(key), 13, 0xE8FFE8);
+         numb["x"] = 625;
+         numb["y"] = 6;
          r["addChild"](numb);
          r["mswNumb"] = numb;
          if(sc != null)
          {
             sc["direction"] = "horizontal";
-            sc["width"] = 200;
+            sc["width"] = 315;
             sc["height"] = 18;
-            sc["x"] = 330;
+            sc["x"] = 300;
             sc["y"] = 5;
             sc["minScrollPosition"] = min;
             sc["maxScrollPosition"] = max;
@@ -551,8 +567,8 @@ package
          else
          {
             // 手绘步进：◀ ▶
-            var less:Sprite = miniBtn("◀", 330);
-            var more:Sprite = miniBtn("▶", 530);
+            var less:Sprite = miniBtn("◀", 300);
+            var more:Sprite = miniBtn("▶", 575);
             less["mswKey"] = key;
             more["mswKey"] = key;
             less["mswDir"] = -1;
@@ -656,6 +672,36 @@ package
          }
       }
 
+      private function onRowHover(e:*):void
+      {
+         try
+         {
+            var row:* = rowOf(e["currentTarget"]);
+            if(row == null) return;
+            var hint:String = row["mswHint"] == null ? "" : row["mswHint"];
+            var lb:String = "";
+            for(var i:int = 0; i < SPEC.length; i++)
+            {
+               if(SPEC[i][0] == row["mswKey"]) lb = SPEC[i][1];
+            }
+            if(helpTf != null) helpTf["text"] = lb + (hint != "" ? "：\n" + hint : "");
+         }
+         catch(e:*)
+         {
+         }
+      }
+
+      private function onRowOut(e:*):void
+      {
+         try
+         {
+            if(helpTf != null) helpTf["text"] = HELP_DEFAULT;
+         }
+         catch(e:*)
+         {
+         }
+      }
+
       private function onScroll(e:*):void
       {
          try
@@ -666,8 +712,7 @@ package
             var key:String = row["mswKey"];
             mod.cfg[key] = valOf(key, Number(sc["scrollPosition"]));
             mod.cfg.clamp();
-            var hint:String = row["mswHint"] == null ? "" : row["mswHint"];
-            row["mswNumb"]["text"] = valText(key) + (hint != "" ? "  " + hint : "");
+            row["mswNumb"]["text"] = valText(key);
             cfgDirty = true; // 拖动期间不落盘（D-035），关面板统一 save
          }
          catch(err2:*)
@@ -765,6 +810,11 @@ package
          }
          if(myBut != null) myButHi["visible"] = true;
          setRowsVisible(true);
+         if(helpTf != null)
+         {
+            helpTf["text"] = HELP_DEFAULT;
+            helpTf["visible"] = true;
+         }
          try
          {
             pip["snd"](2);
@@ -780,6 +830,8 @@ package
       {
          panelOpen = false;
          if(myBut != null) myButHi["visible"] = false;
+         setRowsVisible(false);
+         if(helpTf != null) helpTf["visible"] = false;
          if(hiddenVis != null)
          {
             for(var i:int = 0; i < hiddenVis.length; i++)
@@ -804,23 +856,27 @@ package
          mod.cfg.diagAdd("tabOff");
       }
 
+      /** 面板打开时页面只保留子按钮（but1..5）+ 模组内容——对齐原版选项页
+       *  （pers/存档信息/记录文本等一概让位）。 */
       private function suppressGameContent(ov:*, record:Boolean):void
       {
          var n:int = ov["numChildren"];
          for(var i:int = n - 1; i >= 0; i--)
          {
             var c:* = ov["getChildAt"](i);
-            if(c == myBut || c == head || isMine(c)) continue;
-            if(isChrome(c)) continue;
+            if(c == myBut || c == head || c == helpTf || isMine(c)) continue;
+            var nm:String = "";
+            try
+            {
+               nm = c["name"];
+            }
+            catch(en:*)
+            {
+            }
+            if(nm != null && nm.length == 4 && nm.indexOf("but") == 0) continue; // 子按钮
             if(c["visible"] != true) continue;
             c["visible"] = false;
             if(record) hiddenVis[hiddenVis.length] = c;
-         }
-         var sc:* = ov["getChildByName"]("scBar");
-         if(sc != null && sc["visible"] == true)
-         {
-            sc["visible"] = false;
-            if(record) hiddenVis[hiddenVis.length] = sc;
          }
       }
 
