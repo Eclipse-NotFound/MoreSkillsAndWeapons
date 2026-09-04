@@ -441,14 +441,14 @@ package
       {
          // 右侧帮助栏（对齐原版：行悬停说明显示在此处）
          head = makeLabel(MSWWeapon.WEAPON_NAME + " 模组设置", 16, 0x00FF99);
-         head["x"] = 745;
+         head["x"] = 600;
          head["y"] = 104;
          head["visible"] = false;
          ov["addChild"](head);
          helpTf = makeLabel(HELP_DEFAULT, 13, 0x9FE8C8);
-         helpTf["x"] = 745;
+         helpTf["x"] = 600;
          helpTf["y"] = 134;
-         helpTf["width"] = 250;
+         helpTf["width"] = 230;
          helpTf["wordWrap"] = true;
          helpTf["autoSize"] = TextFieldAutoSize.NONE;
          helpTf["height"] = 300;
@@ -463,14 +463,14 @@ package
             var bg:Sprite = new Sprite();
             bg["graphics"].beginFill(0x000000, 1);
             bg["graphics"].lineStyle(1, 0x0F4A2E, 1);
-            bg["graphics"].drawRect(0, 0, 700, 28);
+            bg["graphics"].drawRect(0, 0, 550, 24);
             bg["graphics"].endFill();
             bg["mouseEnabled"] = false;
             r["addChild"](bg);
             var key:String = SPEC[i][0];
-            var lt:TextField = makeLabel(SPEC[i][1], 15, 0xD8FFE8);
-            lt["x"] = 12;
-            lt["y"] = 4;
+            var lt:TextField = makeLabel(SPEC[i][1], 14, 0xD8FFE8);
+            lt["x"] = 10;
+            lt["y"] = 3;
             r["addChild"](lt);
             r["mswKey"] = key;
             r["mswHint"] = SPEC[i][5];
@@ -500,8 +500,8 @@ package
          if(cb != null)
          {
             cb["selected"] = mod.cfg[key] == true;
-            cb["x"] = 440;
-            cb["y"] = 3;
+            cb["x"] = 360;
+            cb["y"] = 2;
             cb["addEventListener"]("change", onCheck);
             r["addChild"](cb);
          }
@@ -510,8 +510,8 @@ package
             // 手绘开关（组件不可用时）
             var box:MovieClip = new MovieClip();
             drawToggle(box, mod.cfg[key] == true);
-            box["x"] = 445;
-            box["y"] = 4;
+            box["x"] = 365;
+            box["y"] = 2;
             box["buttonMode"] = true;
             box["mswKey"] = key;
             box.addEventListener(MouseEvent.CLICK, onHandToggle);
@@ -547,16 +547,16 @@ package
          {
          }
          var numb:TextField = makeLabel(valText(key), 13, 0xE8FFE8);
-         numb["x"] = 625;
-         numb["y"] = 6;
+         numb["x"] = 505;
+         numb["y"] = 4;
          r["addChild"](numb);
          r["mswNumb"] = numb;
          if(sc != null)
          {
             sc["direction"] = "horizontal";
-            sc["width"] = 315;
-            sc["height"] = 18;
-            sc["x"] = 300;
+            sc["width"] = 240;
+            sc["height"] = 14;
+            sc["x"] = 256;
             sc["y"] = 5;
             sc["minScrollPosition"] = min;
             sc["maxScrollPosition"] = max;
@@ -567,8 +567,8 @@ package
          else
          {
             // 手绘步进：◀ ▶
-            var less:Sprite = miniBtn("◀", 300);
-            var more:Sprite = miniBtn("▶", 575);
+            var less:Sprite = miniBtn("◀", 256);
+            var more:Sprite = miniBtn("▶", 445);
             less["mswKey"] = key;
             more["mswKey"] = key;
             less["mswDir"] = -1;
