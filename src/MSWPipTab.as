@@ -361,14 +361,23 @@ package
          g.endFill();
       }
 
-      private function makeLabel(text:String, size:int, color:int):TextField
+      private function makeLabel(text:String, size:int, color:int, forButton:Boolean = false):TextField
       {
          var tf:TextField = new TextField();
          var fmt:TextFormat = new TextFormat();
-         fmt.font = "SimHei";
-         fmt.size = size;
+         var fname:String = forButton ? butFont : rowFont;
+         if(fname != null) fmt.font = fname; else fmt.font = "SimHei";
+         var fsize:* = forButton ? butFontSize : rowFontSize;
+         if(fsize != null) fmt.size = fsize; else fmt.size = size;
          fmt.color = color;
          tf.defaultTextFormat = fmt;
+         try
+         {
+            tf.embedFonts = forButton ? butEmbed : rowEmbed; // 内嵌字体必须开
+         }
+         catch(ee:*)
+         {
+         }
          tf.text = text;
          tf.selectable = false;
          tf.mouseEnabled = false;
@@ -378,10 +387,19 @@ package
 
       // ---------------- 构建 ----------------
 
+      // 原版字体探测结果（从游戏现成行标签/按钮标签抄来）
+      private var rowFont:String = null;      // 行标签字体名
+      private var rowFontSize:* = null;       // 行标签字号
+      private var rowEmbed:Boolean = false;   // 是否内嵌字体
+      private var butFont:String = null;      // 按钮标签字体名
+      private var butFontSize:* = null;
+      private var butEmbed:Boolean = false;   // 按钮字体是否内嵌
+
       private function ensureBuilt(ov:*):void
       {
          if(built) return;
          mod.cfg.diagSet("tabStage", "build");
+         probeFonts(ov);
          var b5:* = ov["getChildByName"]("but5");
          var bw:Number = 120;
          var bh:Number = 34;
@@ -435,6 +453,61 @@ package
          built = true;
          mod.cfg.diagAdd("tabBuild");
          snap();
+      }
+
+      /** 抄原版字体：行标签 nazv / 按钮标签 text 的字体名、字号、内嵌标志。 */
+      private function probeFonts(ov:*):void
+      {
+         try
+         {
+            var n:int = ov["numChildren"];
+            for(var i:int = 0; i < n; i++)
+            {
+               var c:* = ov["getChildAt"](i);
+               if(c == myBut || c == head || c == helpTf) continue;
+               try
+               {
+                  if(c["name"] != null && c["name"].indexOf("instance") != 0) continue;
+               }
+               catch(en:*)
+               {
+                  continue;
+               }
+               var nz:* = null;
+               try
+               {
+                  nz = c["getChildByName"]("nazv");
+               }
+               catch(e2:*)
+               {
+               }
+               if(nz == null) continue;
+               var tf:* = nz["getTextFormat"]();
+               rowFont = tf["font"];
+               rowFontSize = tf["size"];
+               rowEmbed = nz["embedFonts"] == true;
+               break;
+            }
+         }
+         catch(ea:*)
+         {
+         }
+         try
+         {
+            var b5:* = ov["getChildByName"]("but5");
+            if(b5 != null && b5["text"] != null)
+            {
+               var bf:* = b5["text"]["getTextFormat"]();
+               butFont = bf["font"];
+               butFontSize = bf["size"];
+               butEmbed = b5["text"]["embedFonts"] == true;
+            }
+         }
+         catch(eb:*)
+         {
+         }
+         mod.cfg.diagSet("tabFont", (rowFont == null ? "?" : rowFont + "/" + rowFontSize + "/embed" + rowEmbed) +
+            " but=" + (butFont == null ? "?" : butFont + "/" + butFontSize + "/embed" + butEmbed));
       }
 
       private function buildRows(ov:*):void
@@ -630,7 +703,15 @@ package
       {
          while(o != null)
          {
-            if(o["mswKey"] != null) return o;
+            try
+            {
+               // 密封类（fl.controls.*）访问缺失属性抛 #1069，MovieClip 动态类不抛
+               if(o["mswKey"] != null) return o;
+            }
+            catch(e:*)
+            {
+               return null;
+            }
             o = o["parent"];
          }
          return null;
@@ -874,6 +955,14 @@ package
             {
             }
             if(nm != null && nm.length == 4 && nm.indexOf("but") == 0) continue; // 子按钮
+            try
+            {
+               // 页面自身的背景/边框美术（大尺寸子件）保留，维持原版纹理
+               if(Number(c["width"]) > 800 && Number(c["height"]) > 400) continue;
+            }
+            catch(eg:*)
+            {
+            }
             if(c["visible"] != true) continue;
             c["visible"] = false;
             if(record) hiddenVis[hiddenVis.length] = c;
