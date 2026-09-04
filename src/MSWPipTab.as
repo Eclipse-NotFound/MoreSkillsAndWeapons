@@ -55,6 +55,10 @@ package
       private var butFont:String = null;
       private var butFontSize:* = null;
       private var butEmbed:Boolean = false;
+      private var butColor:* = null;        // 按钮标签颜色
+      private var butFilters:Array = null;  // 按钮标签滤镜（辉光等）
+      private var btnBd1:* = null;          // 原版按钮常态美术（光栅采样）
+      private var btnBd2:* = null;          // 原版按钮高亮美术
 
       private static const HELP_DEFAULT:String = "鼠标悬停某行可查看说明。";
 
@@ -380,6 +384,32 @@ package
          g.endFill();
       }
 
+      /** 光栅采样原版按钮美术：临时清空其文字，帧1/帧2 各绘一张位图。
+       *  全程同步执行，画面不会闪。采样失败时回退 drawButtonFace。 */
+      private function sampleButtonArt(b5:*, bw:Number, bh:Number):void
+      {
+         try
+         {
+            var BD:Class = getDefinitionByName("flash.display.BitmapData") as Class;
+            var fr:int = b5["currentFrame"];
+            var orig:String = b5["text"]["text"];
+            b5["text"]["text"] = "";
+            b5["gotoAndStop"](1);
+            btnBd1 = new BD(bw, bh, true, 0);
+            btnBd1["draw"](b5);
+            b5["gotoAndStop"](2);
+            btnBd2 = new BD(bw, bh, true, 0);
+            btnBd2["draw"](b5);
+            b5["text"]["text"] = orig;
+            b5["gotoAndStop"](fr);
+         }
+         catch(e:*)
+         {
+            btnBd1 = null;
+            btnBd2 = null;
+         }
+      }
+
       private function probeFonts(ov:*):void
       {
          try
@@ -447,6 +477,21 @@ package
                butFont = bf["font"];
                butFontSize = bf["size"];
                butEmbed = b5["text"]["embedFonts"] == true;
+               try
+               {
+                  butColor = bf["color"];
+               }
+               catch(ec1:*)
+               {
+               }
+               try
+               {
+                  var fls:Array = b5["text"]["filters"];
+                  if(fls != null && fls.length > 0) butFilters = fls;
+               }
+               catch(ec2:*)
+               {
+               }
             }
          }
          catch(eb:*)
@@ -479,6 +524,7 @@ package
          {
             if(butFont != null) fname = butFont;
             if(butFontSize != null) fsize = butFontSize;
+            if(butColor != null) fcolor = butColor;
             fembed = butEmbed;
          }
          if(fname != null) fmt.font = fname; else fmt.font = "SimHei";
@@ -488,6 +534,7 @@ package
          try
          {
             tf.embedFonts = fembed;
+            if(kind == "button" && butFilters != null) tf["filters"] = butFilters;
          }
          catch(ee:*)
          {
@@ -533,10 +580,44 @@ package
          }
          myBut = new Sprite();
          myButHi = new Sprite();
-         drawButtonFace(myButHi["graphics"], bw, bh, true);
-         drawButtonFace(myBut["graphics"], bw, bh, false);
+         sampleButtonArt(b5, bw, bh);
+         var useArt:Boolean = btnBd1 != null && btnBd2 != null;
+         if(useArt)
+         {
+            // 原版按钮美术直接作底图（常态/高亮两态）
+            var bmpC:Class = getDefinitionByName("flash.display::Bitmap") as Class;
+            myBut["addChild"](new bmpC(btnBd1));
+            myButHi["addChild"](new bmpC(btnBd2));
+         }
+         else
+         {
+            drawButtonFace(myButHi["graphics"], bw, bh, true);
+            drawButtonFace(myBut["graphics"], bw, bh, false);
+         }
          myButHi["visible"] = false;
          var lt:TextField = makeLabel("模组", 15, 0xE8FFE8, "button");
+         try
+         {
+            // 字号校准：按原版按钮标签的实际字高缩放
+            if(b5 != null && b5["text"] != null)
+            {
+               var wantH:Number = Number(b5["text"]["textHeight"]);
+               if(wantH > 4 && lt["textHeight"] > 4)
+               {
+                  var calSize:int = Math.round(20 * wantH / lt["textHeight"]);
+                  if(calSize >= 10 && calSize <= 40)
+                  {
+                     var f2:TextFormat = lt["defaultTextFormat"];
+                     f2.size = calSize;
+                     lt["defaultTextFormat"] = f2;
+                     lt["setTextFormat"](f2);
+                  }
+               }
+            }
+         }
+         catch(ecal:*)
+         {
+         }
          lt["x"] = (bw - lt["width"]) / 2;
          lt["y"] = (bh - lt["height"]) / 2;
          myBut["addChild"](myButHi);
