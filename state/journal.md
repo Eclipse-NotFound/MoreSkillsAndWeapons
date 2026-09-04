@@ -2,6 +2,11 @@
 
 > 协议见 GOVERNANCE.md §8：只追加不改写，**新条目插在最上面**。
 
+## 2026-08-29（六续） 模组设置聚合页规划成文
+
+- 用户提出未来要把更多模组的设置整合进"模组"页。规划落盘 design/mod-settings-hub.md：注册式聚合契约（各模组 get/set 回调自持配置，宿主不越权写他人存储）、模组子页签 UI（≥2 注册方时出现，单方自动退化为平铺）、loader 链时序约定（MSW 之前加载的模组 ENTER_FRAME 重试注册）、控件扩展路线（choice/action/info）、分期（一期宿主 API+MSW 自注册 → 二期 Sandevistan 接入 → 三期其余模组）。未实现，待玩家确认后启动一期。
+
+
 ## 2026-08-29（五续） v1.2.11：数字字形/颜色对齐 + 修调参静默失效
 
 - 用户特写对比指出：数字字形/颜色不一致、拖滑块数字不动。根因：①原版 nazv/numb 实为 `_sans/16/#00FF99`（探针实证），我此前近白色 + 自选字号；②rowOf 修密封类时"抛异常即 return null"——滑块/复选框事件永远找不到所属行，**调参全部静默失效**。修正：rowOf 抛异常改继续向父级；字体/颜色/样式表全套照抄（makeLabel 按 label/value/button 三源，PipPage.setStyle 挂原版样式表）；行上挂 mswSc/mswCb 供 snap 自检（rowOf=true）。
