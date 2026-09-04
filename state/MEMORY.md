@@ -15,7 +15,7 @@
 
 ## 3. 当前状态
 
-- **v1.2.9（2026-08-29）**：字体/背景对齐原版——suppress 保留页面自带背景美术（大尺寸子件不再隐藏）；标签字体从游戏现成行 nazv 探测（实测 `_sans/16`、按钮 `_sans/20`、非内嵌），不再写死 SimHei；修 rowOf 密封类 #1069。自动驱动验证通过（tabOn=1/tabFont 探针/截图人审字体背景一致）。release SWF 23108 字节。
+- **v1.2.11（2026-08-29）**：文字/数字字形颜色对齐原版（探针实证 nazv/numb = `_sans/16/#00FF99` 非内嵌，全套照抄 + PipPage.setStyle 原版样式表）；**修 rowOf 密封类异常导致滑块/复选框调参静默失效**（#1069 改继续向父级）。自动驱动验证通过（tabFont 探针/rowOf=true/tabOn=1）。release SWF 23485 字节。
 - **测试基建**：MSWAutoTest 常驻模组内（appid≠pfe 才激活，用户实例零影响）——自动开档/开主菜单页/派发点击，配 read_sol.py 与截图可全自动回归 UI。
 - v1.0（910cdce）：全部功能实机验证通过（2026-08-18）；dist zip 为 v1.0，本轮验收后重打包。
 - 回滚：`git checkout 910cdce -- release/MoreSkillsWeaponsMod.swf`。
