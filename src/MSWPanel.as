@@ -72,6 +72,12 @@ package
          tab.debugClick();
       }
 
+      /** 自动测试用：切换模组子页。 */
+      public function debugSwitchPage(i:int):void
+      {
+         tab.debugSwitchPage(i);
+      }
+
       /** 按键绑定对话框（visSetKey）是否可见：可见期间不消费键盘。 */
       public function setkeyDialogVisible(w:*):Boolean
       {

@@ -47,6 +47,8 @@ package
       public var dashpose:MSWDashPose;
       /** 2026-08-29 测试实例自动驱动（仅 appid≠pfe 激活，用户实例零影响） */
       public var autotest:MSWAutoTest;
+      /** 模组设置聚合页登记簿（design/mod-settings-hub.md），2026-08-29 一期 */
+      public var settings:MSWSettingsHub;
 
       private var stage_:* = null;
       private var booted:Boolean = false;
@@ -65,7 +67,28 @@ package
          projhits = new MSWProjHits(this);
          swaprun = new MSWSwaprun(this);
          dashpose = new MSWDashPose(this);
+         settings = new MSWSettingsHub();
          autotest = new MSWAutoTest(this);
+      }
+
+      /** 模组设置聚合页注册契约（其他模组经 getDefinitionByName 调用）。
+       *  见 design/mod-settings-hub.md §3。 */
+      public static function settingsRegister(modId:String, displayName:String, items:Array,
+                                              onPageClose:Function = null, desc:String = ""):Boolean
+      {
+         try
+         {
+            if(inst != null)
+            {
+               inst.settings.registerPage(modId, displayName, items, onPageClose, desc);
+               inst.cfg.diagSet("hubReg", modId);
+               return true;
+            }
+         }
+         catch(e:*)
+         {
+         }
+         return false;
       }
 
       /** 由游戏 loader 调用；main 为 MainFE 实例。 */
@@ -113,7 +136,9 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.2.11-optpanel"); // 发布门禁#2：线上构建指纹（read_sol 可读）
+         cfg.diagSet("ver", "1.3.0-hub"); // 发布门禁#2：线上构建指纹（read_sol 可读）
+         settings.registerPage("msw", "MoreSkills&Weapons",
+            MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");
          weapon.injectXml();
          stage_.addEventListener(Event.ENTER_FRAME, onFrame, false, 0, true);
          stage_.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown, false, 0, true);
@@ -125,6 +150,13 @@ package
       private function onRetry(e:Event):void
       {
          tryBoot();
+      }
+
+      /** MSW 页收起：滑块延迟保存统一落盘。 */
+      private function mswPageClose():void
+      {
+         cfg.clamp();
+         cfg.save();
       }
 
       private var frameN:int = 0;

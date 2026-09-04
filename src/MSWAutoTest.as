@@ -23,6 +23,10 @@ package
       private var triedNewGame:Boolean = false;
       private var openedPip:Boolean = false;
 
+      // mock 页内部状态（自动测试分页渲染验证用）
+      private var mockA:Boolean = true;
+      private var mockB:Number = 50;
+
       public function MSWAutoTest(m:*)
       {
          mod = m;
@@ -32,11 +36,27 @@ package
             var id:String = na["nativeApplication"]["applicationID"];
             enabled = id != "pfe";
             mod.cfg.diagSet("auto", enabled ? "on:" + id : "off");
+            if(enabled) registerMockPage(); // 多模组分页渲染回归：注册 mock 页
          }
          catch(e:*)
          {
             enabled = false;
          }
+      }
+
+      private function registerMockPage():void
+      {
+         var items:Array = [
+            {"key": "mockA", "label": "模拟开关", "kind": "check", "min": 0, "max": 0, "step": 1,
+             "hint": "自动测试用模拟项",
+             "get": function():* { return mockA; },
+             "set": function(v:*):void { mockA = v == true; }},
+            {"key": "mockB", "label": "模拟数值", "kind": "slider", "min": 0, "max": 100, "step": 5,
+             "hint": "步进5",
+             "get": function():* { return mockB; },
+             "set": function(v:*):void { mockB = Number(v); }}
+         ];
+         mod.settings.registerPage("mocktest", "Mock 测试", items, null, "自动测试注册的模拟页");
       }
 
       public function update(w:*):void
@@ -94,6 +114,7 @@ package
                   return;
                }
                if(t == 310) mod.panel.debugClick(); // 自动点开模组面板
+               if(t == 500) mod.panel.debugSwitchPage(1); // 切到 mock 页（分页渲染回归）
                // 测试模式：保持 Opt 页打开，供截图/诊断检查
             }
          }

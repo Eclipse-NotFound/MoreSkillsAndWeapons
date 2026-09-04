@@ -2,6 +2,14 @@
 
 > 协议见 GOVERNANCE.md §8：只追加不改写，**新条目插在最上面**。
 
+## 2026-08-29（七续） v1.3.0：聚合页一期交付（宿主 API + 自注册 + 模组子页签）
+
+- 按 design/mod-settings-hub.md 一期实施：新增 MSWSettingsHub（登记簿 + MSW 12 项 buildMswItems 自注册构造器 + makeGetter/makeSetter 闭包）；MoreSkillsWeaponsMod 增静态契约入口 settingsRegister（其他模组经 getDefinitionByName 调用）与 settings 实例；MSWPipTab 重构为登记簿驱动（renderRows 按当前页重建行、通用 min/max/step 滑块换算、≥2 注册方时顶部模组子页签行、单方自动平铺、close 统一调 onPageClose）；MSWAutoTest 注册 mock 页 + 自动切页验证。行容器沿用 MovieClip；rowOf 密封类防护保留。
+- 关键发现：mock 注册在 ctor 早于 instanceInit 的 MSW 自注册 → 页序 = 注册序（宿主不排序，注册方自行约定；mock 仅测试实例存在）。
+- 验证：自动驱动全绿——pages=2、tabOn=1、page 切换、rowOf=true、无 lastErr；截图人审：双页签渲染、MSW 12 行完整、帮助栏显示 mock/MSW 描述。
+- 遗留：玩家实机验收 v1.3.0（用户实例仅 MSW 一页=平铺，与现状视觉等价）；二期 Sandevistan 接入（其仓库侧）；D-044 落感与举枪/切枪仍待玩家。
+
+
 ## 2026-08-29（六续） 模组设置聚合页规划成文
 
 - 用户提出未来要把更多模组的设置整合进"模组"页。规划落盘 design/mod-settings-hub.md：注册式聚合契约（各模组 get/set 回调自持配置，宿主不越权写他人存储）、模组子页签 UI（≥2 注册方时出现，单方自动退化为平铺）、loader 链时序约定（MSW 之前加载的模组 ENTER_FRAME 重试注册）、控件扩展路线（choice/action/info）、分期（一期宿主 API+MSW 自注册 → 二期 Sandevistan 接入 → 三期其余模组）。未实现，待玩家确认后启动一期。

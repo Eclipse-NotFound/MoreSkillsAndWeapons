@@ -3,58 +3,60 @@ package
    import flash.display.MovieClip;
    import flash.display.Sprite;
    import flash.events.MouseEvent;
+   import flash.geom.Point;
    import flash.text.TextField;
    import flash.text.TextFieldAutoSize;
    import flash.text.TextFormat;
-   import flash.geom.Point;
    import flash.utils.getDefinitionByName;
+   import flash.utils.getQualifiedClassName;
 
    /**
-    * 哔哔小马"模组"子页按钮 + 设置面板（v1.2.5，全自绘控件）。
+    * 哔哔小马"模组"子页按钮 + 模组设置聚合面板（v1.3，多模组聚合）。
     *
-    * 教训链（decisions D-046）：汉化补丁把游戏 UI 符号类改名（ButPage_1536），
-    * 且 new 其类得到的是零尺寸空壳（美术靠运行时初始化）——**克隆游戏类不可行**。
-    * v1.2.5 改为：
-    * - 按钮自绘（绿框深底 + SimHei 文字，两态高亮），尺寸取自 but5 实测宽高；
-    * - 控件行自绘容器 + fl.controls.CheckBox / fl.controls.ScrollBar（原版
-    *   选项页的组件类，自带程序化皮肤，反编译确认在 SWF 内，同域可实例化）；
-    * - 组件类不可用时退化为手绘开关/步进按钮；
-    * - 页面视觉按结构特征定位（含具名 but1/but5 的可见子级，与类名坐标无关）；
-    * - 全链路 null 安全 + 分阶段诊断（pipTab.stageN/tabStage/tabSnap/tabProbe）。
+    * 页面内容不再写死：由 MSWSettingsHub 登记簿驱动——每个注册模组一页
+    * 设置行（check/slider 控件，get/set 回调由注册方自持数据）；MSW 自己
+    * 的 12 项也走同一契约自注册（design/mod-settings-hub.md）。
+    *
+    * UI：子按钮栏"模组"按钮（自绘，克隆类在汉化客户端是空壳——D-046 v2.5）
+    * 打开面板；注册方 ≥2 时顶部出现模组子页签行，单注册方自动退化为平铺。
+    * 面板打开时页面只保留子按钮 + 模组内容（pers/存档信息等让位）；
+    * 页面自带背景美术（大尺寸子件）保留以维持原版纹理。
+    * 保存时机：check 即时持久化（注册方 set 内自理）；滑块拖动只 set，
+    * 面板收起时宿主统一调各注册方 onPageClose（D-035 高频 flush 教训）。
+    * 诊断：tabStage/tabSnap/tabProbe/tabFont/pages/page + 分阶段 lastErr。
     */
    public class MSWPipTab
    {
       private var mod:*;
 
       private var built:Boolean = false;
-      private var myBut:Sprite = null;     // "模组"按钮（自绘）
-      private var myButHi:Sprite = null;   // 高亮层（显示 = 高亮态）
-      private var head:* = null;           // 标题 TextField
-      private var rows:Array = null;       // 设置行容器（Sprite）
-      private var rowsOk:Boolean = false;
+      private var myBut:Sprite = null;      // "模组"子按钮（自绘）
+      private var myButHi:Sprite = null;    // 高亮层
+      private var head:* = null;            // 右侧帮助栏标题
+      private var helpTf:TextField = null;  // 右侧帮助文本
+      private var tabRow:MovieClip = null;  // 模组子页签行
+      private var chips:Array = null;       // 子页签按钮
+      private var rows:Array = null;        // 当前方设置行
+      private var selPage:int = 0;
+      private var builtPages:int = -1;      // 构建页签行时的注册方数量
       private var panelOpen:Boolean = false;
       private var hiddenVis:Array = null;
-      private var cfgDirty:Boolean = false;
       private var cachedVpip:* = null;
-      private var helpTf:TextField = null;
+
+      // 原版字体探测结果（从游戏现成行 nazv/numb/按钮标签抄，见 probeFonts）
+      private var rowFont:String = null;
+      private var rowFontSize:* = null;
+      private var rowEmbed:Boolean = false;
+      private var rowColor:* = null;
+      private var numFont:String = null;
+      private var numFontSize:* = null;
+      private var numEmbed:Boolean = false;
+      private var numColor:* = null;
+      private var butFont:String = null;
+      private var butFontSize:* = null;
+      private var butEmbed:Boolean = false;
 
       private static const HELP_DEFAULT:String = "鼠标悬停某行可查看说明。";
-
-      // key / 标签 / "check"|"slider" / 滑块最小刻度 / 最大刻度 / 提示
-      private static const SPEC:Array = [
-         ["ricochet",     "跳弹技能",      "check",  0,   0,   ""],
-         ["dropRate",     "下坠速率",      "slider", 0,  30,   "0.1步进 0-3"],
-         ["wallHits",     "撞墙次数",      "slider", 0,   5,   "0=撞墙即爆"],
-         ["muzzleVel",    "初速度",        "slider", 0,  90,   "10-100"],
-         ["bounce",       "反弹力度",      "slider", 0,  10,   "0.1步进 0-1"],
-         ["aimSkill",     "蹲/梯举枪",     "check",  0,   0,   "Shift+W"],
-         ["projHits",     "手雷击落",      "check",  0,   0,   ""],
-         ["projHp",       "投掷物血量",    "slider", 0, 199,   "步进5"],
-         ["projArmor",    "投掷物护甲",    "slider", 0, 100,   "步进5"],
-         ["swapRun",      "疾跑切枪",      "check",  0,   0,   "Shift+数字键"],
-         ["spreadFix",    "散布恒定",      "check",  0,   0,   "仅榴弹炮"],
-         ["dashKeepPose", "冲刺保持蹲/趴", "check",  0,   0,   "魔法冲刺"]
-      ];
 
       public function MSWPipTab(m:*)
       {
@@ -73,13 +75,12 @@ package
          myBut.dispatchEvent(new MouseEvent(MouseEvent.CLICK));
       }
 
-      /** 自动测试用：强制挪按钮位置做渲染判别实验。 */
-      public function debugPlace(x:Number, y:Number):void
+      /** 自动测试用：切换当前模组子页。 */
+      public function debugSwitchPage(i:int):void
       {
-         if(myBut == null) return;
-         myBut["x"] = x;
-         myBut["y"] = y;
-         snap();
+         var w:* = MSWU.world();
+         if(w == null) return;
+         switchPage(w, i);
       }
 
       // ---------------- 诊断 ----------------
@@ -103,21 +104,15 @@ package
          {
             var s:String = "but=" + (myBut == null ? "null" : myBut["x"] + "," + myBut["y"] + ",v" + myBut["visible"]) +
                " rows=" + (rows == null ? "null" : rows.length) +
-               " rowsOk=" + rowsOk + " open=" + panelOpen;
+               " page=" + selPage + "/" + pages().length +
+               " open=" + panelOpen;
             try
             {
-               var pt:* = new flash.geom.Point(myBut["x"], myBut["y"]);
+               var pt:* = new Point(myBut["x"], myBut["y"]);
                pt = myBut["localToGlobal"](pt);
                s += " g=" + int(pt["x"]) + "," + int(pt["y"]);
             }
             catch(e1:*)
-            {
-            }
-            try
-            {
-               s += " wh=" + int(myBut["width"]) + "x" + int(myBut["height"]);
-            }
-            catch(e1b:*)
             {
             }
             try
@@ -170,6 +165,11 @@ package
          {
          }
          return cachedVpip;
+      }
+
+      private function pages():Array
+      {
+         return mod.settings.getPages();
       }
 
       // ---------------- 每帧 ----------------
@@ -287,7 +287,7 @@ package
          for(var i:int = 0; i < n; i++)
          {
             var c:* = vpip["getChildAt"](i);
-            if(c == myBut || c == head || isMine(c)) continue;
+            if(c == myBut || c == head || c == helpTf || c == tabRow || isMine(c)) continue;
             if(c["visible"] != true) continue;
             try
             {
@@ -310,6 +310,13 @@ package
             for(var i:int = 0; i < rows.length; i++)
             {
                if(rows[i] === c) return true;
+            }
+         }
+         if(chips != null)
+         {
+            for(var j:int = 0; j < chips.length; j++)
+            {
+               if(chips[j] === c) return true;
             }
          }
          return false;
@@ -356,12 +363,13 @@ package
          }
       }
 
-      // ---------------- 自绘按钮 ----------------
+      // ---------------- 自绘按钮与字体 ----------------
 
       private static const COL_BORDER:int = 0x1E8C5A;
       private static const COL_BORDER_HI:int = 0x00FF99;
       private static const COL_FILL:int = 0x03170E;
       private static const COL_FILL_HI:int = 0x0A3A24;
+      private static const ROW_CAP:int = 17; // 内容区容量（100..610，stride 30）
 
       private function drawButtonFace(g:*, w:Number, h:Number, hi:Boolean):void
       {
@@ -372,135 +380,6 @@ package
          g.endFill();
       }
 
-      /** kind: "label"=行标签 / "value"=数值 / "button"=按钮 —— 字体规格分别
-       *  抄自游戏行的 nazv / numb / 按钮标签；label/value 另挂原版样式表
-       *  （PipPage.setStyle），渲染机制与原版一致。 */
-      private function makeLabel(text:String, size:int, color:int, kind:String = "label"):TextField
-      {
-         var tf:TextField = new TextField();
-         var fmt:TextFormat = new TextFormat();
-         var fname:String = rowFont;
-         var fsize:* = rowFontSize;
-         var fcolor:* = rowColor != null ? rowColor : color;
-         var fembed:Boolean = rowEmbed;
-         if(kind == "value")
-         {
-            if(numFont != null) fname = numFont;
-            if(numFontSize != null) fsize = numFontSize;
-            if(numColor != null) fcolor = numColor;
-            fembed = numEmbed;
-         }
-         else if(kind == "button")
-         {
-            if(butFont != null) fname = butFont;
-            if(butFontSize != null) fsize = butFontSize;
-            fembed = butEmbed;
-         }
-         if(fname != null) fmt.font = fname; else fmt.font = "SimHei";
-         if(fsize != null) fmt.size = fsize; else fmt.size = size;
-         fmt.color = fcolor;
-         tf.defaultTextFormat = fmt;
-         try
-         {
-            tf.embedFonts = fembed; // 内嵌字体必须开
-         }
-         catch(ee:*)
-         {
-         }
-         if(kind != "button")
-         {
-            try
-            {
-               var st:Class = getDefinitionByName("fe.inter::PipPage") as Class;
-               if(st != null) st["setStyle"](tf); // 原版样式表（同游戏行 nazv/numb）
-            }
-            catch(es:*)
-            {
-            }
-         }
-         tf.text = text;
-         tf.selectable = false;
-         tf.mouseEnabled = false;
-         tf.autoSize = TextFieldAutoSize.LEFT;
-         return tf;
-      }
-
-      // ---------------- 构建 ----------------
-
-      // 原版字体探测结果（从游戏现成行标签/按钮标签抄来）
-      private var rowFont:String = null;      // 行标签字体名
-      private var rowFontSize:* = null;       // 行标签字号
-      private var rowEmbed:Boolean = false;   // 是否内嵌字体
-      private var rowColor:* = null;          // 行标签颜色
-      private var numFont:String = null;      // 数值字体名
-      private var numFontSize:* = null;       // 数值字号
-      private var numEmbed:Boolean = false;   // 数值是否内嵌
-      private var numColor:* = null;          // 数值颜色
-      private var butFont:String = null;      // 按钮标签字体名
-      private var butFontSize:* = null;
-      private var butEmbed:Boolean = false;   // 按钮字体是否内嵌
-
-      private function ensureBuilt(ov:*):void
-      {
-         if(built) return;
-         mod.cfg.diagSet("tabStage", "build");
-         probeFonts(ov);
-         var b5:* = ov["getChildByName"]("but5");
-         var bw:Number = 120;
-         var bh:Number = 34;
-         if(b5 != null)
-         {
-            try
-            {
-               if(Number(b5["width"]) > 40) bw = Number(b5["width"]);
-               if(Number(b5["height"]) > 14) bh = Number(b5["height"]);
-            }
-            catch(e0:*)
-            {
-            }
-         }
-         myBut = new Sprite();
-         myButHi = new Sprite();
-         drawButtonFace(myButHi["graphics"], bw, bh, true);
-         drawButtonFace(myBut["graphics"], bw, bh, false);
-         myButHi["visible"] = false;
-         var lt:TextField = makeLabel("模组", 15, 0xE8FFE8, "button");
-         lt["x"] = (bw - lt["width"]) / 2;
-         lt["y"] = (bh - lt["height"]) / 2;
-         myBut["addChild"](myButHi);
-         myBut["addChild"](lt);
-         myBut["mouseChildren"] = false;
-         myBut["buttonMode"] = true;
-         if(b5 != null)
-         {
-            myBut["x"] = Number(b5["x"]) + bw + 2;
-            myBut["y"] = Number(b5["y"]);
-         }
-         else
-         {
-            myBut["x"] = 30;
-            myBut["y"] = 40;
-         }
-         myBut.addEventListener(MouseEvent.CLICK, onButClick);
-         ov["addChild"](myBut);
-         var vpip:* = mainVpip();
-         for(var j:int = 0; j <= 5; j++)
-         {
-            var mb:* = vpip == null ? null : vpip["getChildByName"]("but" + j);
-            if(mb != null) mb.addEventListener(MouseEvent.CLICK, onLeaveClick);
-         }
-         for(var k:int = 1; k <= 5; k++)
-         {
-            var ob:* = ov["getChildByName"]("but" + k);
-            if(ob != null) ob.addEventListener(MouseEvent.CLICK, onLeaveClick);
-         }
-         buildRows(ov);
-         built = true;
-         mod.cfg.diagAdd("tabBuild");
-         snap();
-      }
-
-      /** 抄原版字体：行标签 nazv / 按钮标签 text 的字体名、字号、内嵌标志。 */
       private function probeFonts(ov:*):void
       {
          try
@@ -578,10 +457,116 @@ package
             " but=" + (butFont == null ? "?" : butFont + "/" + butFontSize + "/embed" + butEmbed));
       }
 
-      private function buildRows(ov:*):void
+      /** kind: "label"=行标签 / "value"=数值 / "button"=按钮。
+       *  字体规格分别抄自游戏行的 nazv / numb / 按钮标签；label/value 另挂
+       *  原版样式表（PipPage.setStyle），渲染机制与原版一致。 */
+      private function makeLabel(text:String, size:int, color:int, kind:String = "label"):TextField
       {
-         // 右侧帮助栏（对齐原版：行悬停说明显示在此处）
-         head = makeLabel(MSWWeapon.WEAPON_NAME + " 模组设置", 16, 0x00FF99);
+         var tf:TextField = new TextField();
+         var fmt:TextFormat = new TextFormat();
+         var fname:String = rowFont;
+         var fsize:* = rowFontSize;
+         var fcolor:* = rowColor != null ? rowColor : color;
+         var fembed:Boolean = rowEmbed;
+         if(kind == "value")
+         {
+            if(numFont != null) fname = numFont;
+            if(numFontSize != null) fsize = numFontSize;
+            if(numColor != null) fcolor = numColor;
+            fembed = numEmbed;
+         }
+         else if(kind == "button")
+         {
+            if(butFont != null) fname = butFont;
+            if(butFontSize != null) fsize = butFontSize;
+            fembed = butEmbed;
+         }
+         if(fname != null) fmt.font = fname; else fmt.font = "SimHei";
+         if(fsize != null) fmt.size = fsize; else fmt.size = size;
+         fmt.color = fcolor;
+         tf.defaultTextFormat = fmt;
+         try
+         {
+            tf.embedFonts = fembed;
+         }
+         catch(ee:*)
+         {
+         }
+         if(kind != "button")
+         {
+            try
+            {
+               var st:Class = getDefinitionByName("fe.inter::PipPage") as Class;
+               if(st != null) st["setStyle"](tf);
+            }
+            catch(es:*)
+            {
+            }
+         }
+         tf.text = text;
+         tf.selectable = false;
+         tf.mouseEnabled = false;
+         tf.autoSize = TextFieldAutoSize.LEFT;
+         return tf;
+      }
+
+      // ---------------- 构建 ----------------
+
+      private function ensureBuilt(ov:*):void
+      {
+         if(built) return;
+         mod.cfg.diagSet("tabStage", "build");
+         probeFonts(ov);
+         var b5:* = ov["getChildByName"]("but5");
+         var bw:Number = 120;
+         var bh:Number = 34;
+         if(b5 != null)
+         {
+            try
+            {
+               if(Number(b5["width"]) > 40) bw = Number(b5["width"]);
+               if(Number(b5["height"]) > 14) bh = Number(b5["height"]);
+            }
+            catch(e0:*)
+            {
+            }
+         }
+         myBut = new Sprite();
+         myButHi = new Sprite();
+         drawButtonFace(myButHi["graphics"], bw, bh, true);
+         drawButtonFace(myBut["graphics"], bw, bh, false);
+         myButHi["visible"] = false;
+         var lt:TextField = makeLabel("模组", 15, 0xE8FFE8, "button");
+         lt["x"] = (bw - lt["width"]) / 2;
+         lt["y"] = (bh - lt["height"]) / 2;
+         myBut["addChild"](myButHi);
+         myBut["addChild"](lt);
+         myBut["mouseChildren"] = false;
+         myBut["buttonMode"] = true;
+         if(b5 != null)
+         {
+            myBut["x"] = Number(b5["x"]) + bw + 2;
+            myBut["y"] = Number(b5["y"]);
+         }
+         else
+         {
+            myBut["x"] = 30;
+            myBut["y"] = 40;
+         }
+         myBut.addEventListener(MouseEvent.CLICK, onButClick);
+         ov["addChild"](myBut);
+         var vpip:* = mainVpip();
+         for(var j:int = 0; j <= 5; j++)
+         {
+            var mb:* = vpip == null ? null : vpip["getChildByName"]("but" + j);
+            if(mb != null) mb.addEventListener(MouseEvent.CLICK, onLeaveClick);
+         }
+         for(var k:int = 1; k <= 5; k++)
+         {
+            var ob:* = ov["getChildByName"]("but" + k);
+            if(ob != null) ob.addEventListener(MouseEvent.CLICK, onLeaveClick);
+         }
+         head = makeLabel("", 16, 0x00FF99);
          head["x"] = 600;
          head["y"] = 104;
          head["visible"] = false;
@@ -596,8 +581,133 @@ package
          helpTf["visible"] = false;
          ov["addChild"](helpTf);
          rows = [];
-         for(var i:int = 0; i < SPEC.length; i++)
+         built = true;
+         ensureTabRow(ov);
+         mod.cfg.diagSet("pages", pages().length);
+         mod.cfg.diagAdd("tabBuild");
+         snap();
+      }
+
+      /** 模组子页签行：注册方 ≥2 时出现（单方平铺）。注册方数量变化时重建。 */
+      private function ensureTabRow(ov:*):void
+      {
+         var n:int = pages().length;
+         if(tabRow != null && n == builtPages) return;
+         if(tabRow != null)
          {
+            try
+            {
+               ov["removeChild"](tabRow);
+            }
+            catch(er:*)
+            {
+            }
+            tabRow = null;
+            chips = null;
+         }
+         if(n < 2) return;
+         tabRow = new MovieClip();
+         tabRow["x"] = 30;
+         tabRow["y"] = 66;
+         tabRow["visible"] = false;
+         chips = [];
+         var cx:Number = 0;
+         for(var i:int = 0; i < n; i++)
+         {
+            var pg:* = pages()[i];
+            var nm:String = pg["displayName"] == null ? pg["modId"] : pg["displayName"];
+            var lt:TextField = makeLabel(nm, 13, 0xE8FFE8, "button");
+            var w:Number = lt["width"] + 24;
+            var chip:MovieClip = new MovieClip();
+            var bg:Sprite = new Sprite();
+            drawButtonFace(bg["graphics"], w, 24, i == selPage);
+            chip["addChild"](bg);
+            chip["mswBg"] = bg;
+            lt["x"] = 12;
+            lt["y"] = 3;
+            chip["addChild"](lt);
+            chip["mswIdx"] = i;
+            chip["buttonMode"] = true;
+            chip["mouseChildren"] = false;
+            chip.addEventListener(MouseEvent.CLICK, onPageChipClick);
+            chip["x"] = cx;
+            chip["y"] = 0;
+            tabRow["addChild"](chip);
+            chips[chips.length] = chip;
+            cx += w + 8;
+         }
+         ov["addChild"](tabRow);
+         builtPages = n;
+      }
+
+      private function onPageChipClick(e:*):void
+      {
+         try
+         {
+            var chip:* = e["currentTarget"];
+            var w:* = MSWU.world();
+            if(w == null) return;
+            switchPage(w, int(chip["mswIdx"]));
+         }
+         catch(err:*)
+         {
+            err("pageChip", err);
+         }
+      }
+
+      private function switchPage(w:*, i:int):void
+      {
+         var n:int = pages().length;
+         if(i < 0 || i >= n) return;
+         selPage = i;
+         var ov:* = findOptVis(w);
+         if(ov == null) return;
+         ensureBuilt(ov);
+         ensureTabRow(ov);
+         if(chips != null)
+         {
+            for(var j:int = 0; j < chips.length; j++)
+            {
+               var chip:* = chips[j];
+               var bg:* = chip["mswBg"];
+               drawButtonFace(bg["graphics"], Number(chip["width"]), 24, j == selPage);
+            }
+         }
+         renderRows(ov);
+         mod.cfg.diagSet("page", selPage);
+      }
+
+      // ---------------- 行渲染（按当前注册页） ----------------
+
+      private function renderRows(ov:*):void
+      {
+         if(rows != null)
+         {
+            for(var ri:int = 0; ri < rows.length; ri++)
+            {
+               try
+               {
+                  ov["removeChild"](rows[ri]);
+               }
+               catch(erm:*)
+               {
+               }
+            }
+         }
+         rows = [];
+         var pg:Array = pages();
+         if(selPage >= pg.length) selPage = 0;
+         var page:* = pg[selPage];
+         if(page == null) return;
+         var items:Array = page["items"];
+         if(head != null) head["text"] = (page["displayName"] == null ? "" : page["displayName"]) + " 设置";
+         if(helpTf != null) helpTf["text"] = (page["desc"] == null || page["desc"] == "") ? HELP_DEFAULT : page["desc"];
+         if(items == null) return;
+         var n:int = Math.min(items.length, ROW_CAP);
+         for(var i:int = 0; i < n; i++)
+         {
+            var it:Object = items[i];
+            if(it == null || it["key"] == null) continue;
             var r:MovieClip = new MovieClip();
             r["x"] = 30;
             r["y"] = 100 + i * 30;
@@ -608,60 +718,100 @@ package
             bg["graphics"].endFill();
             bg["mouseEnabled"] = false;
             r["addChild"](bg);
-            var key:String = SPEC[i][0];
-            var lt:TextField = makeLabel(SPEC[i][1], 14, 0xD8FFE8, "label");
+            var lt:TextField = makeLabel(it["label"], 14, 0xD8FFE8, "label");
             lt["x"] = 10;
             lt["y"] = 3;
             r["addChild"](lt);
-            r["mswKey"] = key;
-            r["mswHint"] = SPEC[i][5];
+            r["mswItem"] = it;
+            var kind:String = it["kind"] == null ? "check" : it["kind"];
+            var cur:* = getItemVal(it);
+            if(kind == "check")
+            {
+               var cb:* = makeCheck();
+               cb["selected"] = cur == true;
+               cb["x"] = 360;
+               cb["y"] = 2;
+               cb["addEventListener"]("change", onCheck);
+               r["addChild"](cb);
+               r["mswSc"] = cb;
+            }
+            else
+            {
+               var numb:TextField = makeLabel(fmtVal(it, cur), 13, 0xE8FFE8, "value");
+               numb["x"] = 505;
+               numb["y"] = 4;
+               r["addChild"](numb);
+               r["mswNumb"] = numb;
+               var sc:* = makeSlider(it, cur);
+               if(sc != null)
+               {
+                  sc["addEventListener"]("scroll", onScroll);
+                  r["addChild"](sc);
+                  r["mswSc"] = sc;
+               }
+               else
+               {
+                  var less:Sprite = miniBtn("◀", 256);
+                  var more:Sprite = miniBtn("▶", 445);
+                  less["mswDir"] = -1;
+                  more["mswDir"] = 1;
+                  less.addEventListener(MouseEvent.CLICK, onStep);
+                  more.addEventListener(MouseEvent.CLICK, onStep);
+                  r["addChild"](less);
+                  r["addChild"](more);
+               }
+            }
             r.addEventListener(MouseEvent.MOUSE_OVER, onRowHover);
             r.addEventListener(MouseEvent.MOUSE_OUT, onRowOut);
-            if(SPEC[i][2] == "check") buildCheck(r, key);
-            else buildSlider(r, key, SPEC[i][3], SPEC[i][4]);
             r["visible"] = false;
             ov["addChild"](r);
             rows[rows.length] = r;
          }
-         rowsOk = rows.length == SPEC.length;
-         setRowsVisible(false);
       }
 
-      private function buildCheck(r:Sprite, key:String):void
+      private function makeCheck():*
       {
-         var cb:* = null;
          try
          {
             var cls:Class = getDefinitionByName("fl.controls::CheckBox") as Class;
-            if(cls != null) cb = new cls();
+            if(cls != null) return new cls();
          }
          catch(e0:*)
          {
          }
-         if(cb != null)
-         {
-            cb["selected"] = mod.cfg[key] == true;
-            cb["x"] = 360;
-            cb["y"] = 2;
-            cb["addEventListener"]("change", onCheck);
-            r["addChild"](cb);
-            r["mswSc"] = cb; // 供 snap 自检引用
-         }
-         else
-         {
-            // 手绘开关（组件不可用时）
-            var box:MovieClip = new MovieClip();
-            drawToggle(box, mod.cfg[key] == true);
-            box["x"] = 365;
-            box["y"] = 2;
-            box["buttonMode"] = true;
-            box["mswKey"] = key;
-            box.addEventListener(MouseEvent.CLICK, onHandToggle);
-            r["addChild"](box);
-         }
+         var box:MovieClip = new MovieClip();
+         drawToggle(box, false);
+         box["buttonMode"] = true;
+         box.addEventListener(MouseEvent.CLICK, onHandToggle);
+         return box;
       }
 
-      private function drawToggle(box:Sprite, on:Boolean):void
+      private function makeSlider(it:Object, cur:*):*
+      {
+         try
+         {
+            var cls:Class = getDefinitionByName("fl.controls::ScrollBar") as Class;
+            if(cls != null)
+            {
+               var sc:* = new cls();
+               sc["direction"] = "horizontal";
+               sc["width"] = 240;
+               sc["height"] = 14;
+               sc["x"] = 256;
+               sc["y"] = 5;
+               sc["minScrollPosition"] = 0;
+               sc["maxScrollPosition"] = Math.round((Number(it["max"]) - Number(it["min"])) / Number(it["step"]));
+               sc["scrollPosition"] = posOf(it, cur);
+               return sc;
+            }
+         }
+         catch(e:*)
+         {
+         }
+         return null;
+      }
+
+      private function drawToggle(box:*, on:Boolean):void
       {
          box["graphics"].clear();
          box["graphics"].lineStyle(2, on ? COL_BORDER_HI : COL_BORDER, 1);
@@ -677,57 +827,11 @@ package
          }
       }
 
-      private function buildSlider(r:Sprite, key:String, min:Number, max:Number):void
+      private function miniBtn(txt:String, x:Number):Sprite
       {
-         var sc:* = null;
-         try
-         {
-            var cls:Class = getDefinitionByName("fl.controls::ScrollBar") as Class;
-            if(cls != null) sc = new cls();
-         }
-         catch(e0:*)
-         {
-         }
-         var numb:TextField = makeLabel(valText(key), 13, 0xE8FFE8, "value");
-         numb["x"] = 505;
-         numb["y"] = 4;
-         r["addChild"](numb);
-         r["mswNumb"] = numb;
-         if(sc != null)
-         {
-            sc["direction"] = "horizontal";
-            sc["width"] = 240;
-            sc["height"] = 14;
-            sc["x"] = 256;
-            sc["y"] = 5;
-            sc["minScrollPosition"] = min;
-            sc["maxScrollPosition"] = max;
-            sc["scrollPosition"] = posOf(key);
-            sc["addEventListener"]("scroll", onScroll);
-            r["addChild"](sc);
-            r["mswSc"] = sc; // 供 snap 自检引用
-         }
-         else
-         {
-            // 手绘步进：◀ ▶
-            var less:Sprite = miniBtn("◀", 256);
-            var more:Sprite = miniBtn("▶", 445);
-            less["mswKey"] = key;
-            more["mswKey"] = key;
-            less["mswDir"] = -1;
-            more["mswDir"] = 1;
-            less.addEventListener(MouseEvent.CLICK, onStep);
-            more.addEventListener(MouseEvent.CLICK, onStep);
-            r["addChild"](less);
-            r["addChild"](more);
-         }
-      }
-
-      private function miniBtn(txt:String, x:Number):MovieClip
-      {
-         var s:MovieClip = new MovieClip();
+         var s:Sprite = new Sprite();
          drawButtonFace(s["graphics"], 40, 20, false);
-         var lt:TextField = makeLabel(txt, 12, 0xE8FFE8);
+         var lt:TextField = makeLabel(txt, 12, 0xE8FFE8, "button");
          lt["x"] = (40 - lt["width"]) / 2;
          lt["y"] = 2;
          s["addChild"](lt);
@@ -737,34 +841,47 @@ package
          return s;
       }
 
-      // ---------------- 值换算 ----------------
+      // ---------------- 值换算（通用契约：min/max/step） ----------------
 
-      private function posOf(key:String):Number
+      private function getItemVal(it:Object):*
       {
-         var v:* = mod.cfg[key];
-         if(key == "dropRate") return Math.round(Number(v) * 10);
-         if(key == "bounce") return Math.round(Number(v) * 10);
-         if(key == "muzzleVel") return Number(v) - 10;
-         if(key == "projHp") return (Number(v) - 1) / 5;
-         if(key == "projArmor") return Number(v) / 5;
-         return Number(v);
+         try
+         {
+            return it["get"]();
+         }
+         catch(e:*)
+         {
+            err("itemGet:" + it["key"], e);
+         }
+         return null;
       }
 
-      private function valOf(key:String, pos:Number):*
+      private function posOf(it:Object, v:*):Number
       {
-         if(key == "dropRate") return Math.round(pos) / 10;
-         if(key == "bounce") return Math.round(pos) / 10;
-         if(key == "muzzleVel") return Math.round(pos) + 10;
-         if(key == "projHp") return 1 + Math.round(pos) * 5;
-         if(key == "projArmor") return Math.round(pos) * 5;
-         return Math.round(pos);
+         var st:Number = Number(it["step"]);
+         if(st <= 0) st = 1;
+         return Math.round((Number(v) - Number(it["min"])) / st);
       }
 
-      private function valText(key:String):String
+      private function valOf(it:Object, pos:Number):*
       {
-         var v:* = mod.cfg[key];
-         if(key == "dropRate" || key == "bounce") return Number(v).toFixed(1);
-         return "" + v;
+         var st:Number = Number(it["step"]);
+         if(st <= 0) st = 1;
+         return Number(it["min"]) + Math.round(pos) * st;
+      }
+
+      private function fmtVal(it:Object, v:*):String
+      {
+         var st:Number = Number(it["step"]);
+         if(st >= 1) return String(Math.round(Number(v)));
+         var d:int = 0;
+         var t:Number = st;
+         while(t > 0 && t < 1 && d < 4)
+         {
+            t *= 10;
+            d += 1;
+         }
+         return Number(v).toFixed(d);
       }
 
       // ---------------- 控件事件 ----------------
@@ -777,7 +894,7 @@ package
             try
             {
                // 密封类（fl.controls.*）访问缺失属性抛 #1069：跳过并继续向父级找
-               k = o["mswKey"];
+               k = o["mswItem"];
             }
             catch(e:*)
             {
@@ -796,9 +913,8 @@ package
             var cb:* = e["currentTarget"];
             var row:* = rowOf(cb);
             if(row == null) return;
-            mod.cfg[row["mswKey"]] = cb["selected"] == true;
-            mod.cfg.clamp();
-            mod.cfg.save();
+            var it:Object = row["mswItem"];
+            it["set"](cb["selected"] == true);
          }
          catch(err2:*)
          {
@@ -813,45 +929,14 @@ package
             var box:* = e["currentTarget"];
             var row:* = rowOf(box);
             if(row == null) return;
-            var key:String = row["mswKey"];
-            mod.cfg[key] = !(mod.cfg[key] == true);
-            mod.cfg.clamp();
-            mod.cfg.save();
-            drawToggle(box, mod.cfg[key] == true);
+            var it:Object = row["mswItem"];
+            var cur:Boolean = getItemVal(it) == true;
+            it["set"](!cur);
+            drawToggle(box, getItemVal(it) == true);
          }
          catch(err2:*)
          {
             err("tabToggleBox", err2);
-         }
-      }
-
-      private function onRowHover(e:*):void
-      {
-         try
-         {
-            var row:* = rowOf(e["currentTarget"]);
-            if(row == null) return;
-            var hint:String = row["mswHint"] == null ? "" : row["mswHint"];
-            var lb:String = "";
-            for(var i:int = 0; i < SPEC.length; i++)
-            {
-               if(SPEC[i][0] == row["mswKey"]) lb = SPEC[i][1];
-            }
-            if(helpTf != null) helpTf["text"] = lb + (hint != "" ? "：\n" + hint : "");
-         }
-         catch(e:*)
-         {
-         }
-      }
-
-      private function onRowOut(e:*):void
-      {
-         try
-         {
-            if(helpTf != null) helpTf["text"] = HELP_DEFAULT;
-         }
-         catch(e:*)
-         {
          }
       }
 
@@ -862,11 +947,11 @@ package
             var sc:* = e["currentTarget"];
             var row:* = rowOf(sc);
             if(row == null) return;
-            var key:String = row["mswKey"];
-            mod.cfg[key] = valOf(key, Number(sc["scrollPosition"]));
-            mod.cfg.clamp();
-            row["mswNumb"]["text"] = valText(key);
-            cfgDirty = true; // 拖动期间不落盘（D-035），关面板统一 save
+            var it:Object = row["mswItem"];
+            var v:* = valOf(it, Number(sc["scrollPosition"]));
+            it["set"](v);
+            if(row["mswNumb"] != null) row["mswNumb"]["text"] = fmtVal(it, v);
+            // 拖动期间不落盘（D-035）：关面板时宿主统一调各注册方 onPageClose
          }
          catch(err2:*)
          {
@@ -881,20 +966,45 @@ package
             var btn:* = e["currentTarget"];
             var row:* = rowOf(btn);
             if(row == null) return;
-            var key:String = row["mswKey"];
-            var d:Number = Number(btn["mswDir"]);
-            if(key == "dropRate" || key == "bounce") mod.cfg[key] = Number(mod.cfg[key]) + d * 0.1;
-            else if(key == "muzzleVel") mod.cfg[key] = Number(mod.cfg[key]) + d * 5;
-            else if(key == "projHp" || key == "projArmor") mod.cfg[key] = Number(mod.cfg[key]) + d * 5;
-            else mod.cfg[key] = Number(mod.cfg[key]) + d;
-            mod.cfg.clamp();
-            mod.cfg.save();
-            var hint:String = row["mswHint"] == null ? "" : row["mswHint"];
-            row["mswNumb"]["text"] = valText(key) + (hint != "" ? "  " + hint : "");
+            var it:Object = row["mswItem"];
+            var v:Number = Number(getItemVal(it)) + Number(btn["mswDir"]) * Number(it["step"]);
+            it["set"](v);
+            if(row["mswNumb"] != null) row["mswNumb"]["text"] = fmtVal(it, getItemVal(it));
          }
          catch(err2:*)
          {
             err("tabStep", err2);
+         }
+      }
+
+      private function onRowHover(e:*):void
+      {
+         try
+         {
+            var row:* = rowOf(e["currentTarget"]);
+            if(row == null) return;
+            var it:Object = row["mswItem"];
+            var hint:String = it["hint"] == null ? "" : it["hint"];
+            if(helpTf != null) helpTf["text"] = it["label"] + (hint != "" ? "：\n" + hint : "");
+         }
+         catch(e:*)
+         {
+         }
+      }
+
+      private function onRowOut(e:*):void
+      {
+         try
+         {
+            if(helpTf != null)
+            {
+               var pg:Array = pages();
+               var d:String = selPage < pg.length ? pg[selPage]["desc"] : null;
+               helpTf["text"] = (d == null || d == "") ? HELP_DEFAULT : d;
+            }
+         }
+         catch(e:*)
+         {
          }
       }
 
@@ -962,11 +1072,21 @@ package
             if(b != null) b["gotoAndStop"](1);
          }
          if(myBut != null) myButHi["visible"] = true;
+         ensureTabRow(ov);
+         if(tabRow != null) tabRow["visible"] = true;
+         renderRows(ov);
          setRowsVisible(true);
          if(helpTf != null)
          {
-            helpTf["text"] = HELP_DEFAULT;
+            var pg:Array = pages();
+            var d:String = selPage < pg.length ? pg[selPage]["desc"] : null;
+            helpTf["text"] = (d == null || d == "") ? HELP_DEFAULT : d;
             helpTf["visible"] = true;
+         }
+         if(head != null)
+         {
+            head["text"] = (selPage < pg.length && pg[selPage]["displayName"] != null ? pg[selPage]["displayName"] : "") + " 设置";
+            head["visible"] = true;
          }
          try
          {
@@ -983,8 +1103,6 @@ package
       {
          panelOpen = false;
          if(myBut != null) myButHi["visible"] = false;
-         setRowsVisible(false);
-         if(helpTf != null) helpTf["visible"] = false;
          if(hiddenVis != null)
          {
             for(var i:int = 0; i < hiddenVis.length; i++)
@@ -1000,24 +1118,32 @@ package
             hiddenVis = null;
          }
          setRowsVisible(false);
-         if(cfgDirty)
+         if(helpTf != null) helpTf["visible"] = false;
+         if(head != null) head["visible"] = false;
+         if(tabRow != null) tabRow["visible"] = false;
+         // 各注册方的收尾回调（延迟保存 flush）
+         var pg:Array = pages();
+         for(var j:int = 0; j < pg.length; j++)
          {
-            mod.cfg.clamp();
-            mod.cfg.save();
-            cfgDirty = false;
+            try
+            {
+               if(pg[j]["onPageClose"] != null) pg[j]["onPageClose"]();
+            }
+            catch(ec:*)
+            {
+               err("pageClose:" + pg[j]["modId"], ec);
+            }
          }
          mod.cfg.diagAdd("tabOff");
       }
 
-      /** 面板打开时页面只保留子按钮（but1..5）+ 模组内容——对齐原版选项页
-       *  （pers/存档信息/记录文本等一概让位）。 */
       private function suppressGameContent(ov:*, record:Boolean):void
       {
          var n:int = ov["numChildren"];
          for(var i:int = n - 1; i >= 0; i--)
          {
             var c:* = ov["getChildAt"](i);
-            if(c == myBut || c == head || c == helpTf || isMine(c)) continue;
+            if(c == myBut || c == head || c == helpTf || c == tabRow || isMine(c)) continue;
             var nm:String = "";
             try
             {
@@ -1047,23 +1173,8 @@ package
          setRowsVisible(true);
       }
 
-      private function isChrome(c:*):Boolean
-      {
-         try
-         {
-            var nm:String = c["name"];
-            if(nm != null && nm != "" && nm.indexOf("instance") != 0) return true;
-         }
-         catch(e:*)
-         {
-            return true;
-         }
-         return false;
-      }
-
       private function setRowsVisible(v:Boolean):void
       {
-         if(head != null) head["visible"] = v;
          if(rows != null)
          {
             for(var i:int = 0; i < rows.length; i++)

@@ -135,7 +135,7 @@ y=100+  当前模组的设置行（行框 550x24、stride 30、规范同 v1.2.11
 
 | 期 | 内容 | 交付物 |
 |---|---|---|
-| 一期 | 宿主 API（registerPage/契约类）+ MSW 12 项自注册迁移 + 模组子页签行（≥2 方时出现）+ onPageClose 保存时机 | v1.3，单模组形态与现状视觉等价 |
+| 一期 ✅（2026-08-29，v1.3.0-hub） | 宿主 API（registerPage/契约类）+ MSW 12 项自注册迁移 + 模组子页签行（≥2 方时出现）+ onPageClose 保存时机。自动驱动验证：双页注册（MSW+mock）→ 子页签行渲染 → 自动切页 → 截图人审通过；rowOf=true、无 lastErr | 已交付 |
 | 二期 | Sandevistan 接入（其仓库侧实现注册；设置项最多、收益最大）；choice 控件 | 聚合页双模组 |
 | 三期 | RealisticVision（渲染模式 choice）/ TDFC / RandomRooms / RConnect 按需接入；action/info 控件；超 17 行滚轮滚动 | 全模组聚合 |
 | 末段 | 各期验收后重打 dist 分发包 | —— |
