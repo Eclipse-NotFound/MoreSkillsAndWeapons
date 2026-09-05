@@ -15,7 +15,7 @@
 
 ## 3. 当前状态
 
-- **v1.2.11（2026-08-29）**：文字/数字字形颜色对齐原版（探针实证 nazv/numb = `_sans/16/#00FF99` 非内嵌，全套照抄 + PipPage.setStyle 原版样式表）；**修 rowOf 密封类异常导致滑块/复选框调参静默失效**（#1069 改继续向父级）。自动驱动验证通过（tabFont 探针/rowOf=true/tabOn=1）。release SWF 23485 字节。
+- **v1.3.3（2026-08-29）**：聚合页一期交付（hub 登记簿 + MSW 自注册 + 模组子页签行）+ **跨模组通道定稿**：兄弟模组域互不可见（Sandevistan 实测推翻同域旧结论，shared-knowledge 已二次修正），宿主把登记簿挂 `World.w.main` 的 `MSWModAPICarrier` 动态载体（World 是密封类挂不了属性，#1056），兄弟模组经 `getChildByName("MSWModAPICarrier").modAPI.registerPage(...)` 接入，modAPI=published 已实测。release SWF 25961 字节。
 - **测试基建**：MSWAutoTest 常驻模组内（appid≠pfe 才激活，用户实例零影响）——自动开档/开主菜单页/派发点击，配 read_sol.py 与截图可全自动回归 UI。
 - v1.0（910cdce）：全部功能实机验证通过（2026-08-18）；dist zip 为 v1.0，本轮验收后重打包。
 - 回滚：`git checkout 910cdce -- release/MoreSkillsWeaponsMod.swf`。
