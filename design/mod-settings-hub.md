@@ -112,7 +112,7 @@ y=100+  当前模组的设置行（行框 550x24、stride 30、规范同 v1.2.11
 
 | 类型 | 用途 | 期 |
 |---|---|---|
-| check / slider | 开关、数值（已实现） | 一期 |
+| check / slider | 开关、数值（已实现）；设置项契约含可选 `def`（默认值），页签行尾"恢复默认"一键重置当前模组页（v1.3.4） | 一期 |
 | choice | 枚举轮换（如 RV 渲染模式：点击或 ◀▶ 循环） | 二期 |
 | action | 执行动作的按钮（如"重载配置""立即应用"） | 二期 |
 | info | 只读信息行（版本号、状态） | 三期 |
@@ -135,7 +135,7 @@ y=100+  当前模组的设置行（行框 550x24、stride 30、规范同 v1.2.11
 
 | 期 | 内容 | 交付物 |
 |---|---|---|
-| 一期 ✅（2026-08-29，v1.3.0-hub） | 宿主 API（registerPage/契约类）+ MSW 12 项自注册迁移 + 模组子页签行（≥2 方时出现）+ onPageClose 保存时机。自动驱动验证：双页注册（MSW+mock）→ 子页签行渲染 → 自动切页 → 截图人审通过；rowOf=true、无 lastErr | 已交付 |
+| 一期 ✅（2026-08-29，v1.3.4-hub；通道定稿 modAPI 载体后 **Sandevistan 已实测自动接入**，pages=3；"恢复默认"已加） | 宿主 API（registerPage/契约类）+ MSW 12 项自注册迁移 + 模组子页签行（≥2 方时出现）+ onPageClose 保存时机。自动驱动验证：双页注册（MSW+mock）→ 子页签行渲染 → 自动切页 → 截图人审通过；rowOf=true、无 lastErr | 已交付 |
 | 二期 | Sandevistan 接入（其仓库侧实现注册；设置项最多、收益最大）；choice 控件 | 聚合页双模组 |
 | 三期 | RealisticVision（渲染模式 choice）/ TDFC / RandomRooms / RConnect 按需接入；action/info 控件；超 17 行滚轮滚动 | 全模组聚合 |
 | 末段 | 各期验收后重打 dist 分发包 | —— |
