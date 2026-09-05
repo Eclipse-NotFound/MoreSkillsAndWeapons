@@ -3,10 +3,13 @@ package
    /**
     * 模组设置聚合页 —— 注册契约与登记簿（design/mod-settings-hub.md §3）。
     *
-    * 接入方式（其他模组，在各自仓库实现）：
-    *   var host:Class = getDefinitionByName("MoreSkillsWeaponsMod") as Class;
-    *   if(host != null) host["settingsRegister"](modId, displayName, items, onPageClose, desc);
-    * 加载顺序在 MSW 之前的模组：在自己的 ENTER_FRAME 里重试（≤300 帧）。
+    * 接入方式（其他模组，在各自仓库实现）——主通道：
+    *   var api:* = World.w["modAPI"];  // 宿主启动后自动发布。兄弟模组域互不可见，
+    *                                   // getDefinitionByName 拿不到宿主类
+    *                                   // （mod-loader-cross-domain-anomaly）
+    *   if(api != null) api["registerPage"](modId, displayName, items, onPageClose, desc);
+    * 未发布时在自己的 ENTER_FRAME 里重试（≤300 帧）。
+    * 同域直调备用通道：getDefinitionByName("MoreSkillsWeaponsMod").settingsRegister(...)。
     *
     * items 元素：
     *   { key, label, kind:"check"|"slider", min, max, step, hint,

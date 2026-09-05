@@ -2,6 +2,13 @@
 
 > 协议见 GOVERNANCE.md §8：只追加不改写，**新条目插在最上面**。
 
+## 2026-08-29（九续） v1.3.3：跨模组通道定稿（modAPI 载体）——回应 Sandevistan 接入受阻
+
+- Sandevistan 按契约实现后撞 #1065：兄弟模组域互不可见。证据成立，且推翻 shared-knowledge 旧结论（LoaderContext(false) 非同域，实为各模组独立子域；mod-loader-patch-structure.md 已二次修正）。这解释了既有观测：子域可见父域类（fe.inter/fl.controls 探针可用），兄弟互不可见。
+- 方案取舍：改 loader 合并游戏域（动共享 pfe.swf + 全模组回归）不取；采用父域对象会合点——World 实例密封挂不了属性（#1056 第一次尝试静默失败，诊断空白暴露），改 **MSWModAPICarrier 动态载体挂 World.w.main**（幂等发布，getChildByName 可达）。modAPI=published 实测（SOL）。
+- 待办：Sandevistan 侧重试循环改走 getChildByName("MSWModAPICarrier").modAPI（其常驻重试 10 帧一发，通道就绪后自动出现）；二期验收。D-044 落感与举枪/切枪仍待玩家。
+
+
 ## 2026-08-29（七续） v1.3.0：聚合页一期交付（宿主 API + 自注册 + 模组子页签）
 
 - 按 design/mod-settings-hub.md 一期实施：新增 MSWSettingsHub（登记簿 + MSW 12 项 buildMswItems 自注册构造器 + makeGetter/makeSetter 闭包）；MoreSkillsWeaponsMod 增静态契约入口 settingsRegister（其他模组经 getDefinitionByName 调用）与 settings 实例；MSWPipTab 重构为登记簿驱动（renderRows 按当前页重建行、通用 min/max/step 滑块换算、≥2 注册方时顶部模组子页签行、单方自动平铺、close 统一调 onPageClose）；MSWAutoTest 注册 mock 页 + 自动切页验证。行容器沿用 MovieClip；rowOf 密封类防护保留。
