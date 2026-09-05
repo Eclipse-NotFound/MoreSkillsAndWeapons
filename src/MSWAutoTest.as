@@ -48,11 +48,11 @@ package
       {
          var items:Array = [
             {"key": "mockA", "label": "模拟开关", "kind": "check", "min": 0, "max": 0, "step": 1,
-             "hint": "自动测试用模拟项",
+             "hint": "自动测试用模拟项", "def": true,
              "get": function():* { return mockA; },
              "set": function(v:*):void { mockA = v == true; }},
             {"key": "mockB", "label": "模拟数值", "kind": "slider", "min": 0, "max": 100, "step": 5,
-             "hint": "步进5",
+             "hint": "步进5", "def": 50,
              "get": function():* { return mockB; },
              "set": function(v:*):void { mockB = Number(v); }}
          ];

@@ -36,6 +36,7 @@ package
       private var helpTf:TextField = null;  // 右侧帮助文本
       private var tabRow:MovieClip = null;  // 模组子页签行
       private var chips:Array = null;       // 子页签按钮
+      private var resetBtn:MovieClip = null; // "恢复默认"按钮（当前页）
       private var rows:Array = null;        // 当前方设置行
       private var selPage:int = 0;
       private var builtPages:int = -1;      // 构建页签行时的注册方数量
@@ -527,6 +528,12 @@ package
             if(butColor != null) fcolor = butColor;
             fembed = butEmbed;
          }
+         else if(kind == "chip")
+         {
+            // 页签：行字体 + 指定字号（页签是次级控件，不跟按钮的 20 号）
+            if(butColor != null) fcolor = butColor;
+            fembed = rowEmbed;
+         }
          if(fname != null) fmt.font = fname; else fmt.font = "SimHei";
          if(fsize != null) fmt.size = fsize; else fmt.size = size;
          fmt.color = fcolor;
@@ -697,15 +704,15 @@ package
          {
             var pg:* = pages()[i];
             var nm:String = pg["displayName"] == null ? pg["modId"] : pg["displayName"];
-            var lt:TextField = makeLabel(nm, 13, 0xE8FFE8, "button");
-            var w:Number = lt["width"] + 24;
+            var lt:TextField = makeLabel(nm, 14, 0xD8FFE8, "chip");
+            var w:Number = lt["width"] + 22;
             var chip:MovieClip = new MovieClip();
             var bg:Sprite = new Sprite();
-            drawButtonFace(bg["graphics"], w, 24, i == selPage);
+            drawButtonFace(bg["graphics"], w, 22, i == selPage);
             chip["addChild"](bg);
             chip["mswBg"] = bg;
-            lt["x"] = 12;
-            lt["y"] = 3;
+            lt["x"] = 11;
+            lt["y"] = 2;
             chip["addChild"](lt);
             chip["mswIdx"] = i;
             chip["buttonMode"] = true;
@@ -717,8 +724,61 @@ package
             chips[chips.length] = chip;
             cx += w + 8;
          }
+         // "恢复默认"：重置当前模组页全部设置项（有 def 的）
+         resetBtn = new MovieClip();
+         var rbBg:Sprite = new Sprite();
+         drawButtonFace(rbBg["graphics"], 92, 22, false);
+         resetBtn["addChild"](rbBg);
+         resetBtn["mswBg"] = rbBg;
+         var rlt:TextField = makeLabel("恢复默认", 14, 0x9FE8C8, "chip");
+         rlt["x"] = 11;
+         rlt["y"] = 2;
+         resetBtn["addChild"](rlt);
+         resetBtn["x"] = cx + 16;
+         resetBtn["y"] = 0;
+         resetBtn["buttonMode"] = true;
+         resetBtn["mouseChildren"] = false;
+         resetBtn.addEventListener(MouseEvent.CLICK, onResetClick);
+         tabRow["addChild"](resetBtn);
          ov["addChild"](tabRow);
          builtPages = n;
+      }
+
+      private function onResetClick(e:*):void
+      {
+         try
+         {
+            var w:* = MSWU.world();
+            if(w == null) return;
+            var pg:Array = pages();
+            if(selPage >= pg.length) return;
+            var page:* = pg[selPage];
+            var items:Array = page["items"];
+            var n:int = 0;
+            for(var i:int = 0; i < items.length; i++)
+            {
+               var it:Object = items[i];
+               if(it == null || it["def"] === undefined || it["def"] == null || it["set"] == null) continue;
+               it["set"](it["def"]);
+               n++;
+            }
+            try
+            {
+               if(page["onPageClose"] != null) page["onPageClose"](); // 重置即持久化
+            }
+            catch(e2:*)
+            {
+            }
+            var ov:* = findOptVis(w);
+            if(ov != null) renderRows(ov);
+            setRowsVisible(true);
+            if(helpTf != null) helpTf["text"] = "已恢复默认（" + n + " 项）。";
+            mod.cfg.diagAdd("reset");
+         }
+         catch(err:*)
+         {
+            err("pageReset", err);
+         }
       }
 
       private function onPageChipClick(e:*):void
@@ -751,7 +811,7 @@ package
             {
                var chip:* = chips[j];
                var bg:* = chip["mswBg"];
-               drawButtonFace(bg["graphics"], Number(chip["width"]), 24, j == selPage);
+               drawButtonFace(bg["graphics"], Number(chip["width"]), 22, j == selPage);
             }
          }
          renderRows(ov);

@@ -52,19 +52,20 @@ package
       /** MSW 自注册的设置项（第一个注册方，走同一契约）。 */
       public static function buildMswItems(mod:*):Array
       {
-         var defs:Array = [
-            ["ricochet", "跳弹技能", "check", 0, 0, 1, ""],
-            ["dropRate", "下坠速率", "slider", 0, 3, 0.1, "0.1步进 0-3"],
-            ["wallHits", "撞墙次数", "slider", 0, 5, 1, "0=撞墙即爆"],
-            ["muzzleVel", "初速度", "slider", 10, 100, 1, "10-100"],
-            ["bounce", "反弹力度", "slider", 0, 1, 0.1, "0.1步进 0-1"],
-            ["aimSkill", "蹲/梯举枪", "check", 0, 0, 1, "Shift+W"],
-            ["projHits", "手雷击落", "check", 0, 0, 1, ""],
-            ["projHp", "投掷物血量", "slider", 1, 1000, 5, "步进5"],
-            ["projArmor", "投掷物护甲", "slider", 0, 500, 5, "步进5"],
-            ["swapRun", "疾跑切枪", "check", 0, 0, 1, "Shift+数字键"],
-            ["spreadFix", "散布恒定", "check", 0, 0, 1, "仅榴弹炮"],
-            ["dashKeepPose", "冲刺保持蹲/趴", "check", 0, 0, 1, "魔法冲刺"]
+         // def = 出厂默认（= MSWConfig 字段初始值），供面板"恢复默认"使用
+      var defs:Array = [
+            ["ricochet", "跳弹技能", "check", 0, 0, 1, "", false],
+            ["dropRate", "下坠速率", "slider", 0, 3, 0.1, "0.1步进 0-3", 1],
+            ["wallHits", "撞墙次数", "slider", 0, 5, 1, "0=撞墙即爆", 0],
+            ["muzzleVel", "初速度", "slider", 10, 100, 1, "10-100", 35],
+            ["bounce", "反弹力度", "slider", 0, 1, 0.1, "0.1步进 0-1", 0.4],
+            ["aimSkill", "蹲/梯举枪", "check", 0, 0, 1, "Shift+W", false],
+            ["projHits", "手雷击落", "check", 0, 0, 1, "", true],
+            ["projHp", "投掷物血量", "slider", 1, 1000, 5, "步进5", 30],
+            ["projArmor", "投掷物护甲", "slider", 0, 500, 5, "步进5", 0],
+            ["swapRun", "疾跑切枪", "check", 0, 0, 1, "Shift+数字键", true],
+            ["spreadFix", "散布恒定", "check", 0, 0, 1, "仅榴弹炮", true],
+            ["dashKeepPose", "冲刺保持蹲/趴", "check", 0, 0, 1, "魔法冲刺", true]
          ];
          var items:Array = [];
          for(var i:int = 0; i < defs.length; i++)
@@ -73,6 +74,7 @@ package
             items[items.length] = {
                "key": d[0], "label": d[1], "kind": d[2],
                "min": d[3], "max": d[4], "step": d[5], "hint": d[6],
+               "def": d[7],
                "get": makeGetter(mod, d[0]),
                "set": makeSetter(mod, d[0], d[2])
             };
