@@ -1014,7 +1014,8 @@ package
       private function fmtVal(it:Object, v:*):String
       {
          var st:Number = Number(it["step"]);
-         if(st >= 1) return String(Math.round(Number(v)));
+         var suffix:String = it["suffix"] == null ? "" : String(it["suffix"]);
+         if(st >= 1) return String(Math.round(Number(v))) + suffix;
          var d:int = 0;
          var t:Number = st;
          while(t > 0 && t < 1 && d < 4)
@@ -1022,7 +1023,7 @@ package
             t *= 10;
             d += 1;
          }
-         return Number(v).toFixed(d);
+         return Number(v).toFixed(d) + suffix;
       }
 
       // ---------------- 控件事件 ----------------

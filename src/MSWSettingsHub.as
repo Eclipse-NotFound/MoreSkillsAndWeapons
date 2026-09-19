@@ -55,6 +55,11 @@ package
          // def = 出厂默认（= MSWConfig 字段初始值），供面板"恢复默认"使用
       var defs:Array = [
             ["ricochet", "跳弹技能", "check", 0, 0, 1, "", false],
+            ["ricochetCount", "基础跳弹次数", "slider", 0, 20, 1, "次数内必弹；0=首次撞墙即抽概率。整条弹道最多100次。", 1],
+            ["ricochetChance", "额外跳弹概率", "slider", 0, 100, 1, "首次额外跳弹概率；0%=不额外跳弹。设置只影响新发射的子弹。", 0],
+            ["ricochetChanceDecay", "额外概率衰减", "slider", 0, 100, 1, "每次成功额外跳弹后降低下次概率；50%：80%→40%→20%。", 0],
+            ["ricochetDamageDecay", "额外伤害衰减", "slider", 0, 100, 1, "仅额外跳弹后减伤；20%：100→80→64。伤害归零终止。", 0],
+            ["ricochetSpeedDecay", "额外速度衰减", "slider", 0, 100, 1, "仅额外跳弹后减速；低于1像素/游戏步终止。", 0],
             ["dropRate", "下坠速率", "slider", 0, 3, 0.1, "0.1步进 0-3", 1],
             ["wallHits", "撞墙次数", "slider", 0, 5, 1, "0=撞墙即爆", 0],
             ["muzzleVel", "初速度", "slider", 10, 100, 1, "10-100", 35],
@@ -74,7 +79,7 @@ package
             items[items.length] = {
                "key": d[0], "label": d[1], "kind": d[2],
                "min": d[3], "max": d[4], "step": d[5], "hint": d[6],
-               "def": d[7],
+               "def": d[7], "suffix": String(d[0]).indexOf("ricochet") == 0 && d[0] != "ricochet" && d[0] != "ricochetCount" ? "%" : "",
                "get": makeGetter(mod, d[0]),
                "set": makeSetter(mod, d[0], d[2])
             };

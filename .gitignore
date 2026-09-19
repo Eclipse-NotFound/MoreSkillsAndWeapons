@@ -13,3 +13,5 @@ Thumbs.db
 dist/
 build/pfe-patch/dist_build/
 build_out.txt
+build/out/
+build/test-runtime/

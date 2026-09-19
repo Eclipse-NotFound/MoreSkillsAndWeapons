@@ -1,12 +1,12 @@
 # 构建工具链说明（可复现）
 
 ## 依赖
-- Java 8+（本机 Oracle JDK 1.8.0_411）
+- Java：当前使用 `D:\Program Files\Adobe Animate 2024\jre\bin\java.exe`（17.0.10，2026-09-19 实际构建与测试通过；无需 PATH 配置）
 - Adobe Animate 2024 自带 mxmlc：
-  `C:\Program Files\Adobe\Adobe Animate 2024\Common\Configuration\ActionScript 3.0\bin\mxmlc.jar`
+  `D:\Program Files\Adobe Animate 2024\Common\Configuration\ActionScript 3.0\bin\mxmlc.jar`
   （版本输出：Version 4.6.0 build 23188）
 - playerglobal.swc：
-  `C:\Program Files\Adobe\Adobe Animate 2024\Common\Configuration\ActionScript 3.0\FP11.1\playerglobal.swc`
+  `D:\Program Files\Adobe Animate 2024\Common\Configuration\ActionScript 3.0\FP11.1\playerglobal.swc`
   （flex-config.xml 中已写死绝对路径）
 
 ## 为什么这样配（坑位记录，见 decisions D-007）
@@ -19,6 +19,18 @@
    完全动态访问架构（getDefinitionByName + bracket 访问），编译期零游戏类依赖。
 
 ## 使用
+
+隔离编译（PowerShell，在 build 目录执行）：
+
+```powershell
+New-Item -ItemType Directory -Force out | Out-Null
+& 'D:\Program Files\Adobe Animate 2024\jre\bin\java.exe' '-Dfile.encoding=UTF-8' -jar 'D:\Program Files\Adobe Animate 2024\Common\Configuration\ActionScript 3.0\bin\mxmlc.jar' '-target-player=11.1' '-source-path+=../src' '-output=out/MoreSkillsWeaponsMod.swf' '../src/MoreSkillsWeaponsMod.as'
+```
+
+跳弹验证：`./test-ricochet.ps1` 运行 AIR 确定性断言；`./test-game-smoke.ps1` 在复制的游戏资源上执行真实控件/子弹冒烟。二者使用独立应用 ID，结果在 `out/`；不写真实 pfe 存档。第二个脚本中的测试专用文档类只用于测试，不可将 `out/smoke/SmokeMod.swf` 当发布产物。
+
+旧入口如下，**直接覆盖正式 release**，使用前走发布门禁；其裸 java 命令需要 PATH 可用：
+
 ```
 cd build
 build.bat

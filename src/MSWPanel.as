@@ -25,12 +25,13 @@ package
       private var tab:MSWPipTab;
       private var ovTf:TextField = null; // F6 浮层内容（黑底白字框）
 
-      private static const ROWS:int = 12;
+      private var items:Array; // 与模组设置页共用同一份设置定义
 
       public function MSWPanel(m:*)
       {
          mod = m;
          tab = new MSWPipTab(m);
+         items = MSWSettingsHub.buildMswItems(m);
       }
 
       // ---------------- 状态查询 ----------------
@@ -113,13 +114,13 @@ package
       {
          if(code == 38) // Up
          {
-            sel = (sel + ROWS - 1) % ROWS;
+            sel = (sel + items.length - 1) % items.length;
             refresh();
             return true;
          }
          if(code == 40) // Down
          {
-            sel = (sel + 1) % ROWS;
+            sel = (sel + 1) % items.length;
             refresh();
             return true;
          }
@@ -128,19 +129,9 @@ package
          else if(code == 39 || code == 13) d = 1; // Right / Enter
          if(d != 0)
          {
-            if(sel == 0) mod.cfg.ricochet = !mod.cfg.ricochet;
-            else if(sel == 1) mod.cfg.dropRate += d * 0.1;
-            else if(sel == 2) mod.cfg.wallHits += d;
-            else if(sel == 3) mod.cfg.muzzleVel += d;
-            else if(sel == 4) mod.cfg.bounce += d * 0.1;
-            else if(sel == 5) mod.cfg.aimSkill = !mod.cfg.aimSkill;
-            // 2026-08-17 自 Sandevistan 迁移（MSWProjHits / MSWSwaprun）
-            else if(sel == 6) mod.cfg.projHits = !mod.cfg.projHits;
-            else if(sel == 7) mod.cfg.projHp += d * 5;
-            else if(sel == 8) mod.cfg.projArmor += d * 5;
-            else if(sel == 9) mod.cfg.swapRun = !mod.cfg.swapRun;
-            else if(sel == 10) mod.cfg.spreadFix = !mod.cfg.spreadFix;
-            else mod.cfg.dashKeepPose = !mod.cfg.dashKeepPose;
+            var it:Object = items[sel];
+            var value:* = it["get"]();
+            it["set"](it["kind"] == "check" ? !Boolean(value) : Number(value) + d * Number(it["step"]));
             mod.cfg.clamp();
             mod.cfg.save();
             refresh();
@@ -236,20 +227,16 @@ package
          var s:String = "";
          s += MSWWeapon.WEAPON_NAME + " 模组设置\n";
          s += "--------------------------------\n";
-         s += (sel == 0 ? "> " : "  ") + "跳弹技能 : " + (c.ricochet ? "开" : "关") + "\n";
-         s += (sel == 1 ? "> " : "  ") + "下坠速率 : " + c.dropRate.toFixed(1) + "  (0-3, 1=原版)\n";
-         s += (sel == 2 ? "> " : "  ") + "撞墙次数 : " + c.wallHits + "  (0=撞墙即爆)\n";
-         s += (sel == 3 ? "> " : "  ") + "初速度   : " + c.muzzleVel + "  (10-100, 原版 35)\n";
-         s += (sel == 4 ? "> " : "  ") + "反弹力度 : " + c.bounce.toFixed(1) + "  (0-1, 原版 0.4)\n";
-         s += (sel == 5 ? "> " : "  ") + "蹲/梯举枪 : " + (c.aimSkill ? "开" : "关") + "  (Shift+W)\n";
-         // 2026-08-17 自 Sandevistan 迁移（MSWProjHits / MSWSwaprun）
-         s += (sel == 6 ? "> " : "  ") + "手雷击落 : " + (c.projHits ? "开" : "关") + "\n";
-         s += (sel == 7 ? "> " : "  ") + "投掷物血量 : " + c.projHp + "\n";
-         s += (sel == 8 ? "> " : "  ") + "投掷物护甲 : " + c.projArmor + "\n";
-         s += (sel == 9 ? "> " : "  ") + "疾跑切枪 : " + (c.swapRun ? "开" : "关") + "  (Shift+数字键)\n";
-         s += (sel == 10 ? "> " : "  ") + "散布恒定 : " + (c.spreadFix ? "开" : "关") + "  (仅榴弹炮)\n";
-         s += (sel == 11 ? "> " : "  ") + "冲刺保持蹲/趴 : " + (c.dashKeepPose ? "开" : "关") + "  (魔法冲刺)\n";
-         s += "←→/Enter 调整   ↑↓ 选择";
+         for(var i:int = 0; i < items.length; i++)
+         {
+            var it:Object = items[i];
+            var value:* = it["get"]();
+            var label:String = it["kind"] == "check" ? (value ? "开" : "关") :
+               (Number(it["step"]) < 1 ? Number(value).toFixed(1) : String(value));
+            s += (sel == i ? "> " : "  ") + it["label"] + " : " + label + it["suffix"] + "\n";
+         }
+         s += "←→/Enter 调整   ↑↓ 选择\n";
+         s += items[sel]["hint"];
          ovTf["text"] = s;
       }
    }

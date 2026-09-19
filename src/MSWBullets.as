@@ -16,6 +16,7 @@ package
    {
       private var mod:*;
       private var track:Dictionary = new Dictionary(true);
+      private var seen:Dictionary;
       private var lastLoc:* = null;
       private var BulletCls:Class = null;
 
@@ -58,7 +59,7 @@ package
             //    子弹在出生帧内即可完成首次 step 并撞墙死亡（高速弹一步最多
             //    vel 像素），因此"首次见到即已 babah/超时"的子弹也要在这里处理，
             //    否则枪口附近会形成弹跳死角。
-            var seen:Dictionary = new Dictionary(true);
+            seen = new Dictionary(true);
             var o:* = loc["firstObj"];
             while(o != null)
             {
@@ -85,20 +86,21 @@ package
                               "kind": kind,
                               "prevX": sX,
                               "prevY": sY,
-                              "bounced": false,
+                              "ric": kind == "ric" ? new MSWRicochet(mod.cfg) : null,
                               "hits": mod.cfg.wallHits,
                               "dead": true
                            };
                            handleDeath(w, loc, o, info);
                            track[o] = info;
                         }
-                        else if(kind != "none")
+                        else
                         {
+                           // 也登记关闭开关时的子弹，避免中途开启跳弹追溯生效。
                            track[o] = {
                               "kind": kind,
                               "prevX": MSWU.num(o, "X"),
                               "prevY": MSWU.num(o, "Y"),
-                              "bounced": false,
+                              "ric": kind == "ric" ? new MSWRicochet(mod.cfg) : null,
                               "hits": mod.cfg.wallHits,
                               "livLeft": MSWU.num(o, "liv"),
                               "grounded": false,
@@ -284,9 +286,14 @@ package
          else if(inf["kind"] == "ric")
          {
             // 同上：无历史位置的墙撞按原版消亡，不做不可靠的反弹
-            if(wallIntact && inf["bounced"] != true && MSWU.num(inf, "prevX", -1e9) > -1e8)
+            if(wallIntact && MSWU.num(inf, "prevX", -1e9) > -1e8)
             {
-               bounce(loc, b, inf);
+               var chain:MSWRicochet = inf["ric"] as MSWRicochet;
+               var dx:Number = MSWU.num(b, "dx");
+               var dy:Number = MSWU.num(b, "dy");
+               var plan:Object = chain == null ? null : chain.plan(MSWU.num(b, "damage"), Math.sqrt(dx * dx + dy * dy));
+               if(plan != null) bounce(loc, b, inf, plan);
+               else mod.cfg.diagAdd("ricStop");
             }
          }
       }
@@ -318,7 +325,7 @@ package
        * - msw（可编程榴弹）：参考 PhisBullet 手雷——弹性 0.4、地面摩擦 0.7、
        *   落地静止、引信（liv）延续、翻滚动画、反弹音效。
        */
-      private function bounce(loc:*, b:*, inf:*):void
+      private function bounce(loc:*, b:*, inf:*, ricPlan:Object = null):void
       {
          mod.cfg.diagAdd("bounce");
          killVis(b);
@@ -550,6 +557,12 @@ package
             return;
          }
 
+         // 先用入射速度确定反射面/落点，衰减仅影响反射后的飞行段。
+         if(ricPlan != null)
+         {
+            ndx *= ricPlan.speedScale;
+            ndy *= ricPlan.speedScale;
+         }
          var nb:* = null;
          try
          {
@@ -586,17 +599,26 @@ package
          else
          {
             nb["liv"] = 100;
+            nb["damage"] = ricPlan.damage;
+            var chain:MSWRicochet = inf["ric"] as MSWRicochet;
+            chain.recordBounce();
+            mod.cfg.diagAdd("ricBounce");
+            if(ricPlan.extra) mod.cfg.diagAdd("ricExtra");
+            mod.cfg.diagSet("ricLastCount", chain.count);
          }
          track[nb] = {
             "kind": inf["kind"],
             "prevX": newX,
             "prevY": newY,
-            "bounced": true,
+            "ric": inf["ric"],
             "hits": MSWU.num(inf, "hits") - 1,
             "livLeft": MSWU.num(inf, "livLeft", 100),
             "spin": 0,
             "dead": false
          };
+         // 出生帧撞墙在扫描阶段就会生成续弹；它尚未被链扫描见到，
+         // 但本帧确实存活，不能让后面的清理分支删除其计数/设置快照。
+         seen[nb] = true;
       }
 
       private function copyBullet(b:*, nb:*, ndx:Number, ndy:Number):void

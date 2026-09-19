@@ -141,7 +141,7 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.3.4-hub"); // 发布门禁#2：线上构建指纹（read_sol 可读）
+         cfg.diagSet("ver", "1.4.0-ricochet"); // 发布门禁#2：线上构建指纹（read_sol 可读）
          settings.registerPage("msw", "MoreSkills&Weapons",
             MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");
          weapon.injectXml();

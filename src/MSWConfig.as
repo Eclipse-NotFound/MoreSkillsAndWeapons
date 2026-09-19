@@ -10,6 +10,13 @@ package
       /** 跳弹技能独立开关（尚未接入游戏技能系统） */
       public var ricochet:Boolean = false;
 
+      /** 跳弹链首次登记时快照；百分比均为 0..100 的整数。 */
+      public var ricochetCount:int = 1;
+      public var ricochetChance:Number = 0;
+      public var ricochetChanceDecay:Number = 0;
+      public var ricochetDamageDecay:Number = 0;
+      public var ricochetSpeedDecay:Number = 0;
+
       /** 可编程榴弹炮下坠速率 = weapon.grav（1.0 = 原版，0 = 无下坠） */
       public var dropRate:Number = 1.0;
 
@@ -66,6 +73,11 @@ package
          {
             so = SharedObject.getLocal("MSWConfig");
             if(so.data.ricochet != undefined) ricochet = so.data.ricochet;
+            if(so.data.ricochetCount != undefined) ricochetCount = so.data.ricochetCount;
+            if(so.data.ricochetChance != undefined) ricochetChance = so.data.ricochetChance;
+            if(so.data.ricochetChanceDecay != undefined) ricochetChanceDecay = so.data.ricochetChanceDecay;
+            if(so.data.ricochetDamageDecay != undefined) ricochetDamageDecay = so.data.ricochetDamageDecay;
+            if(so.data.ricochetSpeedDecay != undefined) ricochetSpeedDecay = so.data.ricochetSpeedDecay;
             if(so.data.dropRate != undefined) dropRate = so.data.dropRate;
             if(so.data.wallHits != undefined) wallHits = so.data.wallHits;
             if(so.data.muzzleVel != undefined) muzzleVel = so.data.muzzleVel;
@@ -138,6 +150,11 @@ package
          {
             if(so == null) so = SharedObject.getLocal("MSWConfig");
             so.data.ricochet = ricochet;
+            so.data.ricochetCount = ricochetCount;
+            so.data.ricochetChance = ricochetChance;
+            so.data.ricochetChanceDecay = ricochetChanceDecay;
+            so.data.ricochetDamageDecay = ricochetDamageDecay;
+            so.data.ricochetSpeedDecay = ricochetSpeedDecay;
             so.data.dropRate = dropRate;
             so.data.wallHits = wallHits;
             so.data.muzzleVel = muzzleVel;
@@ -161,6 +178,11 @@ package
 
       public function clamp():void
       {
+         ricochetCount = Math.max(0, Math.min(20, ricochetCount));
+         ricochetChance = percent(ricochetChance);
+         ricochetChanceDecay = percent(ricochetChanceDecay);
+         ricochetDamageDecay = percent(ricochetDamageDecay);
+         ricochetSpeedDecay = percent(ricochetSpeedDecay);
          dropRate = Math.round(dropRate * 10) / 10;
          if(dropRate < 0) dropRate = 0;
          if(dropRate > 3) dropRate = 3;
@@ -180,6 +202,11 @@ package
          projArmor = Math.round(projArmor);
          if(projArmor < 0) projArmor = 0;
          if(projArmor > 500) projArmor = 500;
+      }
+
+      private function percent(v:Number):Number
+      {
+         return isFinite(v) ? Math.max(0, Math.min(100, Math.round(v))) : 0;
       }
    }
 }
