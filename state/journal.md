@@ -2,6 +2,14 @@
 
 > 协议见 GOVERNANCE.md §8：只追加不改写，**新条目插在最上面**。
 
+## 2026-09-19 接手核对：同步 v1.3.4 现状与验证边界
+
+- 按用户要求接手 MoreSkills&Weapons，阅读职责、治理、记忆、近期日志、入口与设置相关源码、构建配置和设计/决策记录；接手时 master 工作树干净，HEAD 为 `7950f6c`。
+- 旧 MEMORY 停在 v1.3.3；源码诊断为 `1.3.4-hub`，release 26383 字节且与 HEAD 一致。2026-09-05 `f17880c` 已记录页签字号调整、恢复默认持久化、Sandevistan 自动接入实测，`7950f6c` 同步设计；将已完成事项移出待开发列表。
+- 按 `MSWU.inGameplay()` 纠正旧快照：排除条件为 onPause 与 godMode 同时成立，单纯时停仍允许介入。跨模组设置以 `MSWModAPICarrier` 载体为准；旧设计与注释中的直接 World 属性/兄弟域查类路径不可照用。
+- 构建依赖文件在 D 盘 Animate 路径存在，但本轮 PATH 查不到 Java；build.bat 直接写 release，未执行。本轮仅更新交接文件，没有编译、启动游戏、修改源码或部署产物。
+- 下一步按用户具体开发需求推进；面板手感、D-044 落感及换机后举枪/切枪仍是历史记录未闭环项，未新增用户待办。dist 保持旧 v1.0，发布时再走门禁。
+
 ## 2026-08-29（九续） v1.3.3：跨模组通道定稿（modAPI 载体）——回应 Sandevistan 接入受阻
 
 - Sandevistan 按契约实现后撞 #1065：兄弟模组域互不可见。证据成立，且推翻 shared-knowledge 旧结论（LoaderContext(false) 非同域，实为各模组独立子域；mod-loader-patch-structure.md 已二次修正）。这解释了既有观测：子域可见父域类（fe.inter/fl.controls 探针可用），兄弟互不可见。
