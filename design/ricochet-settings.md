@@ -35,7 +35,7 @@
 - `build/test-game-smoke.ps1`：复制当前根目录游戏资源到 build/test-runtime，采用原 pfe.swf 启动入口与独立应用 ID。仅加载本模组测试构建；验证真实 Pip 17 行、五个真实滑块事件、真实恢复默认点击、真实游戏 Bullet 对象连续 3 次基础 + 1 次额外反弹以及随后终止。
 - 游戏冒烟用暂停世界、人工设置真实子弹的撞墙状态来获得确定性，**不是自然开火全流程、多人/多模组共存或高弹量性能实测**。原有首次跳弹方向逻辑未改；概率曲线使用确定性随机值测试边界，不拿少量随机样本代替概率验证。
 - 运行结果与界面截图位于 build/out/tests/results.txt、build/out/smoke/results.txt、build/out/smoke/settings.png；均可重建，不入 git。测试进程及临时描述符由脚本清理，正式 pfe 存档不写入。
-- 生产构建：build/out/MoreSkillsWeaponsMod.swf，诊断版本 `1.4.0-ricochet`。本轮尚未覆盖正式 release 或重打 dist。
+- 生产构建：build/out/MoreSkillsWeaponsMod.swf，诊断版本 `1.4.0-ricochet`。2026-09-19 用户明确授权安装后已覆盖正式 release；同字节生产 SWF 的独立启动日志确认版本、持续心跳与设置入口。旧版备份与回滚路径见 state/MEMORY.md；dist 未重打。
 
 ## 再次构建
 
