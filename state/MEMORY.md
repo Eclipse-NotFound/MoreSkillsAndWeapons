@@ -1,6 +1,6 @@
 # MoreSkills&Weapons —— 开发记忆入口
 
-> 协议见工作区 GOVERNANCE.md §8；本模组参数见 ../AGENT_SCOPE.md。最近实现：2026-09-20；正式安装未随本轮更换。
+> 协议见工作区 GOVERNANCE.md §8；本模组参数见 ../AGENT_SCOPE.md。最近实现及安装：2026-09-20，v1.6.0-dazzler。
 
 ## 1. 这个模组是什么
 
@@ -12,20 +12,20 @@
 - 激光零直接生命伤害；正面眼部/传感器命中，普通敌人和首领统一失明 6 秒，可刷新；恐慌攻击可误伤同伴/中立并造成死亡，射手阵营不变。
 - 默认半自动 0.8 秒、6 次一匣、2 秒装填、每次 2 份原版电池；40 px/5° 瞬时辅助随二维速度减弱，手动精瞄始终有效；SATS 瞄眼基础 17 AP；每存档只赠枪一次，不赠弹。只有直线，没有跳弹/智能制导。
 - 智能武器默认关闭，规则与菱形 HUD 已确认。热键只用 F6，Tab/PageUp/PageDown 切换三页，不新增热键。
-- 当前模组可写；其他模组最小必要只读。游戏本体/正式 release 部署核对并发版本与授权；本轮仅实现验证，没有新安装请求。
+- 当前模组可写；其他模组最小必要只读。用户已明确“请实装”，授权将本次激光枪版本部署到正式 release；根游戏 loader 无须修改。
 
 ## 3. 当前状态
 
-- **候选 v1.6.0-dazzler 已实现、验证、未安装**。生产产物 build/out/MoreSkillsWeaponsMod.swf，39403 字节，SHA256 EF5FBA0F8407E25432F38CF9A9342D8D802B1F80243011C43A8693CEF92A713E。
+- **正式已安装 v1.6.0-dazzler**。release/MoreSkillsWeaponsMod.swf 与已验证的 build/out 候选同字节，39403 字节，SHA256 EF5FBA0F8407E25432F38CF9A9342D8D802B1F80243011C43A8693CEF92A713E。实现提交 1929bc8；未修改玩法源码即安装。
 - 普通激光回归 244 条 PASS；36 类原生敌人接管/恢复，24 个有武器的测试单位另验证真实攻击；覆盖身体/眼部/背面/遮挡/护盾、隐形不辅助、六次点射与装填、SATS 17 AP、存档 AMF 与读档武器接续、爆炸/刀棍/中立友伤、生命周期。Sandevistan 实际慢步及一次录制一次回放也通过。
-- 同字节生产检查：900 帧、laserGifts=1、ModSettings-connected、tabOn=1；无 lastErr/smartError/laserError。链接表 30 个模组定义，没有宿主原类或 Smoke/Probe。详见 knowledge/experiments/nonlethal-laser-20260920.md 和 build/out/laser-production/install-smoke.json。
+- 安装前与安装后同字节检查均通过：900 帧、laserGifts=1、ModSettings-connected、tabOn=1；无 lastErr/smartError/laserError。安装后证据 build/out/laser-installed/install-smoke.json；使用独立 AIR 存储，不读写真实存档。链接表 30 个模组定义，没有宿主原类或 Smoke/Probe。
 - 原功能回归：智能规则 42 条、跳弹规则 315 条、智能原生游戏场景（绕障/64 弹/锁定/设置）通过。激光有 11 个设置，Pip 独立页 msw-laser，F6 三页；眼圈/倒计时截图已检查。
-- **正式仍安装 v1.5.3-smart-diamond**：release/MoreSkillsWeaponsMod.swf 28580 字节，SHA256 671FD977ECA722B9272FF916426E64E5DF8C8C4DEFDA1ECADACDF1778C5EB72A。
+- 旧 v1.5.3-smart-diamond 已备份为 release/MoreSkillsWeaponsMod.before-v1.6.0-20260920.swf，28580 字节，SHA256 671FD977ECA722B9272FF916426E64E5DF8C8C4DEFDA1ECADACDF1778C5EB72A。
 - 根 pfe.swf 七 loader 未改，SHA256 9A81430D775209E37E8E7FD54414057995E0680671445F38797623865B5A699A。ModSettings 与其他模组正式文件未改。dist 仍旧 v1.0，未打分发包。
 
 ## 4. 正在进行与卡点
 
-- 本轮实现与隔离验证完成，候选等待用户提出安装/部署。不是只做普通枪手原型；36 类与真实伤害路径已有证据，但不等于全关卡全变体认证。
+- 本轮实现、隔离验证与正式安装完成。用户重启游戏后加载本版本，进入存档自动赠枪一次。36 类与真实伤害路径已有证据，但不等于全关卡全变体认证。
 - 激光开火最终采用 MSWDazzlerWeapon 的原生 shoot 回调，已移除轮询射击计数/激光头节点方案。固定扣弹，电池回收专长不会改变“每匣次数”。原生保存 id，恢复后重新接成子类。
 - 同包 internal 访问已实测；旧“只能 public”的公共记录新增了范围补充。四个适配类必须显式 includes 并在场景就绪后解析，避免早期 loader 死等。
 
@@ -39,7 +39,7 @@
 
 ## 6. 下一步
 
-- 用户要求安装时使用 remains-release-gate；先确认候选指纹/源版本，备份正式 v1.5.3，只替换本模组 release SWF 并重启，根游戏 loader 不需修改。安装后再跑同字节生产验证。
+- 安装完成，无待执行部署。实际游玩须重启；没有强制关闭用户游戏。若需回滚，用 release/MoreSkillsWeaponsMod.before-v1.6.0-20260920.swf 覆盖 release/MoreSkillsWeaponsMod.swf 后重启；根游戏和其他模组不改。已保存过新武器的存档不在回滚验证范围内。
 - 不要部署 build/out/laser/LaserSmokeMod.swf、smoke/SandevistanMod.as 的错误捕获器或任何测试副本。
 - 若另开新任务，优先读本文件及激光实验记录；Q1–Q25 不再询问。普通功能已完成，不自行建立提醒/待办。
 - v1.5.3 原回滚备份仍在 release/MoreSkillsWeaponsMod.before-v1.5.3-final-20260920.swf（v1.5.2）；回到设置拆分前须成套恢复 ModSettings loader/客户端，不能只换本 SWF。

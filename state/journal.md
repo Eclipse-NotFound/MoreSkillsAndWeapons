@@ -1,5 +1,18 @@
 # MoreSkills&Weapons —— 开发日志
 
+## 2026-09-20 v1.6.0 非致命激光枪正式安装
+
+- 按用户“请实装”部署实现提交 1929bc8 对应的已验证产物，未改玩法源码。release/MoreSkillsWeaponsMod.swf 为 39403 字节，SHA256 EF5FBA0F8407E25432F38CF9A9342D8D802B1F80243011C43A8693CEF92A713E。
+- 发布前核对既有构建/244 条激光回归/时停回放证据、候选指纹、实际 application.xml 与七 loader；根 pfe.swf 指纹保持 9A81430D775209E37E8E7FD54414057995E0680671445F38797623865B5A699A。只替换 MSW 正式 SWF，其他模组与真实存档未改。
+- 备份 release/MoreSkillsWeaponsMod.before-v1.6.0-20260920.swf 为原 v1.5.3，SHA256 671FD977ECA722B9272FF916426E64E5DF8C8C4DEFDA1ECADACDF1778C5EB72A；恢复该文件至正式路径并重启可回退模组。新武器已写入的存档不在回滚验证范围。
+- 安装后 test-installed.ps1 从正式 release 复制相同字节到独立 AIR 实例：900 帧、laserGifts=1、ModSettings-connected、tabOn=1，无 lastErr/smartError/laserError；证据 build/out/laser-installed/install-smoke.json。只重启测试实例，用户游戏未强制关闭，用户下次启动加载新版本。
+- 安装步骤中 File.Replace 参数问题已改用覆盖移动完成，备份未覆盖。仓库无单独 changelog，此条及设计/记忆状态作为版本记录；未重新打 dist 分发包。
+
+## 2026-09-20 v1.6.0 安装过程记录
+
+- 用户明确“请实装”。候选、原安装及根游戏指纹核对一致，七 loader 齐全；已创建并校验 release/MoreSkillsWeaponsMod.before-v1.6.0-20260920.swf（原 v1.5.3）。
+- 首次替换因 PowerShell 将 File.Replace 的 null 备份参数传为空路径而失败，尚未改变正式 SWF；临时副本保留。后续改用 .NET 覆盖移动，重新核对两端及备份指纹后继续部署与冒烟。
+
 ## 2026-09-20 非致命激光枪 v1.6.0 实现与隔离验证完成（未安装）
 
 - 用户确认整份方案“按此实现”。新增逐发原生开火回调、眼部几何及速度辅助、临时失明随机控制、原生子弹/爆炸/刀棍误伤、SATS 精确目标、每档一次赠枪、11 项设置与装备 HUD；不修改原有设置接口。

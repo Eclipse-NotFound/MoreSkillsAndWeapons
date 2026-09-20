@@ -13,7 +13,7 @@ date-updated: 2026-09-20
 
 # 非致命激光枪实现与隔离验证
 
-用户在 Q1–Q25 和整体补充边界之后明确“按此实现”。实现依据见 `design/nonlethal-laser.md`。本轮生成候选 v1.6.0-dazzler，没有安装；正式仍 v1.5.3。
+用户在 Q1–Q25 和整体补充边界之后明确“按此实现”。实现依据见 `design/nonlethal-laser.md`。实现阶段生成候选 v1.6.0-dazzler，保留正式 v1.5.3；随后按“请实装”完成安装，见末尾安装验收。
 
 ## 实现
 
@@ -58,4 +58,13 @@ date-updated: 2026-09-20
 
 ## 验证边界
 
-没有验证所有敌人变体/剧情组合、长时间自然战斗、联机或 DLC 1.03/1.04；36 类覆盖不等于所有关卡所有状态。眼部使用游戏公开眼位并按体型缩放，未为每套美术逐帧标注骨骼。时停联测覆盖本枪普通单次开火/回放与行动计时，不宣称所有原有时停+跳弹+智能三者问题已解决。正式游戏 SWF、release 和其他模组未修改。
+没有验证所有敌人变体/剧情组合、长时间自然战斗、联机或 DLC 1.03/1.04；36 类覆盖不等于所有关卡所有状态。眼部使用游戏公开眼位并按体型缩放，未为每套美术逐帧标注骨骼。时停联测覆盖本枪普通单次开火/回放与行动计时，不宣称所有原有时停+跳弹+智能三者问题已解决。上述实现验证阶段未修改正式游戏 SWF、release 和其他模组。
+
+## 2026-09-20 安装验收
+
+- 用户明确“请实装”。沿用已成功编译、已验证且指纹未变的产物，源码实现提交 1929bc8；不重新构建产生新的未测字节。
+- 实际启动配置仍为 application.xml → 根 pfe.swf；字符串扫描确认七 loader，根 SWF SHA256 仍为 9A81430D775209E37E8E7FD54414057995E0680671445F38797623865B5A699A。
+- 安装前备份 release/MoreSkillsWeaponsMod.before-v1.6.0-20260920.swf（v1.5.3，28580 字节，SHA256 671FD977ECA722B9272FF916426E64E5DF8C8C4DEFDA1ECADACDF1778C5EB72A），备份及临时产物双重指纹确认后覆盖移动到正式路径。首次 File.Replace 的空路径参数失败未改变正式文件，过程记于 journal。
+- 正式 release/MoreSkillsWeaponsMod.swf 与候选同字节：39403 字节，SHA256 EF5FBA0F8407E25432F38CF9A9342D8D802B1F80243011C43A8693CEF92A713E。
+- `test-installed.ps1 -ExpectedVersion 1.6.0-dazzler -ExpectedHudVersion 1-top-ccw -RuntimeDirectory out\laser\runtime -OutputDirectory out\laser-installed` 通过。新独立 AIR 应用 ID 从正式 release 复制运行，900 帧、laserGifts=1、ModSettings-connected、tabOn=1，无 lastErr/smartError/laserError；证据 out/laser-installed/install-smoke.json。只验证当前模组及设置接入，不等于所有其他模组组合验证。
+- 回滚：将上述备份覆盖 release/MoreSkillsWeaponsMod.swf 并重启游戏。未验证含新武器的存档在旧版中的表现。没有强制关闭用户实例，没有读写真实存档；实际游玩重启后加载新版本。
