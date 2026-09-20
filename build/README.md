@@ -29,6 +29,8 @@ New-Item -ItemType Directory -Force out | Out-Null
 
 跳弹验证：`./test-ricochet.ps1` 运行 AIR 确定性断言；`./test-game-smoke.ps1` 在复制的游戏资源上执行真实控件/子弹冒烟。二者使用独立应用 ID，结果在 `out/`；不写真实 pfe 存档。第二个脚本中的测试专用文档类只用于测试，不可将 `out/smoke/SmokeMod.swf` 当发布产物。
 
+伤害诊断：`./test-damage.ps1` 在隔离游戏副本中调用原版 Bullet.step/run 和 Unit.udarBullet，验证十次连续反弹的实际扣血、护甲/穿甲、精确墙面碰撞及轻机枪基础精度下的距离命中率。世界暂停后手动推进子弹，并非自然实战录像；命中率统计是随机样本。结果在 `out/damage/results.txt`，`out/damage/DamageSmokeMod.swf` 是测试探针，禁止部署到正式 release。
+
 旧入口如下，**直接覆盖正式 release**，使用前走发布门禁；其裸 java 命令需要 PATH 可用：
 
 ```

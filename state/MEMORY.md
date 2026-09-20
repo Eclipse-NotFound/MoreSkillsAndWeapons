@@ -15,6 +15,8 @@
 
 ## 3. 当前状态
 
+- **2026-09-20 跳弹伤害排查**：0% 衰减下连续 10 次反弹的有效扣血、护甲/穿甲正常；轻机枪穿过目标但不扣血在累计距离对照中复现，符合原版隐藏命中率规则。详情见 knowledge/experiments/ricochet-damage-20260920.md，样本未代入用户具体技能/目标。
+- **源码存在未部署修复**：精确落在墙面时续弹被墙内保护吞掉，已加 0.01 px 向外净空；286 项回归及真实 Bullet.step/run 扣血测试通过。此独立缺陷不能解释用户补充的“子弹仍飞行”。正式 release 保持下述 v1.4.0，未改累计距离/精度规则。
 - **源码 / 已安装版本 v1.4.0**：诊断版本 `1.4.0-ricochet`，增加基础跳弹次数、额外概率和概率/伤害/速度衰减；五项设置在模组页与 F6 共用定义。默认仍为一次跳弹，额外概率 0%。完整已确认规则见 design/ricochet-settings.md。
 - **2026-09-19 用户明确“安装”，已替换正式 release**：release/MoreSkillsWeaponsMod.swf 为 **27327 字节**，SHA256 `D87B233391E87AE6BE4BB224055D5F2615B2DC3E1DFF0EF6929391508D3CF1EC`。安装前 v1.3.4 备份为 release/MoreSkillsWeaponsMod.before-v1.4.0-20260919.swf（26383 字节）。dist 仍为 v1.0，本次未重打分发包。
 - **安装后加载检查通过**：独立应用 ID 重新启动与 release 完全同字节的生产 SWF（无测试探针），日志版本正确、frames 增至 900、modAPI=published、tabOn=1，设置入口有响应，未见 lastErr。记录在 build/out/install-smoke.json。当前用户原游戏进程保留，保存后重启才会加载新文件。
@@ -27,7 +29,7 @@
 ## 4. 正在进行与卡点
 
 - **2026-09-20 智能武器设想（讨论中，未批准实现）**：用户希望对子弹类武器加入目视+准星停留锁定、飞行中弯曲追踪、短暂失去目视后逐渐脱锁，并指定《赛博朋克2077》智能武器为灵感，要求 game-brainstorming + grilling。首轮待决定绕障程度、目视是否需双方互见、单/多目标锁定；具体时长、转弯能力、失锁过程、跳弹交互等随后依答案展开。候选建议不是已定需求。
-- 本轮开始时发现非本轮未提交改动：src/MSWBullets.as、build/tests/RicochetTests.as，以及 DamageProbe.as / DamageSmokeMod.as / test-damage.ps1；保留原状，不混入设计记录提交。
+- 智能武器讨论时发现的 MSWBullets、RicochetTests、DamageProbe/DamageSmokeMod/test-damage 改动，归属并行进行的跳弹伤害排查任务，现已完成验证与记录，未混入智能武器设计。
 - 本次跳弹功能已实现、验证并安装；未修改游戏本体 loader。基础次数 0–20、百分比 0–100，整条链保护上限 100 次；低速/零伤害终止；快照随续弹继承，允许再次命中同一目标。
 - 历史记录仍留有面板手感、D-044 冲刺落感、换机后举枪/疾跑切枪确认项；已读记录中未见后续闭环，本轮未重跑，不能据此判定功能失效。
 - **构建环境已打通**：使用 `D:\Program Files\Adobe Animate 2024\jre\bin\java.exe`（17.0.10），配原 mxmlc.jar / playerglobal.swc 成功构建；不依赖 PATH。PowerShell 将包含 `+=` 的编译选项整体加引号。当前仅有既存 MSWSettingsHub 无显式构造器警告，无编译错误。
@@ -42,7 +44,7 @@
 
 0. 智能武器先按 grilling 收敛规则并等用户确认共同理解；当前不修改实现或部署。已安装跳弹功能继续保持。
 1. 安装任务已完成；用户保存后重启即可体验。若需回滚，将 release/MoreSkillsWeaponsMod.before-v1.4.0-20260919.swf 复制覆盖 release/MoreSkillsWeaponsMod.swf，再重启。备份 SHA256 为 `BEF4D857B6B78D6CCB1F9E012B8BF33CD1E9892B7347892DA984176789DE648F`。
-2. 可重跑 build/test-ricochet.ps1 与 build/test-game-smoke.ps1；测试使用唯一应用 ID，清理只针对各自测试进程与描述符，正式 pfe 实例不碰。
+2. 跳弹命中距离是否每次反弹重置属于待用户决定的新平衡规则，未实现；边界修复备妥但未部署，部署前更新版本并走门禁。可重跑 build/test-ricochet.ps1、build/test-game-smoke.ps1、build/test-damage.ps1；测试使用唯一应用 ID，正式 pfe 实例不碰。
 3. 若进入发布，核对上述历史未闭环项，走发布门禁并更新 dist；不要把旧 v1.2.11 验收要求误当当前版本。
 4. choice/action/info 控件、长页滚动等仅为设计候选；跳弹/举枪接入游戏技能系统仍按用户延缓决定处理。
 

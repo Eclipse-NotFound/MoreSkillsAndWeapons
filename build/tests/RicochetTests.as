@@ -14,7 +14,7 @@ package
          trace("START RicochetTests");
          try
          {
-            rules(); chains(); configAndPanel();
+            rules(); chains(); wallBoundaries(); configAndPanel();
             finish("PASS " + checks + " assertions", 0);
          }
          catch(e:*) { finish("FAIL " + e + "\n" + e.getStackTrace(), 1); }
@@ -113,6 +113,25 @@ package
          ok(hit(s,b)==null,"explosive bullet excluded");
          c=cfg(); s=scene(c); b=initial(s); b.owner.player=false; s.engine.process(s.w);
          ok(hit(s,b)==null,"enemy bullet excluded");
+      }
+      private function wallBoundaries():void
+      {
+         // Inclusive wall collision: reflecting an exact face hit must spawn outside it.
+         for each(var face:Array in [[100,120,10,0],[140,120,-10,0],[120,100,0,10],[120,140,0,-10]])
+         {
+            var c:MSWConfig=cfg(); var s:Object=scene(c);
+            s.wall.phY1=100; s.wall.phY2=140;
+            var b:Bullet=new Bullet(s.owner,face[0]-face[2],face[1]-face[3]);
+            b.dx=face[2]; b.dy=face[3]; s.engine.process(s.w);
+            b.X=face[0]; b.Y=face[1]; b.babah=true; b.liv=3;
+            s.engine.process(s.w);
+            var next:Bullet=s.loc.firstObj as Bullet;
+            ok(next!==b,"exact face continuation "+face);
+            ok(next.X<100 || next.X>140 || next.Y<100 || next.Y>140,"exact face spawns outside wall "+face);
+            near(next.damage,100,"exact face preserves damage "+face);
+            near(next.dx,-face[2],"exact face dx "+face);
+            near(next.dy,-face[3],"exact face dy "+face);
+         }
       }
       private function configAndPanel():void
       {

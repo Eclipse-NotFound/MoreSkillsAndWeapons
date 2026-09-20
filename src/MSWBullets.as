@@ -519,18 +519,19 @@ package
          }
          else
          {
-            // 跳弹技能：镜面反射
+            // 跳弹技能：镜面反射。原版碰撞包含矩形边界，精确落在面上时
+            // 镜像仍在面上，须留最小净空，否则后面的墙内保护会吞掉续弹。
             if(crossX)
             {
                ndx = -dx;
-               if(dx >= 0) newX = px1 - (X - px1);
-               else newX = px2 + (px2 - X);
+               if(dx >= 0) newX = px1 - Math.max(X - px1, 0.01);
+               else newX = px2 + Math.max(px2 - X, 0.01);
             }
             if(crossY)
             {
                ndy = -dy;
-               if(dy >= 0) newY = py1 - (Y - py1);
-               else newY = py2 + (py2 - Y);
+               if(dy >= 0) newY = py1 - Math.max(Y - py1, 0.01);
+               else newY = py2 + Math.max(py2 - Y, 0.01);
             }
          }
          // 世界边界保险
