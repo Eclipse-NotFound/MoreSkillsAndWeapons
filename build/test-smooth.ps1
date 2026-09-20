@@ -1,28 +1,24 @@
-param([string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$SourcePath='../src')
+param([string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$SourcePath = '../src')
 $ErrorActionPreference = 'Stop'
 & (Join-Path $PSScriptRoot 'build-smart-host.ps1') -AnimateRoot $AnimateRoot
 $gameRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
-$runtimeDir = Join-Path $PSScriptRoot 'test-sandy-runtime'
-$outputDir = Join-Path $PSScriptRoot 'out\sandy-smart'
+$runtimeDir = Join-Path $PSScriptRoot 'out\smooth-runtime'
+$outputDir = Join-Path $PSScriptRoot 'out\smooth'
 $javaPath = Join-Path $AnimateRoot 'jre\bin\java.exe'
 $compilerPath = Join-Path $AnimateRoot 'Common\Configuration\ActionScript 3.0\bin\mxmlc.jar'
 New-Item -ItemType Directory -Force $runtimeDir,$outputDir,(Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release') | Out-Null
 Push-Location $PSScriptRoot
 try {
-    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-target-player=11.1' ("-source-path+="+$SourcePath) '-external-library-path+=out/SmartHost.swc' '-output=out/sandy-smart/Production.swf' (Join-Path $SourcePath 'MoreSkillsWeaponsMod.as')
+    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-target-player=11.1' ("-source-path+=" + $SourcePath) '-external-library-path+=out/SmartHost.swc' '-output=out/smooth/Production.swf' (Join-Path $SourcePath "MoreSkillsWeaponsMod.as")
     if ($LASTEXITCODE -ne 0) { throw 'Mod compilation failed' }
-    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-debug=true' '-target-player=11.1' ("-source-path+="+$SourcePath) '-external-library-path+=out/SmartHost.swc' '-source-path+=smoke' '-output=out/sandy-smart/SandySmartSmokeMod.swf' 'smoke/SandySmartSmokeMod.as'
+    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-debug=true' '-target-player=11.1' ("-source-path+=" + $SourcePath) '-external-library-path+=out/SmartHost.swc' '-source-path+=smoke' '-output=out/smooth/SmoothSmokeMod.swf' 'smoke/SmoothSmokeMod.as'
     if ($LASTEXITCODE -ne 0) { throw 'Smoke harness compilation failed' }
-    Copy-Item -LiteralPath (Join-Path $outputDir 'SandySmartSmokeMod.swf') -Destination (Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf')
+    Copy-Item -LiteralPath (Join-Path $outputDir 'SmoothSmokeMod.swf') -Destination (Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf')
     Get-ChildItem -LiteralPath $gameRoot -File | Where-Object { $_.Name -eq 'pfe.swf' -or $_.Name -match '^(sound|sprite|texture).*\.swf$' -or $_.Extension -eq '.xml' } | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $runtimeDir }
     if (-not (Test-Path -LiteralPath (Join-Path $runtimeDir 'Rooms'))) { Copy-Item -LiteralPath (Join-Path $gameRoot 'Rooms') -Destination $runtimeDir -Recurse }
     $settingsSwf=Join-Path $gameRoot 'mods\ModSettings\release\ModSettingsMod.swf'
     if(Test-Path -LiteralPath $settingsSwf){$settingsDir=Join-Path $runtimeDir 'mods\ModSettings\release';New-Item -ItemType Directory -Force $settingsDir | Out-Null;Copy-Item -LiteralPath $settingsSwf -Destination $settingsDir}
-    $sandyDir = Join-Path $runtimeDir 'mods\Sandevistan\release'
-    New-Item -ItemType Directory -Force $sandyDir | Out-Null
-    Copy-Item -LiteralPath (Join-Path $gameRoot 'mods\Sandevistan\release\SandevistanMod.swf') -Destination $sandyDir
-    "hotkey=220`nduration=240`ncooldown=0`nreplayspeed=3`nslowfactor=5`ndiaglog=1`ndebugtest=0`nesandyenabled=0" | Set-Content -LiteralPath (Join-Path $sandyDir 'config.txt') -Encoding utf8
-    $testId = 'pfe-msw-sandy-smart-' + [guid]::NewGuid().ToString('N')
+    $testId = 'pfe-msw-smooth-' + [guid]::NewGuid().ToString('N')
     $descriptor = Join-Path $runtimeDir 'app_msw_smart_test.xml'
     @"
 <application xmlns="http://ns.adobe.com/air/application/30.0">
@@ -31,7 +27,7 @@ try {
 </application>
 "@ | Set-Content -LiteralPath $descriptor -Encoding utf8
     $storageDir = Join-Path $env:APPDATA "$testId\Local Store"
-    foreach ($name in @('results.txt','heartbeat.txt','settings.png')) {
+    foreach ($name in @('results.txt','heartbeat.txt','trace.json','obstacle-trace.json','curve.png')) {
         $oldOutput = Join-Path $outputDir $name
         if (Test-Path -LiteralPath $oldOutput) { Remove-Item -LiteralPath $oldOutput }
     }
@@ -42,7 +38,7 @@ try {
             if (Test-Path -LiteralPath (Join-Path $storageDir 'heartbeat.txt')) { Get-Content -LiteralPath (Join-Path $storageDir 'heartbeat.txt') -TotalCount 1 }
         }
         if (-not $proc.HasExited) { throw 'Game smoke timed out' }
-        foreach ($name in @('results.txt','heartbeat.txt','settings.png')) {
+        foreach ($name in @('results.txt','heartbeat.txt','trace.json','obstacle-trace.json','curve.png')) {
             $src = Join-Path $storageDir $name
             if (Test-Path -LiteralPath $src) { Copy-Item -LiteralPath $src -Destination $outputDir }
         }
@@ -50,7 +46,7 @@ try {
         if (-not (Test-Path -LiteralPath $result)) { throw 'No game smoke result' }
         $lines = Get-Content -LiteralPath $result
         $lines | Select-Object -Last 12
-        if ($lines[-1] -ne 'PASS smart Sandevistan integration') { throw 'Smart Sandevistan test failed; see out/sandy-smart/results.txt' }
+        if ($lines[-1] -ne 'PASS smooth trajectory') { throw 'Smooth test failed; see out/smooth/results.txt' }
     }
     finally {
         if (-not $proc.HasExited) { Stop-Process -Id $proc.Id }

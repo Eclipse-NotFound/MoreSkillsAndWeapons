@@ -55,6 +55,7 @@ package
                rows[3].settingsSc.scrollPosition=5;rows[3].settingsSc.dispatchEvent(new Event("scroll"));
                m.panel.tabToggle(w);stored=new MSWConfig();stored.load();
                ok(stored.smartGrace==0.25,"changed decimal slider persists on page close");m.panel.tabToggle(w);
+               if(MSWU.has(m.settings,"api") && m.settings.api!=null)m.settings.api.selectPage("msw-smart");
                rows=[];collect(w.main);
                rows[0].settingsSc.selected=true;rows[0].settingsSc.dispatchEvent(new Event(Event.CHANGE));
                ok(m.cfg.smartEnabled,"real checkbox enables smart guns");
@@ -80,7 +81,7 @@ package
                w.loc.firstObj.step();
                ok(m.smart.snapshot(bullet)!=null && bullet.precision==0 && bullet.miss==0,"hook configures newborn before Bullet.step");
                ok(bullet.dy>0 && bullet.liv==100,"first-step steering before lifetime decrement");
-               bullet.step();ok(bullet.liv==99 && bullet.Y>180,"real Bullet follows steered trajectory");
+               bullet.step();m.smart.afterProjectiles();ok(bullet.liv==99 && bullet.Y>180,"real Bullet follows steered trajectory");
                var remaining:Number=m.smart.snapshot(bullet).remaining;
                m.smart.frame(w);m.smart.frame(w);ok(m.smart.snapshot(bullet).remaining==remaining,"display-only frozen frames do not consume budget");
                m.smart.lock.clear();w.loc.firstObj.step();ok(m.smart.snapshot(bullet).remaining<remaining,"shot remains independent after weapon loses lock");
@@ -88,20 +89,20 @@ package
                bullet.damage=100;var clone:*=spawn(220,180,-20,0);m.smart.inherit(bullet,clone);
                ok(Math.abs(m.smart.snapshot(clone).remaining-(m.cfg.smartLife-3/30))<0.00001,"bounce inherits remaining budget without refresh");
                target.fraction=100;w.loc.firstObj.step();ok(m.smart.snapshot(clone).remaining==0,"converted ally cancels existing guidance");target.fraction=2;
-               m.smart.lock.target=target;m.smart.lock.strength=1;bullet=spawn(340,240,20,0);w.loc.firstObj.step();
-               var hp:Number=target.hp;bullet.step();ok(target.hp<hp,"actual collision damages high-evasion target with smart accuracy");
+               m.smart.lock.target=target;m.smart.lock.strength=1;bullet=spawn(340,240,20,0);var hp:Number=target.hp;w.loc.firstObj.step();
+               bullet.step();m.smart.afterProjectiles();ok(target.hp<hp,"actual collision damages high-evasion target with smart accuracy");
                pos(520,240);var wall:Array=[];
                for(x=320;x<400;x+=40)for(y=200;y<280;y+=40){tile=w.loc.getAbsTile(x+1,y+1);tile.phis=1;tile.phX1=x;tile.phX2=x+40;tile.phY1=y;tile.phY2=y+40;wall.push(tile);}
                ok(!MSWSmartRoute.clear(w.loc,220,240,520,240),"real terrain blocks direct shot");
                bullet=spawn(220,240,20,0);hp=target.hp;var curved:Boolean=false;var trajectory:String="";
-               for(j=0;j<50 && !bullet.babah;j++){w.loc.firstObj.step();bullet.step();trajectory+=int(bullet.X)+","+int(bullet.Y)+" ";if(Math.abs(bullet.Y-240)>40)curved=true;}
+               for(j=0;j<50 && !bullet.babah;j++){w.loc.firstObj.step();bullet.step();m.smart.afterProjectiles();trajectory+=int(bullet.X)+","+int(bullet.Y)+" ";if(Math.abs(bullet.Y-240)>40)curved=true;}
                write("trajectory.txt",trajectory);ok(curved && target.hp<hp,"real Bullet curves around solid box and hits covered target");
                for each(tile in wall)tile.phis=0;
                // Force a close collision that a slow-turning round cannot avoid.
                for each(tile in wall)tile.phis=1;
                m.cfg.ricochet=true;m.cfg.ricochetCount=2;m.cfg.smartTurn=90;
                bullet=spawn(310,240,25,0);m.bullets.process(w);w.loc.firstObj.step();
-               var shot:Object=m.smart.snapshot(bullet);bullet.step();ok(bullet.babah,"smart shot physically collides with close wall");
+               var shot:Object=m.smart.snapshot(bullet);bullet.step();m.smart.afterProjectiles();ok(bullet.babah,"smart shot physically collides with close wall");
                remaining=shot.remaining;m.bullets.process(w);
                var bounced:*=w.loc.firstObj;
                while(bounced!=null && (bounced===bullet || m.smart.snapshot(bounced)!==shot))bounced=bounced.nobj;

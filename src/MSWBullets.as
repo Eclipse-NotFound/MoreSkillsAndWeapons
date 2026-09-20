@@ -352,7 +352,18 @@ package
          var ndy:Number = dy;
          var crossX:Boolean = false;
          var crossY:Boolean = false;
-         if(prevX > -1e8)
+         var smartShot:Object=MSWU.has(mod,"smart") && mod.smart!=null ? mod.smart.snapshot(b) : null;
+         var curve:Array=smartShot==null?null:smartShot.motionPath;
+         if(curve!=null && curve.length>1 &&
+            Math.abs(curve[curve.length-1].x-X)<0.001 && Math.abs(curve[curve.length-1].y-Y)<0.001)
+         {
+            // Smart bullets travel an arc in this step. Use the actual last
+            // collision segment, not a replay of their final heading from birth.
+            var entry:Object=curve[curve.length-2];
+            crossX=entry.x<=px1 && X>=px1 || entry.x>=px2 && X<=px2;
+            crossY=entry.y<=py1 && Y>=py1 || entry.y>=py2 && Y<=py2;
+         }
+         else if(prevX > -1e8)
          {
             // 按游戏自己的子步粒度（World.maxdelta=9）重放本步轨迹，确定真实进入面。
             // 不能用"上一帧位置"直接对比矩形：高速弹一步可移动 vel 像素（远超

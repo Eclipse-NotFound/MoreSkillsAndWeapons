@@ -24,6 +24,8 @@ package
       private var history:Array=[];
       private var replayHook:*;
       private var replayOriginals:Dictionary=new Dictionary(true);
+      private var motion:MSWSmartMotion=new MSWSmartMotion();
+      private var tail:*;
       public function MSWSmartWeapons(m:*)
       {
          mod=m;
@@ -71,6 +73,8 @@ package
       {
          try
          {
+            mod.cfg.diagSet("smartMotionVersion","1.1-smooth");
+            afterProjectiles(); motion.prune();
             var now:int=getTimer(); var dt:Number=lastTime==0?0:Math.min(0.1,(now-lastTime)/1000); lastTime=now;
             if(w.loc!==lastLoc || w.gg!==lastPlayer)
             {
@@ -127,6 +131,7 @@ package
       }
       private function detach():void
       {
+         afterProjectiles(); motion.clear();
          if(hook!=null && hook.in_chain && hook.loc!=null) hook.loc.remObj(hook);
          if(replayHook!=null && replayHook.in_chain && replayHook.loc!=null) replayHook.loc.remObj(replayHook);
          replayHook=null; recording=false;replaying=false;history=[];
@@ -138,14 +143,26 @@ package
       {
          try
          {
+            afterProjectiles();
             var w:*=MSWU.world();
             if(w==null || w.loc!==lastLoc || !mod.cfg.smartEnabled || !alivePlayer(w)) return;
             prepare(w);
             routeCache={}; searches=0;
             // This callback runs inside the original Location.step, not every display frame.
             scan(w,true);
+            // Newborn bullets were appended by player.step. Append a one-use
+            // finalizer AFTER them; remove it from inside its own callback so
+            // neither Location nor Sandevistan retains a stale next pointer.
+            tail=replaying ? new MSWSmartReplayStep(w.gg,afterProjectiles) : new MSWSmartStep(afterProjectiles);
+            tail.loc=w.loc; tail.X=tail.Y=0; w.loc.addObj(tail);
          }
-         catch(e:*) { mod.cfg.diagSet("smartError","step:"+e); }
+         catch(e:*) { afterProjectiles(); mod.cfg.diagSet("smartError","step:"+e); }
+      }
+      public function afterProjectiles():void
+      {
+         motion.finish();
+         if(tail!=null && tail.in_chain && tail.loc!=null) tail.loc.remObj(tail);
+         tail=null;
       }
       private function eligible(b:*,w:*):Boolean
       {
@@ -184,8 +201,8 @@ package
       }
       private function guide(b:*,s:Object,w:*):void
       {
-         if(s.remaining<=0) return;
-         if(!targetAllowed(s.target,w)) { s.remaining=0; return; }
+         if(s.remaining<=0) { motion.remove(b); return; }
+         if(!targetAllowed(s.target,w)) { s.remaining=0; motion.remove(b); return; }
          var dt:Number=Math.min(1/30,s.remaining); s.remaining=Math.max(0,s.remaining-dt);
          if(s.remaining<0.000000001) s.remaining=0;
          var tx:Number=(s.target.X1+s.target.X2)/2, ty:Number=(s.target.Y1+s.target.Y2)/2;
@@ -207,14 +224,14 @@ package
          }
          s.routeAge--;
          var path:Array=s.route;
-         if(path.length==0) return;
+         if(path.length==0) { motion.remove(b); return; }
          while(path.length>1 && MSWSmartRoute.clear(w.loc,b.X,b.Y,path[1].x,path[1].y)) path.shift();
-         var p:Object=path[0];
-         MSWSmartRoute.steer(b,p.x,p.y,s.turn*s.strength*dt*Math.PI/180,w.loc);
+         motion.advance(b,s,path,s.turn*s.strength*dt*Math.PI/180);
          mod.cfg.diagAdd("smartSteps");
       }
       public function inherit(from:*,to:*):void
       {
+         motion.remove(from);
          observed[to]=true;
          var s:Object=states[from];
          if(s!=null) { states[to]=s; delete states[from]; s.route=[]; s.routeAge=0; }

@@ -68,13 +68,18 @@ package
       { return Math.sqrt((x-tx)*(x-tx)+(y-ty)*(y-ty)); }
       public static function angle(a:Number):Number
       { while(a>Math.PI)a-=Math.PI*2; while(a< -Math.PI)a+=Math.PI*2; return a; }
-      public static function steer(b:*,tx:Number,ty:Number,maxTurn:Number,loc:*):void
+      public static function steer(b:*,tx:Number,ty:Number,maxTurn:Number,loc:*,fraction:Number=1):void
       {
          var speed:Number=Math.sqrt(b.dx*b.dx+b.dy*b.dy);
          if(!(speed>0) || !isFinite(speed)) return;
          var old:Number=Math.atan2(b.dy,b.dx);
          var desired:Number=angle(Math.atan2(ty-b.Y,tx-b.X)-old);
-         var turn:Number=Math.max(-maxTurn,Math.min(maxTurn,desired));
+         // Pursuit curvature eases into the target bearing over travelled
+         // distance, instead of snapping onto a ray as soon as the turn fits.
+         var requested:Number=desired;
+         if(fraction<1 && Math.abs(desired)<Math.PI/2)
+            requested=2*speed*fraction*Math.sin(desired)/Math.max(speed*fraction,distance(b.X,b.Y,tx,ty));
+         var turn:Number=Math.max(-maxTurn,Math.min(maxTurn,requested));
          // Preserve momentum and angular limit. If the preferred arc hits terrain,
          // try other legal headings for this step; never teleport around an obstacle.
          var choices:Array=[turn,-maxTurn,maxTurn,0,-maxTurn/2,maxTurn/2];
@@ -82,9 +87,10 @@ package
          for each(var d:Number in choices)
          {
             var a:Number=old+d;
-            if(!clear(loc,b.X,b.Y,b.X+Math.cos(a)*speed,b.Y+Math.sin(a)*speed,0.5)) continue;
-            var cost:Number=Math.abs(angle(desired-d));
+            if(!clear(loc,b.X,b.Y,b.X+Math.cos(a)*speed*fraction,b.Y+Math.sin(a)*speed*fraction,0.5)) continue;
+            var cost:Number=Math.abs(angle(turn-d));
             if(cost<score) { score=cost; selected=d; }
+            if(cost==0) break;
          }
          a=old+selected;
          b.dx=Math.cos(a)*speed; b.dy=Math.sin(a)*speed; b.vel=speed;

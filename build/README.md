@@ -1,5 +1,7 @@
 # 构建工具链说明（可复现）
 
+弹道平滑回归：`test-smooth.ps1` 测原生轨迹拐角、距离、曳光、绕墙扣血、跳弹入墙面、时限/寿命、清理及 64 发批量，结果和截图在 `out/smooth/`。`test-smart-sandy.ps1` 同时测真实慢步/回放的曲线。两者支持 `-SourcePath` 指定固定源码快照（相对 build 目录），生产候选分别写入各自结果目录的 `Production.swf`；Smoke/Probe 仍禁止部署。详见 `knowledge/experiments/smart-smoothing-20260920.md`。
+
 v1.5.1 起真实游戏 UI 测试需要正式安装 ModSettings 及其 loader。`test-game-smoke.ps1`、`test-damage.ps1`、`test-smart.ps1` 可用 `-HostSwf` / `-SettingsSwf` 指定预部署候选；测试只复制到私有目录。`test-installed.ps1` 使用正式宿主与正式依赖字节。
 
 ## 依赖

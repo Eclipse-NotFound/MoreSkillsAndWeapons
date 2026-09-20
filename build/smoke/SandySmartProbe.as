@@ -12,6 +12,7 @@ package
       private var initial:Dictionary=new Dictionary(true),replayed:Dictionary=new Dictionary(true);
       private var frozen:int=0,budgetChecks:int=0,replaySteps:int=0;
       private var preExisting:*,preBudget:Number,heldChecks:int=0;
+      private var slowCurves:int=0,replayCurves:int=0,maxKink:Number=0;
       public function SandySmartProbe(){timer.addEventListener("timer",tick);timer.start();}
       private function ok(v:Boolean,s:String):void{if(!v)throw new Error(s);log+="PASS "+s+"\n";}
       private function key():void{w.main.stage.dispatchEvent(new KeyboardEvent(KeyboardEvent.KEY_DOWN,true,false,0,220));w.main.stage.dispatchEvent(new KeyboardEvent(KeyboardEvent.KEY_UP,true,false,0,220));}
@@ -27,7 +28,8 @@ package
             if(phase==0)
             {
                if(t<160)return;
-               var found:Boolean=false;for each(var page:Object in m.settings.getPages())if(page.modId=="sandevistan")found=true;
+               var pages:Array=MSWU.has(m.settings,"api") && m.settings.api!=null ? m.settings.api.getPages() : m.settings.getPages();
+               var found:Boolean=false;for each(var page:Object in pages)if(page.modId=="sandevistan")found=true;
                if(!found)return;
                ok(found,"installed Sandevistan copy loaded and registered settings");
                if(w.pip.active)w.pip.onoff();w.onPause=false;w.godMode=false;w.catPause=false;w.gg.controlOn();
@@ -50,6 +52,18 @@ package
             {
                if(getQualifiedClassName(b)=="fe.weapon::Bullet" && b.owner===w.gg && (s=m.smart.snapshot(b))!=null)
                {
+                  if(s.motionPath!=null && s.motionPath.length>2)
+                  {
+                     var pts:Array=s.motionPath;var firstAngle:Number=Math.atan2(pts[1].y-pts[0].y,pts[1].x-pts[0].x);
+                     var lastAngle:Number=firstAngle;
+                     for(var k:int=2;k<pts.length;k++)
+                     {
+                        var a:Number=Math.atan2(pts[k].y-pts[k-1].y,pts[k].x-pts[k-1].x);
+                        maxKink=Math.max(maxKink,Math.abs(MSWSmartRoute.angle(a-lastAngle)));lastAngle=a;
+                     }
+                     if(Math.abs(MSWSmartRoute.angle(lastAngle-firstAngle))>0.0001)
+                     {if(phase==1)slowCurves++;else if(initial[b]==null)replayCurves++;}
+                  }
                   if(phase==1)
                   {
                      if(initial[b]!=null && !b.babah)
@@ -87,6 +101,7 @@ package
                ok(heldChecks>0,"pre-existing bullet replay budget verified");
                ok(target.hp<target.maxhp,"replayed smart bullets settle real target damage");
                ok(!w.godMode,"Sandevistan restores normal world state");
+               ok(slowCurves>0 && replayCurves>0 && maxKink<=Math.PI/60+0.00001,"real slow/replay trajectories use smooth native substeps; peak kink="+(maxKink*180/Math.PI));
                finish("PASS smart Sandevistan integration",0);
             }
          }
