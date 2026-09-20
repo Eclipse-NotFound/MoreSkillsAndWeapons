@@ -18,6 +18,17 @@ package
       public var ricochetSpeedDecay:Number = 0;
       public var ricochetResetDistance:Boolean = true;
 
+      public var smartEnabled:Boolean = false;
+      public var smartRadius:Number = 48;
+      public var smartAcquire:Number = 0.6;
+      public var smartGrace:Number = 0.15;
+      public var smartRetreat:Number = 0.6;
+      public var smartHold:Number = 0.6;
+      public var smartDecay:Number = 1.5;
+      public var smartRecover:Number = 0.4;
+      public var smartTurn:Number = 1080;
+      public var smartLife:Number = 2;
+
       /** 可编程榴弹炮下坠速率 = weapon.grav（1.0 = 原版，0 = 无下坠） */
       public var dropRate:Number = 1.0;
 
@@ -74,6 +85,16 @@ package
          {
             so = SharedObject.getLocal("MSWConfig");
             if(so.data.ricochet != undefined) ricochet = so.data.ricochet;
+            if(so.data.smartEnabled != undefined) smartEnabled = so.data.smartEnabled;
+            if(so.data.smartRadius != undefined) smartRadius = so.data.smartRadius;
+            if(so.data.smartAcquire != undefined) smartAcquire = so.data.smartAcquire;
+            if(so.data.smartGrace != undefined) smartGrace = so.data.smartGrace;
+            if(so.data.smartRetreat != undefined) smartRetreat = so.data.smartRetreat;
+            if(so.data.smartHold != undefined) smartHold = so.data.smartHold;
+            if(so.data.smartDecay != undefined) smartDecay = so.data.smartDecay;
+            if(so.data.smartRecover != undefined) smartRecover = so.data.smartRecover;
+            if(so.data.smartTurn != undefined) smartTurn = so.data.smartTurn;
+            if(so.data.smartLife != undefined) smartLife = so.data.smartLife;
             if(so.data.ricochetCount != undefined) ricochetCount = so.data.ricochetCount;
             if(so.data.ricochetChance != undefined) ricochetChance = so.data.ricochetChance;
             if(so.data.ricochetChanceDecay != undefined) ricochetChanceDecay = so.data.ricochetChanceDecay;
@@ -152,6 +173,16 @@ package
          {
             if(so == null) so = SharedObject.getLocal("MSWConfig");
             so.data.ricochet = ricochet;
+            so.data.smartEnabled = smartEnabled;
+            so.data.smartRadius = smartRadius;
+            so.data.smartAcquire = smartAcquire;
+            so.data.smartGrace = smartGrace;
+            so.data.smartRetreat = smartRetreat;
+            so.data.smartHold = smartHold;
+            so.data.smartDecay = smartDecay;
+            so.data.smartRecover = smartRecover;
+            so.data.smartTurn = smartTurn;
+            so.data.smartLife = smartLife;
             so.data.ricochetCount = ricochetCount;
             so.data.ricochetChance = ricochetChance;
             so.data.ricochetChanceDecay = ricochetChanceDecay;
@@ -181,6 +212,15 @@ package
 
       public function clamp():void
       {
+         smartRadius = smartClamp(smartRadius,48,0,200,4);
+         smartAcquire = smartClamp(smartAcquire,0.6,0.1,3,0.1);
+         smartGrace = smartClamp(smartGrace,0.15,0,0.5,0.05);
+         smartRetreat = smartClamp(smartRetreat,0.6,0.1,3,0.1);
+         smartHold = smartClamp(smartHold,0.6,0,3,0.1);
+         smartDecay = smartClamp(smartDecay,1.5,0.1,5,0.1);
+         smartRecover = smartClamp(smartRecover,0.4,0.1,3,0.1);
+         smartTurn = smartClamp(smartTurn,1080,90,2880,90);
+         smartLife = smartClamp(smartLife,2,0.1,5,0.1);
          ricochetCount = Math.max(0, Math.min(20, ricochetCount));
          ricochetChance = percent(ricochetChance);
          ricochetChanceDecay = percent(ricochetChanceDecay);
@@ -211,5 +251,8 @@ package
       {
          return isFinite(v) ? Math.max(0, Math.min(100, Math.round(v))) : 0;
       }
+
+      private function smartClamp(v:Number, def:Number, lo:Number, hi:Number, step:Number):Number
+      { return !isFinite(v) ? def : Math.round(Math.max(lo,Math.min(hi,Math.round(v/step)*step))*1000)/1000; }
    }
 }

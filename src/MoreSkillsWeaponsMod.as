@@ -23,6 +23,13 @@ package
        */
       private static var inst:MoreSkillsWeaponsMod = null;
 
+      /** Isolated AIR harness only; never exposes the production instance. */
+      public static function testInstance():*
+      {
+         var na:Class=MSWU.cls("flash.desktop.NativeApplication");
+         return na!=null && na["nativeApplication"]["applicationID"]!="pfe" ? inst : null;
+      }
+
       public static function init(main:*):void
       {
          try
@@ -38,6 +45,7 @@ package
       public var cfg:MSWConfig;
       public var weapon:MSWWeapon;
       public var bullets:MSWBullets;
+      public var smart:MSWSmartWeapons;
       public var trajectory:MSWTrajectory;
       public var panel:MSWPanel;
       public var aim:MSWAim;
@@ -67,6 +75,7 @@ package
          bullets = new MSWBullets(this);
          trajectory = new MSWTrajectory(this);
          panel = new MSWPanel(this);
+         smart = new MSWSmartWeapons(this);
          aim = new MSWAim(this);
          projhits = new MSWProjHits(this);
          swaprun = new MSWSwaprun(this);
@@ -141,11 +150,14 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.4.1-ricochet-distance"); // 发布门禁#2：线上构建指纹（read_sol 可读）
+         cfg.diagSet("ver", "1.5.0-smart-weapons");
          settings.registerPage("msw", "MoreSkills&Weapons",
             MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");
+         settings.registerPage("msw-smart", "智能武器", MSWSettingsHub.buildSmartItems(this), mswPageClose,
+            "实弹枪与霰弹枪：准星停留锁定，弯曲追踪与局部绕障；时长可调。");
          weapon.injectXml();
          stage_.addEventListener(Event.ENTER_FRAME, onFrame, false, 0, true);
+         stage_.addEventListener(Event.ENTER_FRAME, onSmartBeforeFrame, false, 1000, true);
          stage_.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown, false, 0, true);
          stage_.addEventListener(KeyboardEvent.KEY_UP, onKeyUp, false, 0, true);
          cfg.diagSet("booted", 1);
@@ -165,6 +177,12 @@ package
       }
 
       private var frameN:int = 0;
+
+      private function onSmartBeforeFrame(e:Event):void
+      {
+         try { smart.prepare(MSWU.world()); }
+         catch(err:*) { cfg.diagSet("smartError","prepare:"+err); }
+      }
 
       private function onFrame(e:Event):void
       {
@@ -213,6 +231,7 @@ package
             weapon.apply(w);      // 每帧应用配置（grav/explRadius/noTrass/nazv）
             weapon.provision(w);  // 发放武器+初始弹药（幂等）
             bullets.process(w);   // 子弹跟踪：跳弹/弹跳/引爆
+            smart.frame(w);       // 锁定时钟与HUD；实际制导由场景步进钩子驱动
             projhits.process(w);  // 2026-08-17 迁移：手雷击落（投掷物可击落）
             trajectory.update(w); // SATS 弹道覆盖层
             aim.update(w);        // 蹲姿/梯子举枪

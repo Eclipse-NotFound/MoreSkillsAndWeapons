@@ -4,59 +4,57 @@
 
 ## 1. 这个模组是什么
 
-武器与技能扩展模组：**跳弹**（镜面反射）+ **可编程榴弹炮 mswglau**（下坠/撞墙/初速度/反弹可调，SATS 实时弹道）+ **蹲/梯举枪**（Shift+W）+ **魔法冲刺保持蹲/趴姿** + **手雷击落 / 疾跑切枪**（迁自 Sandevistan）+ 散布恒定 + **哔哔小马"模组"子页**（主菜单页内，原版复选框/滑块控件，v1.2）+ F6 浮层。完全动态访问架构（零游戏类类型引用）。入口类 `MoreSkillsWeaponsMod`。
+武器与技能扩展模组：智能武器（准星锁定、飞行转弯、局部绕障）+ 跳弹 + 可编程榴弹炮 mswglau + 蹲/梯举枪 + 冲刺保持姿态 + 手雷击落/疾跑切枪 + 散布恒定。Pip「模组」原版风格设置页与 F6 浮层共用配置。
+入口类 MoreSkillsWeaponsMod。主体动态访问；v1.5.0 增加仅 fe.Pt 的外部编译存根，用于原生链表步进钩子，**不得将存根嵌入正式 SWF**。不需要改游戏 loader。
 
 ## 2. 用户偏好与协作约定
 
-- **热键只用 F6**（F8 在该键盘无键事件；F10 曾与其他模组冲突已让出）。
-- **与 Sandevistan 共存**：以 D-033 / `MSWU.inGameplay()` 为准：`onPause && godMode` 时不介入；仅时停（onPause=true、godMode=false）仍可介入。旧记忆将时停与回放一并排除，已于 2026-09-19 按源码纠正。
-- **改游戏本体文件前必须先检查其他开发者改动**（时间戳/loader 字符串），有改动先合并。
-- 跳弹/举枪接入游戏技能系统：用户要求延缓，未做。
+- 热键只用 F6；智能页在 F6 内用 Tab/PageUp/PageDown 切换，不新增全局热键。
+- 用户已明确「按这套参数实装并在设置面板中保留调节入口」：完整智能武器方案及初值、边界均已确认，不再重问 Q1–Q21。
+- 普通迁移技能仍遵守 D-033 / MSWU.inGameplay：可操作时停可介入，回放不介入。智能武器另有专用回放适配，仅重建弹丸走制导。
+- 游戏本体改动前必须检查其他开发者改动；只写当前模组，其他模组必要最小范围只读。
+- 跳弹/举枪接入游戏技能系统仍按用户要求延缓。
 
 ## 3. 当前状态
 
-- **2026-09-20 跳弹伤害排查**：0% 衰减下连续 10 次反弹的有效扣血、护甲/穿甲正常；轻机枪穿过目标但不扣血在累计距离对照中复现，符合原版隐藏命中率规则。详情见 knowledge/experiments/ricochet-damage-20260920.md，样本未代入用户具体技能/目标。
-- **源码 / 已安装版本 v1.4.1**：诊断版本 `1.4.1-ricochet-distance`。用户明确要求每次反弹重新计算命中距离并安装；新增“跳弹重置命中距离”开关，默认开启，旧配置缺键自动开启，关闭恢复整条路径累计。基础与额外反弹均生效，随弹道设置快照，不改武器精度/敌人闪避/原有伤害设置。Pip 与 F6 共 18 项，完整规则见 design/ricochet-settings.md。
-- **同时部署精确墙面续弹修复**：镜像位置加 0.01 px 向外净空，防止精确落在墙面被保护逻辑吞掉。315 项 AIR 断言通过；真实游戏开/关各 10 次反弹核对距离及扣血、基础+额外段、真实复选框保存/恢复默认与 18 行布局通过。
-- **2026-09-20 已安装**：release/MoreSkillsWeaponsMod.swf 为 **27521 字节**，SHA256 `F9DCD668B57B3EE9B44A52649D55432276AFADE9DEF0EF9E46BA5AB9B9ADCDB3`。安装前 v1.4.0 备份为 release/MoreSkillsWeaponsMod.before-v1.4.1-20260920.swf（27327 字节，SHA256 `D87B233391E87AE6BE4BB224055D5F2615B2DC3E1DFF0EF6929391508D3CF1EC`）。旧 v1.3.4 备份仍保留。dist 仍为 v1.0，本次未重打分发包。
-- **安装后加载检查通过**：独立应用 ID 重新启动与 release 完全同字节的生产 SWF（无测试探针），日志版本正确、frames 增至 900、modAPI=published、tabOn=1，设置入口有响应，未见 lastErr。记录在 build/out/install-smoke.json。当前用户原游戏进程保留，保存后重启才会加载新文件。
-- **跨模组通道**：宿主在 `World.w.main` 下发布动态载体 `MSWModAPICarrier`，其他模组经 `getChildByName("MSWModAPICarrier").modAPI.registerPage(...)` 接入。不要沿用旧设计中的兄弟域 `getDefinitionByName` 或直接写 `World.w.modAPI` 路径。
-- **最近历史验证依据**：2026-09-05 提交 `f17880c` 记录 Sandevistan 自动接入（测试 pages=3）及真实点击恢复默认验证；`7950f6c` 同步设计状态。设计正文部分仍标 2026-08-29，日期以各自证据为准。
-- **2026-09-19 实现验证**：隔离 AIR 266 项断言通过；游戏副本真实设置页 17 行、五个滑块、恢复默认点击通过，真实 Bullet 对象 3 次基础 + 1 次额外反弹、减伤/减速和概率归零终止通过；截图已核对。游戏冒烟暂停世界并设置碰撞状态，不是自然开火/高弹量性能/多模组共存复验。安装仅替换本模组 release，游戏本体与真实存档未改。
-- **测试基建**：MSWAutoTest 按 applicationID≠pfe 激活，自动开档/开菜单/派发点击；这是源码门控，不能替代正式实例回归。诊断配合 read_sol.py 读取。
-- v1.0（910cdce）历史记录为 2026-08-18 全部功能实机通过；dist zip 仍为 v1.0，尚未随当前 release 更新。回滚或发布须另走对应技能与部署授权流程。
+- **源码 / 已安装 v1.5.0**，诊断版本 `1.5.0-smart-weapons`，2026-09-20 完成。智能默认关闭，入口 Pip「模组 → 智能武器」或 F6 → Tab。十项配置（主开关 + 九个数值）保存/恢复默认可用，既有跳弹设置保留。
+- 新功能：玩家实弹枪与霰弹枪（含特殊弹药）、单目标、目视获取、遮挡后保持/线性衰减、重见恢复、出膛快照、有限转弯/局部绕障、跳弹共享剩余预算、普通命中抽签豁免及持续 HUD。细则和全部默认见 design/smart-weapons.md。
+- 正式 SWF **34457 字节**，SHA256 `B3D076B51D36E164740F373B6745980D3A2C9FCB8949208FAE94536891BAB6DB`。v1.4.1 备份：release/MoreSkillsWeaponsMod.before-v1.5.0-20260920.swf，27521 字节，SHA256 `F9DCD668B57B3EE9B44A52649D55432276AFADE9DEF0EF9E46BA5AB9B9ADCDB3`。
+- 智能验证：42 项规则；真实游戏首步接管、绕实体箱体命中、低转速撞墙后跳弹继承、原版霰弹特殊弹药、64 发寻路约 16–17 ms、分步搜索防饥饿、锁定/遮挡/恢复/暂停/彻底脱锁及真实设置控件通过。
+- Sandevistan 联合副本：实际热键/实际枪械开火、冻结与慢步计时、回放重建匹配、旧弹预算保持、回放实际扣血及恢复正常状态通过。补充扣血检查曾失败并先回滚，定位为测试准星被 Camera 覆盖；修正测试输入后通过，制导源码无需修改。完整证据和边界见 knowledge/experiments/smart-weapons-20260920.md。
+- 旧功能回归：315 项跳弹断言、原设置页和基础/额外反弹、连续十次真实扣血与护甲/穿甲/距离对照通过。未改原有跳弹次数/概率/衰减规则。
+- 生产 SWF 同字节隔离启动检查通过：版本正确、frames=900、modAPI=published、tabOn=1，无 lastErr/smartError，见 build/out/install-smoke.json。正式用户进程保留，需保存后重启加载。
+- 跨模组通道仍为 World.w.main 下 MSWModAPICarrier.modAPI.registerPage；不要改用密封 World 动态属性或兄弟域 getDefinitionByName。dist 仍为旧 v1.0，未制作分发包。
+- 原 v1.4.1「跳弹重置命中距离」默认开启且仍有效；关闭可恢复整条弹链累计距离。
 
 ## 4. 正在进行与卡点
 
-- **设置中枢独立模组探查（2026-09-20，未批准实施）**：已核对当前宿主、Sandevistan/RV 注册方、TDFC 诊断读取方及正式 SWF 字符串。建议独立 Pip 聚合页和接口，MSW 改为普通客户端，保留旧载体名称兼容；F6 当前为 MSW 私有浮层，建议首版保留，是否通用化待定。不能仅增加新宿主而让旧 MSW 同时渲染 UI。报告见 design/settings-hub-extraction-investigation.md；未修改实现或部署。
-- **2026-09-20 智能武器设想（待最终确认，未批准实现）**：用户指定《赛博朋克2077》智能武器为灵感，要求 game-brainstorming + grilling。Q1–Q20 已记录在 design/smart-weapons.md；最新 Q14–18=A（默认关闭总开关、合格枪间换枪保留、整弹链默认 2 秒制导预算、中断容错、主要参数可调），Q19=B（遮挡后框追踪真实位置），Q20=B（可操作时停中锁定时钟继续，弹丸预算仅实际推进时消耗）。已整理一份初值与边界建议供最终共同理解确认；这些新增建议尚非已定需求，不因前 20 题答完而直接实现/安装。
-- **智能武器未验风险**：优先验证出生当帧接管及 Sandevistan 时停/回放。只读发现时停会临时将弹丸伤害归零，不能以此当死亡或私自补回；回放会重建部分子弹，引用快照不能自动继承；原本开无敌时仅靠 onPause/godMode 不能可靠区分回放。细节与验收顺序已写 design/smart-weapons.md，未改其他模组/游戏本体，未声称兼容通过。
-- 跳弹伤害排查后续 v1.4.1 已完成用户要求的距离重置开关、验证与安装，未混入同期智能武器设计。游戏原进程未关闭，用户保存后重启加载新文件。
-- 本次跳弹功能已实现、验证并安装；未修改游戏本体 loader。基础次数 0–20、百分比 0–100，整条链保护上限 100 次；低速/零伤害终止；快照随续弹继承，允许再次命中同一目标。
-- 历史记录仍留有面板手感、D-044 冲刺落感、换机后举枪/疾跑切枪确认项；已读记录中未见后续闭环，本轮未重跑，不能据此判定功能失效。
-- **构建环境已打通**：使用 `D:\Program Files\Adobe Animate 2024\jre\bin\java.exe`（17.0.10），配原 mxmlc.jar / playerglobal.swc 成功构建；不依赖 PATH。PowerShell 将包含 `+=` 的编译选项整体加引号。当前仅有既存 MSWSettingsHub 无显式构造器警告，无编译错误。
+- 智能武器本轮实装已完成，交付包含下节明确边界；没有待用户重新确认的参数。
+- **设置中枢独立模组探查（未批准实施）**：保留 design/settings-hub-extraction-investigation.md。建议独立 Pip 聚合页/接口，MSW 改为客户端，保留旧载体名兼容；F6 是否通用化待定。不能只增加新宿主而让旧 MSW 同时渲染。该工作与本轮智能武器实装分开，未修改其他模组。
+- 历史面板手感、D-044 冲刺落感、换机后举枪/疾跑切枪的旧记录没有后续闭环；本轮未重跑，不据此判定失效。
 
 ## 5. 已知问题
 
-- **趴姿（lurked）分支尽力而为**：lurked/lurkX/lurkBox 均 internal 不可写——冲刺后位移>10px 会站起回归；蹲姿分支完整支持（已知限制，见 D-039）。
-- 发枪可能重复 +12 发 gren40（读档时序，可接受）。
-- DLC/pfe.swf、pfeUI.swf（1.03/1.04）未合并本模组 loader（如需支持按 D-010 流程）。
+- 局部绕障有有限转速、240 px 搜索范围及原版碰撞约束，不保证封闭空间/多拐角/贴墙高速弹命中。
+- Sandevistan 已测普通智能射击及回放；原有跳弹要求 damage>0，而时停慢步会暂时归零。**时停预演 + 跳弹 + 智能绕障三者组合未解决/未通过**，不得私自补回临时伤害。普通时间智能跳弹已测。
+- 玩家原已开 godMode 时，onPause/godMode 不能可靠辨别时停与回放；保留既有边缘限制。移动敌人和所有模组组合的逐像素回放一致性、长时间自然战斗和联机未声称覆盖。
+- 趴姿 lurked 分支受 internal 字段限制，冲刺位移较大仍可站起；蹲姿支持完整，见 D-039。发枪可能重复 +12 gren40。
+- DLC 1.03/1.04 未合并本模组 loader，不在当前支持/测试范围。
 
-## 6. 下一步（优先级排序）
+## 6. 下一步
 
-0. 智能武器 Q1–Q20 已确认，等待用户对 design/smart-weapons.md 的初值/边界收尾建议与共同理解做最终确认。确认后先隔离验证出生接管和时停/回放接入，再实现与测试；当前只更新设计，部署另按实际授权和门禁执行。
-1. v1.4.1 安装已完成，用户保存后重启即可体验。若需回滚到 v1.4.0，将 release/MoreSkillsWeaponsMod.before-v1.4.1-20260920.swf 复制覆盖 release/MoreSkillsWeaponsMod.swf，再重启；哈希见上。只想恢复累计命中距离，可直接关闭新开关，不必回滚。
-2. 可重跑 build/test-ricochet.ps1、build/test-game-smoke.ps1、build/test-damage.ps1；build/test-installed.ps1 复验正式生产 SWF。均使用唯一应用 ID，正式 pfe 实例不碰；未声称完成自然实战、高弹量或多模组共存复验。
-3. 若进入发布，核对上述历史未闭环项，走发布门禁并更新 dist；不要把旧 v1.2.11 验收要求误当当前版本。
-4. choice/action/info 控件、长页滚动等仅为设计候选；跳弹/举枪接入游戏技能系统仍按用户延缓决定处理。
-5. 若继续设置中枢独立工作，先确定拆分范围（尤其 F6），再建立新模组并配套迁移 MSW。新模组直接由游戏 loader 加载；旧载体兼容可让其他接入方分批迁移。验收必须包含卸掉 MSW 后其他模组设置仍可用，以及单页默认重置/容量/晚到注册。
+1. 用户保存后重启，通过智能页打开主开关；默认数值可按体验调节，不另建待办或提醒。
+2. 若处理上述时停三者组合，先界定伤害暂存/回放归属与跨模组权限；当前测试和源码不得当作完全兼容保证。
+3. 回滚至 v1.4.1：把 before-v1.5.0 备份复制覆盖 release/MoreSkillsWeaponsMod.swf 后重启。更早备份也保留；只关智能无需回滚。
+4. 若继续设置中枢独立，先确定拆分范围尤其 F6；验收卸掉 MSW 后其他设置仍可用、单页默认/容量/晚到注册。choice/action/info 等控件仍是候选。
+5. 外部分发需另走发布门禁更新 dist；不要把历史版本的待办当当前门禁结果。
 
 ## 7. 深入了解
 
-- **开发历程**：state/journal.md（含 Sandevistan 技能迁入与 D-037~D-044 全链路摘要；迁移报告原文在 git 历史）
-- **决策**：decisions/decisions.md（至 D-046；关键索引：D-001 动态架构 / D-002 帧后重生 / D-007 构建链 / D-010 pfe 合并 / D-016 F6-only / D-026~D-033 举枪与时停共存 / D-037~D-044 冲刺姿态 / D-045 分发 / D-046 面板）
-- **设计**：design/smart-weapons.md（Q1–Q20 已选规则、待确认收尾建议、静态工程证据与验收顺序）；design/ricochet-settings.md（跳弹规则、公式、实现与验证边界）；旧 design/features.md、mechanics-notes.md、skill-aim-sit-ladder.md、design-冲刺保持趴姿.md。
-- **源码结构**：src 下 15 个 AS 文件，v1.4.0 新增 MSWRicochet（每条跳弹链的快照/次数/概率）；其余入口/配置/武器/追踪/UI 等结构不变。配置存 SharedObject `MSWConfig`。
-- **诊断读取法**：`python build/tools/read_sol.py "%APPDATA%\pfe\Local Store\#SharedObjects\mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf\MSWConfig.sol"`——完整解析 AMF3 键值（格式规律沉淀在 shared-knowledge `knowledge-validation/methods/sol-diag-reading.md`）；diag 计数器跨会话累积、换机/换用户重置
-- **构建/部署**：build/README.md 已更新当前 Java/编译器路径、隔离构建与测试命令。旧 build.bat 使用裸 java，直接覆盖运行时 release，因此不是只读编译检查；实际部署走 remains-release-gate，修改 loader 走 remains-swf-patching。
-- **共享知识贡献清单**：原 HANDOFF §6（bullet-wall-impact / explosion-blast-bullets / phisbullet-grenade-physics / runtime-weapon-creation / sats-trajectory-arc / pippageopt-overlay / mod-loader-patch-structure 等）
+- design/smart-weapons.md：全部已确认规则、参数表、实现结构及历史源码调查。
+- knowledge/experiments/smart-weapons-20260920.md：测试条件、证据、失败定位、边界和产物回滚；state/journal.md：历程。
+- design/ricochet-settings.md、knowledge/experiments/ricochet-damage-20260920.md：原跳弹规则和伤害证据。
+- src 共 20 个 AS 类；新增 MSWSmartLock / Route / Weapons / Step 及 fe.weapon.MSWSmartReplayStep。回放节点是唯一新类，不覆盖原版类；仅回放期存在。
+- build/build.ps1 与 build/build.bat 均只构建至 out；先生成外部 SmartHost.swc。Java/Animate/compc 路径和全部测试命令见 build/README.md。生产产物与 Smoke/Probe 不得混用。
+- 配置为 SharedObject MSWConfig；read_sol.py 可只读解析真实 pfe 的 Local Store。diag 跨会话累积，排错须看版本/时间与新计数，不能把旧错误当新故障。
+- decisions/decisions.md：D-001～D-046 历史；原共享机制（碰撞、爆炸、武器创建、Pip 页、loader）继续查 shared-knowledge。

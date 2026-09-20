@@ -90,10 +90,26 @@ package
 
       private static function makeGetter(mod:*, k:String):Function
       {
-         return function():*
-         {
-            return mod.cfg[k];
-         };
+         return function():* { return mod.cfg[k]; };
+      }
+
+      public static function buildSmartItems(mod:*):Array
+      {
+         var defs:Array = [
+            ["smartEnabled","智能武器","check",0,0,1,"仅玩家实弹枪/霰弹；默认关闭。关闭立即停止制导。",false,""],
+            ["smartRadius","准星锁定容差","slider",0,200,4,"准星到敌人身体边缘的场景距离；无需双方发现。",48,"px"],
+            ["smartAcquire","锁定时间","slider",0.1,3,0.1,"暂停菜单时不计时；可操作时停期间继续计时。",0.6,"秒"],
+            ["smartGrace","中断容错时间","slider",0,0.5,0.05,"暂停菜单时不计时；可操作时停期间继续计时。",0.15,"秒"],
+            ["smartRetreat","锁定进度回退时间","slider",0.1,3,0.1,"暂停菜单时不计时；可操作时停期间继续计时。",0.6,"秒"],
+            ["smartHold","失去目视保持时间","slider",0,3,0.1,"暂停菜单时不计时；可操作时停期间继续计时。",0.6,"秒"],
+            ["smartDecay","脱锁衰减时间","slider",0.1,5,0.1,"暂停菜单时不计时；可操作时停期间继续计时。",1.5,"秒"],
+            ["smartRecover","重新目视恢复时间","slider",0.1,3,0.1,"暂停菜单时不计时；可操作时停期间继续计时。",0.4,"秒"],
+            ["smartTurn","转向速度（°/游戏秒）","slider",90,2880,90,"允许掉头；弱锁定按比例降低转弯能力。",1080,""],
+            ["smartLife","制导时限（游戏秒）","slider",0.1,5,0.1,"跳弹不刷新时限；子弹实际推进才计时，到期继续普通飞行。",2,""]
+         ];
+         var result:Array=[];
+         for each(var d:Array in defs) result.push({key:d[0],label:d[1],kind:d[2],min:d[3],max:d[4],step:d[5],hint:d[6],def:d[7],suffix:d[8],get:makeGetter(mod,d[0]),set:makeSetter(mod,d[0],d[2])});
+         return result;
       }
 
       /** check 即时持久化；slider 只写内存（onPageClose 统一 save）。 */

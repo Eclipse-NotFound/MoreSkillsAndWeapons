@@ -26,6 +26,7 @@ package
       private var ovTf:TextField = null; // F6 浮层内容（黑底白字框）
 
       private var items:Array; // 与模组设置页共用同一份设置定义
+      private var smartPage:Boolean = false;
 
       public function MSWPanel(m:*)
       {
@@ -112,6 +113,12 @@ package
       /** 返回 true = 已消费。 */
       public function handleKey(code:int):Boolean
       {
+         if(code==9 || code==33 || code==34)
+         {
+            smartPage=!smartPage; sel=0;
+            items=smartPage?MSWSettingsHub.buildSmartItems(mod):MSWSettingsHub.buildMswItems(mod);
+            refresh(); return true;
+         }
          if(code == 38) // Up
          {
             sel = (sel + items.length - 1) % items.length;
@@ -225,14 +232,14 @@ package
          if(ovTf == null) return;
          var c:* = mod.cfg;
          var s:String = "";
-         s += MSWWeapon.WEAPON_NAME + " 模组设置\n";
+         s += (smartPage ? "智能武器" : MSWWeapon.WEAPON_NAME) + " 模组设置 [Tab 切页]\n";
          s += "--------------------------------\n";
          for(var i:int = 0; i < items.length; i++)
          {
             var it:Object = items[i];
             var value:* = it["get"]();
             var label:String = it["kind"] == "check" ? (value ? "开" : "关") :
-               (Number(it["step"]) < 1 ? Number(value).toFixed(1) : String(value));
+               (Number(it["step"]) < 0.1 ? Number(value).toFixed(2) : Number(it["step"]) < 1 ? Number(value).toFixed(1) : String(value));
             s += (sel == i ? "> " : "  ") + it["label"] + " : " + label + it["suffix"] + "\n";
          }
          s += "←→/Enter 调整   ↑↓ 选择\n";

@@ -15,6 +15,8 @@ build/pfe-patch/dist_build/
 build_out.txt
 build/out/
 build/test-runtime/
+build/test-smart-runtime/
+build/test-sandy-runtime/
 build/tools/__pycache__/
 # 安装前本机回滚备份（正式旧版本另有 git 历史）
 release/*.before-*.swf

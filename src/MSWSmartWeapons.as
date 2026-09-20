@@ -1,0 +1,280 @@
+package
+{
+   import flash.display.Sprite;
+   import flash.geom.Point;
+   import flash.text.TextField;
+   import flash.text.TextFormat;
+   import flash.utils.Dictionary;
+   import flash.utils.getQualifiedClassName;
+   import flash.utils.getTimer;
+   import fe.weapon.MSWSmartReplayStep;
+
+   public class MSWSmartWeapons
+   {
+      private var mod:*;
+      public var lock:MSWSmartLock=new MSWSmartLock();
+      private var lastLoc:*;
+      private var lastPlayer:*;
+      private var hook:*;
+      private var states:Dictionary=new Dictionary(true);
+      private var observed:Dictionary=new Dictionary(true);
+      private var lastTime:int=0;
+      private var hud:Sprite=new Sprite();
+      private var label:TextField=new TextField();
+      private var routeCache:Object={};
+      private var searches:int=0;
+      private var recording:Boolean=false;
+      private var replaying:Boolean=false;
+      private var history:Array=[];
+      private var replayHook:*;
+      private var replayOriginals:Dictionary=new Dictionary(true);
+      public function MSWSmartWeapons(m:*)
+      {
+         mod=m; hud.name="MSWSmartHUD"; hud.mouseEnabled=false; hud.mouseChildren=false;
+         label.defaultTextFormat=new TextFormat("SimHei",13,0x66FFDD);
+         label.width=210; label.height=24; label.selectable=false; hud.addChild(label);
+      }
+      public static function weaponAllowed(w:*):Boolean
+      { return w!=null && MSWU.num(w,"skill")==2 && (MSWU.num(w,"tip")==2 || MSWU.num(w,"tip")==3); }
+      public function targetAllowed(u:*,w:*):Boolean
+      {
+         return u!=null && u!==w.gg && MSWU.has(u,"loc") && u.loc===w.loc &&
+            MSWU.num(u,"hp")>0 && MSWU.num(u,"sost")<3 &&
+            MSWU.num(u,"fraction")>=1 && MSWU.num(u,"fraction")<=4 && u.fraction!=w.gg.fraction &&
+            !u.disabled && !u.trigDis && !u.npc && !u.noAgro;
+      }
+      private function alivePlayer(w:*):Boolean
+      { return w!=null && MSWU.has(w,"gg") && w.gg!=null && MSWU.num(w.gg,"hp")>0 && MSWU.num(w.gg,"sost")<3; }
+      private function active(w:*):Boolean
+      { return MSWU.inGameplay(w) && !w.catPause && !mod.panel.overlayOpen && w.gg.ggControl; }
+      /** Runs before the host ENTER_FRAME, and again after it to observe transitions. */
+      public function prepare(w:*):void
+      {
+         if(w==null || !mod.cfg.smartEnabled || w.loc!==lastLoc || !alivePlayer(w)) return;
+         if(w.onPause && !w.godMode)
+         {
+            if(!recording && !replaying) { recording=true; history=[]; }
+         }
+         else if(w.onPause && w.godMode && recording)
+         {
+            recording=false; replaying=true;
+            replayOriginals=new Dictionary(true);
+            var old:*=w.loc.firstObj;
+            while(old!=null) { replayOriginals[old]=true;old=old.nobj; }
+            replayHook=new MSWSmartReplayStep(w.gg,function():void { beforeProjectiles(); });
+            placeHead(replayHook,w.loc); mod.cfg.diagAdd("smartReplayStart");
+         }
+         else if(!w.onPause)
+         {
+            recording=false; replaying=false; history=[];
+            replayOriginals=new Dictionary(true);
+            if(replayHook!=null && replayHook.in_chain) replayHook.loc.remObj(replayHook);
+            replayHook=null;
+         }
+      }
+      public function frame(w:*):void
+      {
+         try
+         {
+            var now:int=getTimer(); var dt:Number=lastTime==0?0:Math.min(0.1,(now-lastTime)/1000); lastTime=now;
+            if(w.loc!==lastLoc || w.gg!==lastPlayer)
+            {
+               detach(); lastLoc=w.loc; lastPlayer=w.gg;
+               states=new Dictionary(true); observed=new Dictionary(true); lock.clear();
+               recording=false;replaying=false;history=[];
+            }
+            if(!mod.cfg.smartEnabled || !alivePlayer(w)) { lock.clear(); stopGuidance(); detach(); hide(); return; }
+            prepare(w);
+            if(!replaying) attach(w);
+            if(w.sats!=null && w.sats.active) lock.clear();
+            if(!active(w)) { hide(); return; }
+            if(!weaponAllowed(w.gg.currentWeapon)) lock.clear();
+            else
+            {
+               if(lock.target!=null && !targetAllowed(lock.target,w)) lock.clear();
+               var choice:*=null; var nearest:Number=mod.cfg.smartRadius+0.0001;
+               for each(var u:* in w.loc.units)
+               {
+                  if(!targetAllowed(u,w)) continue;
+                  var dx:Number=Math.max(u.X1-w.celX,0,w.celX-u.X2);
+                  var dy:Number=Math.max(u.Y1-w.celY,0,w.celY-u.Y2);
+                  var distance:Number=Math.sqrt(dx*dx+dy*dy);
+                  if(distance<=nearest && visible(u,w))
+                  { if(distance<nearest || u===lock.candidate) { choice=u; nearest=distance; } }
+               }
+               lock.advance(choice,lock.target!=null && visible(lock.target,w),dt,mod.cfg);
+            }
+            scan(w,false); // Snapshot shots born on a time-stop display frame with no world step.
+            draw(w);
+         }
+         catch(e:*) { mod.cfg.diagSet("smartError","frame:"+e); }
+      }
+      private function attach(w:*):void
+      {
+         if(hook==null) hook=new MSWSmartStep(function():void { beforeProjectiles(); });
+         placeHead(hook,w.loc);
+      }
+      private function placeHead(node:*,loc:*):void
+      {
+         if(node.in_chain && node.loc===loc && loc.firstObj===node) return;
+         if(node.in_chain && node.loc!=null) node.loc.remObj(node);
+         node.loc=loc; node.X=node.Y=0;
+         loc.addObj(node);
+         // Move our own node only; retain every original object's relative order.
+         if(loc.firstObj!==node)
+         {
+            loc.remObj(node);
+            var first:*=loc.firstObj;
+            node.nobj=first; node.pobj=null; node.in_chain=true;
+            if(first!=null) first.pobj=node; else loc.lastObj=node;
+            loc.firstObj=node;
+         }
+      }
+      private function detach():void
+      {
+         if(hook!=null && hook.in_chain && hook.loc!=null) hook.loc.remObj(hook);
+         if(replayHook!=null && replayHook.in_chain && replayHook.loc!=null) replayHook.loc.remObj(replayHook);
+         replayHook=null; recording=false;replaying=false;history=[];
+         replayOriginals=new Dictionary(true);
+      }
+      private function stopGuidance():void
+      { for each(var s:Object in states) s.remaining=0; }
+      public function beforeProjectiles():void
+      {
+         try
+         {
+            var w:*=MSWU.world();
+            if(w==null || w.loc!==lastLoc || !mod.cfg.smartEnabled || !alivePlayer(w)) return;
+            prepare(w);
+            routeCache={}; searches=0;
+            // This callback runs inside the original Location.step, not every display frame.
+            scan(w,true);
+         }
+         catch(e:*) { mod.cfg.diagSet("smartError","step:"+e); }
+      }
+      private function eligible(b:*,w:*):Boolean
+      {
+         return b.owner===w.gg && weaponAllowed(b.weap) && b.tipBullet==0 && !b.babah &&
+            b.liv>3 && b.flame==0 && b.brakeR==0;
+      }
+      private function scan(w:*,advance:Boolean):void
+      {
+         var b:*=w.loc.firstObj; var guard:int=0;
+         while(b!=null && guard++<12000)
+         {
+            if(getQualifiedClassName(b)=="fe.weapon::Bullet" && b.owner===w.gg)
+            {
+               if(!observed[b])
+               {
+                  observed[b]=true;
+                  var shot:Object=null;
+                  if(eligible(b,w) && replaying) shot=replayShot(b);
+                  else if(eligible(b,w) && lock.target!=null && lock.strength>0 && targetAllowed(lock.target,w) && active(w))
+                  {
+                     shot={target:lock.target,strength:lock.strength,turn:mod.cfg.smartTurn,
+                        remaining:mod.cfg.smartLife,route:[],routeAge:0,goalX:0,goalY:0};
+                  }
+                  if(shot!=null) { states[b]=shot;b.precision=0;b.miss=0;mod.cfg.diagAdd("smartShots"); }
+                  if(recording && eligible(b,w))
+                     history.push({used:false,x:b.begx,y:b.begy,id:MSWU.str(b.weap,"id"),dx:b.dx,dy:b.dy,vel:b.vel,
+                        shot:shot==null?null:{target:shot.target,strength:shot.strength,turn:shot.turn,remaining:shot.remaining}});
+               }
+               var s:Object=states[b];
+               // The time-stop mod pins recorded originals during replay; only
+               // recreated player shots actually take a physics step there.
+               if(s!=null && advance && !b.babah && b.liv>0 && !(replaying && replayOriginals[b])) guide(b,s,w);
+            }
+            b=b.nobj;
+         }
+      }
+      private function guide(b:*,s:Object,w:*):void
+      {
+         if(s.remaining<=0) return;
+         if(!targetAllowed(s.target,w)) { s.remaining=0; return; }
+         var dt:Number=Math.min(1/30,s.remaining); s.remaining=Math.max(0,s.remaining-dt);
+         if(s.remaining<0.000000001) s.remaining=0;
+         var tx:Number=(s.target.X1+s.target.X2)/2, ty:Number=(s.target.Y1+s.target.Y2)/2;
+         if(MSWSmartRoute.clear(w.loc,b.X,b.Y,tx,ty)) s.route=[{x:tx,y:ty}];
+         else if(s.routeAge<=0 || MSWSmartRoute.distance(tx,ty,s.goalX,s.goalY)>32)
+         {
+            var key:String=int(b.X/24)+","+int(b.Y/24)+":"+int(tx/24)+","+int(ty/24);
+            var resolved:Boolean=true;
+            if(routeCache[key]!=null) s.route=routeCache[key].concat();
+            else if(searches<4)
+            {
+               searches++; s.route=MSWSmartRoute.find(w.loc,b.X,b.Y,tx,ty);
+               routeCache[key]=s.route.concat(); mod.cfg.diagAdd("smartRoutes");
+            }
+            else resolved=false;
+            // Defer to the next step, not the same six-step cohort: otherwise a
+            // large volley's later rounds could repeatedly lose the search budget.
+            s.routeAge=resolved?6:0; s.goalX=tx; s.goalY=ty;
+         }
+         s.routeAge--;
+         var path:Array=s.route;
+         if(path.length==0) return;
+         while(path.length>1 && MSWSmartRoute.clear(w.loc,b.X,b.Y,path[1].x,path[1].y)) path.shift();
+         var p:Object=path[0];
+         MSWSmartRoute.steer(b,p.x,p.y,s.turn*s.strength*dt*Math.PI/180,w.loc);
+         mod.cfg.diagAdd("smartSteps");
+      }
+      public function inherit(from:*,to:*):void
+      {
+         observed[to]=true;
+         var s:Object=states[from];
+         if(s!=null) { states[to]=s; delete states[from]; s.route=[]; s.routeAge=0; }
+      }
+      public function snapshot(b:*):Object { return states[b]; }
+      private function replayShot(b:*):Object
+      {
+         var id:String=MSWU.str(b.weap,"id");var best:Object=null;var distance:Number=97;
+         for each(var record:Object in history)
+         {
+            if(record.used || record.id!=id) continue;
+            var d:Number=MSWSmartRoute.distance(record.x,record.y,b.begx,b.begy);
+            if(d<distance) {distance=d;best=record;if(d<1)break;}
+         }
+         if(best==null) { mod.cfg.diagAdd("smartReplayUnmatched");return null; }
+         best.used=true;
+         if(best.shot==null)return null;
+         mod.cfg.diagAdd("smartReplayMatched");
+         b.dx=best.dx;b.dy=best.dy;b.vel=best.vel;b.rot=Math.atan2(b.dy,b.dx);
+         return {target:best.shot.target,strength:best.shot.strength,turn:best.shot.turn,remaining:best.shot.remaining,
+            route:[],routeAge:0,goalX:0,goalY:0};
+      }
+      public function visible(u:*,w:*):Boolean
+      {
+         if(!u.isVis || MSWU.has(u,"invis") && u.invis) return false;
+         var a:Point=w.visual.localToGlobal(new Point(u.X1,u.Y1));
+         var b:Point=w.visual.localToGlobal(new Point(u.X2,u.Y2));
+         var st:*=w.main.stage;
+         if(Math.max(a.x,b.x)<0 || Math.max(a.y,b.y)<0 || Math.min(a.x,b.x)>st.stageWidth || Math.min(a.y,b.y)>st.stageHeight) return false;
+         var x:Number=(u.X1+u.X2)/2;
+         var gx:Number=(w.gg.X1+w.gg.X2)/2, gy:Number=w.gg.Y1+(w.gg.Y2-w.gg.Y1)*0.3;
+         return w.loc.isLine(gx,gy,x,(u.Y1+u.Y2)/2) || w.loc.isLine(gx,gy,x,u.Y1+3) || w.loc.isLine(gx,gy,x,u.Y2-3);
+      }
+      private function screen(w:*,x:Number,y:Number):Point
+      { return w.main.globalToLocal(w.visual.localToGlobal(new Point(x,y))); }
+      private function hide():void { hud.visible=false; }
+      private function draw(w:*):void
+      {
+         if(hud.parent!==w.main) w.main.addChild(hud);
+         hud.visible=true; hud.graphics.clear();
+         var p:Point=screen(w,w.celX,w.celY);
+         var color:uint=lock.lost>0?0xFFBB55:0x66FFDD;
+         label.x=p.x+20; label.y=p.y+20;
+         label.text=lock.target!=null?"智能锁定 "+Math.round(lock.strength*100)+"%":lock.candidate!=null?"锁定中 "+Math.round(lock.progress*100)+"%":"";
+         label.textColor=color;
+         if(lock.target!=null || lock.candidate!=null)
+         {
+            hud.graphics.lineStyle(1,color,0.6); hud.graphics.drawRect(p.x+20,p.y+42,90,4);
+            hud.graphics.beginFill(color); hud.graphics.drawRect(p.x+20,p.y+42,90*(lock.candidate!=null?lock.progress:lock.strength),4); hud.graphics.endFill();
+         }
+         var u:*=lock.target;
+         if(u==null) return;
+         var a:Point=screen(w,u.X1-4,u.Y1-4), b:Point=screen(w,u.X2+4,u.Y2+4);
+         hud.graphics.lineStyle(1.5,color,Math.max(0.3,lock.strength));
+         hud.graphics.drawRect(a.x,a.y,b.x-a.x,b.y-a.y);
+      }
+   }
+}

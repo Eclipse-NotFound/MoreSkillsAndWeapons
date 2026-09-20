@@ -1,5 +1,5 @@
 param(
-    [string]$ExpectedVersion = '1.4.1-ricochet-distance',
+    [string]$ExpectedVersion = '1.5.0-smart-weapons',
     [string]$PythonPath = 'C:\Users\hello\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
 )
 $ErrorActionPreference = 'Stop'
@@ -38,6 +38,7 @@ try {
         Write-Output "Installed smoke: version=$($diag.ver) frames=$($diag.frames) settings=$($diag.tabOn)"
         if ($diag.ver -ne $ExpectedVersion) { throw 'Installed version marker mismatch' }
         if ($diag.lastErr) { throw "Installed build error: $($diag.lastErr)" }
+        if ($diag.smartError) { throw "Installed smart error: $($diag.smartError)" }
         if ($diag.frames -ge 900 -and $diag.modAPI -eq 'published' -and $diag.tabOn -eq 1) {
             $data | Add-Member -NotePropertyName installedSHA256 -NotePropertyValue $installedHash
             $data | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $outputDir 'install-smoke.json') -Encoding utf8

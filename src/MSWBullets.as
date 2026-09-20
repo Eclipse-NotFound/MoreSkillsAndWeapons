@@ -577,6 +577,7 @@ package
          }
          if(nb == null) return;
          copyBullet(b, nb, ndx, ndy);
+         if(MSWU.has(mod,"smart") && mod.smart!=null) mod.smart.inherit(b,nb);
          if(inf["kind"] == "msw")
          {
             // 手雷风格：视觉由模组驱动翻滚（vRot=false），不再沿速度指向；
