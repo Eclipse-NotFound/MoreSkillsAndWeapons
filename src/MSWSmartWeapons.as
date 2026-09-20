@@ -1,9 +1,6 @@
 package
 {
-   import flash.display.Sprite;
    import flash.geom.Point;
-   import flash.text.TextField;
-   import flash.text.TextFormat;
    import flash.utils.Dictionary;
    import flash.utils.getQualifiedClassName;
    import flash.utils.getTimer;
@@ -19,8 +16,7 @@ package
       private var states:Dictionary=new Dictionary(true);
       private var observed:Dictionary=new Dictionary(true);
       private var lastTime:int=0;
-      private var hud:Sprite=new Sprite();
-      private var label:TextField=new TextField();
+      private var hud:MSWSmartHUD=new MSWSmartHUD();
       private var routeCache:Object={};
       private var searches:int=0;
       private var recording:Boolean=false;
@@ -30,9 +26,8 @@ package
       private var replayOriginals:Dictionary=new Dictionary(true);
       public function MSWSmartWeapons(m:*)
       {
-         mod=m; hud.name="MSWSmartHUD"; hud.mouseEnabled=false; hud.mouseChildren=false;
-         label.defaultTextFormat=new TextFormat("SimHei",13,0x66FFDD);
-         label.width=210; label.height=24; label.selectable=false; hud.addChild(label);
+         mod=m;
+         mod.cfg.diagSet("smartHudVersion",MSWSmartHUD.VERSION);
       }
       public static function weaponAllowed(w:*):Boolean
       { return w!=null && MSWU.num(w,"skill")==2 && (MSWU.num(w,"tip")==2 || MSWU.num(w,"tip")==3); }
@@ -253,28 +248,10 @@ package
          var gx:Number=(w.gg.X1+w.gg.X2)/2, gy:Number=w.gg.Y1+(w.gg.Y2-w.gg.Y1)*0.3;
          return w.loc.isLine(gx,gy,x,(u.Y1+u.Y2)/2) || w.loc.isLine(gx,gy,x,u.Y1+3) || w.loc.isLine(gx,gy,x,u.Y2-3);
       }
-      private function screen(w:*,x:Number,y:Number):Point
-      { return w.main.globalToLocal(w.visual.localToGlobal(new Point(x,y))); }
       private function hide():void { hud.visible=false; }
       private function draw(w:*):void
       {
-         if(hud.parent!==w.main) w.main.addChild(hud);
-         hud.visible=true; hud.graphics.clear();
-         var p:Point=screen(w,w.celX,w.celY);
-         var color:uint=lock.lost>0?0xFFBB55:0x66FFDD;
-         label.x=p.x+20; label.y=p.y+20;
-         label.text=lock.target!=null?"智能锁定 "+Math.round(lock.strength*100)+"%":lock.candidate!=null?"锁定中 "+Math.round(lock.progress*100)+"%":"";
-         label.textColor=color;
-         if(lock.target!=null || lock.candidate!=null)
-         {
-            hud.graphics.lineStyle(1,color,0.6); hud.graphics.drawRect(p.x+20,p.y+42,90,4);
-            hud.graphics.beginFill(color); hud.graphics.drawRect(p.x+20,p.y+42,90*(lock.candidate!=null?lock.progress:lock.strength),4); hud.graphics.endFill();
-         }
-         var u:*=lock.target;
-         if(u==null) return;
-         var a:Point=screen(w,u.X1-4,u.Y1-4), b:Point=screen(w,u.X2+4,u.Y2+4);
-         hud.graphics.lineStyle(1.5,color,Math.max(0.3,lock.strength));
-         hud.graphics.drawRect(a.x,a.y,b.x-a.x,b.y-a.y);
+         hud.render(w,lock);
       }
    }
 }
