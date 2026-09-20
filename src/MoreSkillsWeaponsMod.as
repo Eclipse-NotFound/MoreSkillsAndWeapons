@@ -144,7 +144,8 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.5.2-smart-smooth");
+         cfg.diagSet("ver", "1.5.3-smart-diamond");
+         cfg.diagSet("smartHudVersion", MSWSmartHUD.VERSION);
          settings.registerPage("msw", "MoreSkills&Weapons",
             MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");
          settings.registerPage("msw-smart", "智能武器", MSWSettingsHub.buildSmartItems(this), mswPageClose,

@@ -1,11 +1,15 @@
 param(
-    [string]$ExpectedVersion = '1.5.1-modsettings',
+    [string]$ExpectedVersion = '1.5.3-smart-diamond',
+    [string]$ExpectedHudVersion = '',
+    [string]$RuntimeDirectory = 'test-runtime',
+    [string]$OutputDirectory = 'out',
     [string]$PythonPath = 'C:\Users\hello\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
 )
 $ErrorActionPreference = 'Stop'
 $gameRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
-$runtimeDir = Join-Path $PSScriptRoot 'test-runtime'
-$outputDir = Join-Path $PSScriptRoot 'out'
+$runtimeDir = Join-Path $PSScriptRoot $RuntimeDirectory
+$outputDir = Join-Path $PSScriptRoot $OutputDirectory
+New-Item -ItemType Directory -Force $outputDir | Out-Null
 $installed = Join-Path $PSScriptRoot '..\release\MoreSkillsWeaponsMod.swf'
 $testMod = Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf'
 # Run after test-game-smoke: reuse isolated assets, but replace its probe with production bytes.
@@ -40,6 +44,7 @@ try {
         $diag = $data.diag
         Write-Output "Installed smoke: version=$($diag.ver) frames=$($diag.frames) settings=$($diag.tabOn)"
         if ($diag.ver -ne $ExpectedVersion) { throw 'Installed version marker mismatch' }
+        if ($ExpectedHudVersion -and $diag.smartHudVersion -ne $ExpectedHudVersion) { throw 'Installed HUD version marker mismatch' }
         if ($diag.lastErr) { throw "Installed build error: $($diag.lastErr)" }
         if ($diag.smartError) { throw "Installed smart error: $($diag.smartError)" }
         if ($diag.frames -ge 900 -and $diag.modAPI -eq 'ModSettings-connected' -and $diag.tabOn -eq 1) {

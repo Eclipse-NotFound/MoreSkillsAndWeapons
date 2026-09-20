@@ -29,7 +29,6 @@ package
       public function MSWSmartWeapons(m:*)
       {
          mod=m;
-         mod.cfg.diagSet("smartHudVersion",MSWSmartHUD.VERSION);
       }
       public static function weaponAllowed(w:*):Boolean
       { return w!=null && MSWU.num(w,"skill")==2 && (MSWU.num(w,"tip")==2 || MSWU.num(w,"tip")==3); }

@@ -40,7 +40,13 @@ v1.5.1 起真实游戏 UI 测试需要正式安装 ModSettings 及其 loader。`
 
 智能武器：`test-smart-unit.ps1` 验证锁定状态机、参数保存和寻路/转弯数学；`test-smart.ps1` 验证原版首步、绕实体箱体命中、跳弹继承、霰弹特殊弹药、64 发局部寻路、实际帧锁定/遮挡/恢复/暂停，以及 10 项设置与 F6。`test-smart-sandy.ps1` 只读复制已安装 Sandevistan 到隔离副本，用独立配置验证真实时停/回放和重建弹丸匹配，绝不修改其正式配置。
 
-安装后验证：先由 `test-game-smoke.ps1` 准备隔离资源，再运行 `./test-installed.ps1`。它复制正式 release 的同字节生产 SWF 到隔离实例，检查版本、持续帧计数及设置入口，输出 `out/install-smoke.json`。脚本不替换正式 release，失败时部署方须恢复已留存的备份；默认期望 v1.5.0，可用 ExpectedVersion 参数指定。真实 pfe 进程和存储不受影响。
+菱形 HUD：`./test-smart-hud.ps1` 做 18 项实际光栅检查并生成状态对照图；`./test-smart-hud-game.ps1` 做 10 项原游戏 HUD 检查并保存真实 Raider 上的标记截图，分别输出到 `out/smart-hud`、`out/smart-hud-game`。后者支持 SourcePath，用于固定源码快照。所有 Smoke/Probe 均不可部署。
+
+安装后验证：先由 `test-game-smoke.ps1` 准备隔离资源，再运行 `./test-installed.ps1`。它复制正式 release 的同字节生产 SWF 到隔离实例，检查版本、持续帧计数及设置入口，默认输出 `out/install-smoke.json`。脚本不替换正式 release，失败时部署方须恢复已留存的备份；默认期望 v1.5.3，可用 ExpectedVersion 参数指定。真实 pfe 进程和存储不受影响。并行任务可用 RuntimeDirectory/OutputDirectory 选择独立资源和日志；本轮 HUD 安装检查使用：
+
+```powershell
+./test-installed.ps1 -ExpectedVersion '1.5.3-smart-diamond' -ExpectedHudVersion '1-top-ccw' -RuntimeDirectory 'out\smart-hud-game\runtime' -OutputDirectory 'out\smart-hud-production'
+```
 
 `build.bat` 现在也调用同一个隔离构建入口，不再直接覆盖正式 release：
 
