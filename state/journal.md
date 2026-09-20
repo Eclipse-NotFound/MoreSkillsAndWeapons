@@ -1,5 +1,10 @@
 # MoreSkills&Weapons —— 开发日志
 
+## 2026-09-20 v1.5.1 设置入口迁移并安装
+- 用户明确要求独立中枢安装并切换客户端。MSW 删除共享 Pip 渲染器与旧载体发布，保留设置定义、配置、F6 浮层，同域旧 facade 只排队转发；Pip 内 F6 使用新 API。
+- 原真实设置控件/保存/跳弹回归通过；联测含四页、F6、无 MSW 时其他客户端仍工作；正式字节独立启动 frames=900/tabOn=1/ModSettings-connected，无 lastErr/smartError。
+- 配套测试读取新载体和控件属性，显式复制独立依赖。候选从并发平滑修改前固定；只提交本次文件，平滑 WIP 保留。已备份原 v1.5.0 与 loader，回滚为整套；见 MEMORY 顶部和 ModSettings 实验记录。
+
 > 协议见 GOVERNANCE.md §8：只追加不改写，**新条目插在最上面**。
 
 ## 2026-09-20 智能武器红蓝菱形 HUD 提案

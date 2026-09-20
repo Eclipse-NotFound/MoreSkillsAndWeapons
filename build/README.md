@@ -1,5 +1,7 @@
 # 构建工具链说明（可复现）
 
+v1.5.1 起真实游戏 UI 测试需要正式安装 ModSettings 及其 loader。`test-game-smoke.ps1`、`test-damage.ps1`、`test-smart.ps1` 可用 `-HostSwf` / `-SettingsSwf` 指定预部署候选；测试只复制到私有目录。`test-installed.ps1` 使用正式宿主与正式依赖字节。
+
 ## 依赖
 - Java：当前使用 `D:\Program Files\Adobe Animate 2024\jre\bin\java.exe`（17.0.10，2026-09-19 实际构建与测试通过；无需 PATH 配置）
 - Adobe Animate 2024 自带 mxmlc：

@@ -34,7 +34,8 @@ package
          {
             var na:* = getDefinitionByName("flash.desktop.NativeApplication");
             var id:String = na["nativeApplication"]["applicationID"];
-            enabled = id != "pfe";
+            // ModSettings integration probes own their isolated game's lifecycle.
+            enabled = id != "pfe" && id.indexOf("pfe-modsettings-") != 0;
             mod.cfg.diagSet("auto", enabled ? "on:" + id : "off");
             if(enabled) registerMockPage(); // 多模组分页渲染回归：注册 mock 页
          }

@@ -1,15 +1,10 @@
 package
 {
    /**
-    * 模组设置聚合页 —— 注册契约与登记簿（design/mod-settings-hub.md §3）。
+    * MSW setting definitions and outbound registration adapter for ModSettings.
     *
-    * 接入方式（其他模组，在各自仓库实现）——主通道：
-    *   var api:* = World.w["modAPI"];  // 宿主启动后自动发布。兄弟模组域互不可见，
-    *                                   // getDefinitionByName 拿不到宿主类
-    *                                   // （mod-loader-cross-domain-anomaly）
-    *   if(api != null) api["registerPage"](modId, displayName, items, onPageClose, desc);
-    * 未发布时在自己的 ENTER_FRAME 里重试（≤300 帧）。
-    * 同域直调备用通道：getDefinitionByName("MoreSkillsWeaponsMod").settingsRegister(...)。
+    * Main settings host is World.w.main.getChildByName("ModSettingsCarrier").modAPI.
+    * This adapter queues MSW's pages until that host arrives; it publishes no carrier.
     *
     * items 元素：
     *   { key, label, kind:"check"|"slider", min, max, step, hint,
@@ -21,6 +16,26 @@ package
    public class MSWSettingsHub
    {
       private var pages:Array = [];
+      public var api:* = null;
+      private var revision:int = 0;
+      private var sentRevision:int = -1;
+
+      public function MSWSettingsHub() {}
+
+      public function connect(w:*):void
+      {
+         try
+         {
+            var carrier:* = w.main.getChildByName("ModSettingsCarrier");
+            var next:* = carrier == null ? null : carrier["modAPI"];
+            if(next !== api) { api = next; sentRevision = -1; }
+            if(api == null || sentRevision == revision) return;
+            for each(var page:Object in pages)
+               api.registerPage(page.modId, page.displayName, page.items, page.onPageClose, page.desc);
+            sentRevision = revision;
+         }
+         catch(e:*) { api = null; sentRevision = -1; }
+      }
 
       public function registerPage(modId:String, displayName:String, items:Array,
                                    onPageClose:Function = null, desc:String = ""):void
@@ -34,6 +49,7 @@ package
                pages[i]["items"] = items;
                pages[i]["onPageClose"] = onPageClose;
                pages[i]["desc"] = desc;
+               revision++;
                return; // 重复注册 = 更新
             }
          }
@@ -42,6 +58,7 @@ package
             "onPageClose": onPageClose, "desc": desc
          };
          pages[pages.length] = p;
+         revision++;
       }
 
       public function getPages():Array

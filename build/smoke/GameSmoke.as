@@ -47,7 +47,7 @@ package
       private function findRows(o:*):void
       {
          if(o==null || !("visible" in o) || !o.visible) return;
-         if("mswItem" in o && o.mswItem!=null) rows.push(o);
+         if("settingsItem" in o && o.settingsItem!=null) rows.push(o);
          if("numChildren" in o) for(var i:int=0;i<o.numChildren;i++) findRows(o.getChildAt(i));
       }
       private function resetButton(o:*):*
@@ -68,7 +68,7 @@ package
             w=getDefinitionByName("fe.World")["w"];
             if(w==null || w.gg==null || w.loc==null) return;
             if(w.verror!=null && w.verror.visible) throw new Error("game dialog: "+w.verror.txt.text);
-            var carrier:*=w.main.getChildByName("MSWModAPICarrier");
+            var carrier:*=w.main.getChildByName("ModSettingsCarrier");
             if(carrier==null) return;
             api=carrier.modAPI;
             for each(var pg:Object in api.getPages()) if(pg.modId=="msw") items=pg.items;
@@ -80,15 +80,15 @@ package
                if(phaseTick==0) { phaseTick=ticks; return; }
                if(ticks-phaseTick<10) return;
                check(items.length==18,"real Pip renders all 18 settings");
-               check(rows[17].mswItem.key=="dashKeepPose","last original setting visible");
+               check(rows[17].settingsItem.key=="dashKeepPose","last original setting visible");
                for each(var row:* in rows)
                {
-                  var key:String=row.mswItem.key;
+                  var key:String=row.settingsItem.key;
                   if(key=="ricochetResetDistance")
                   {
                      check(value(key)===true,"real distance reset defaults on");
-                     row.mswSc.selected=false;
-                     row.mswSc.dispatchEvent(new Event("change"));
+                     row.settingsSc.selected=false;
+                     row.settingsSc.dispatchEvent(new Event("change"));
                      check(value(key)===false,"real distance reset checkbox off");
                      var saved:MSWConfig=new MSWConfig(); saved.load();
                      check(!saved.ricochetResetDistance,"real checkbox persists immediately");
@@ -96,8 +96,8 @@ package
                   if(key=="ricochetCount" || key=="ricochetChance" || key=="ricochetChanceDecay" || key=="ricochetDamageDecay" || key=="ricochetSpeedDecay")
                   {
                      var target:Number=key=="ricochetCount"?3:(key=="ricochetChance"?80:(key=="ricochetChanceDecay"?50:(key=="ricochetDamageDecay"?20:25)));
-                     row.mswSc.scrollPosition=target;
-                     row.mswSc.dispatchEvent(new Event("scroll"));
+                     row.settingsSc.scrollPosition=target;
+                     row.settingsSc.dispatchEvent(new Event("scroll"));
                      check(Number(value(key))==target,"real slider "+key);
                   }
                }
@@ -160,7 +160,7 @@ package
          // 隐藏测试窗口不一定派发 RENDER，先让原版 fl.controls 绘制皮肤。
          for each(var row:* in rows)
          {
-            var control:*=row.mswSc;
+            var control:*=row.settingsSc;
             if(control!=null && "drawNow" in control) control.drawNow();
          }
          var b:BitmapData=new BitmapData(gameStage.stageWidth,gameStage.stageHeight,false,0);

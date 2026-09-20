@@ -1,4 +1,4 @@
-param([string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024')
+param([string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$HostSwf='', [string]$SettingsSwf='')
 $ErrorActionPreference = 'Stop'
 & (Join-Path $PSScriptRoot 'build-smart-host.ps1') -AnimateRoot $AnimateRoot
 $gameRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
@@ -15,6 +15,11 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Smoke harness compilation failed' }
     Copy-Item -LiteralPath (Join-Path $outputDir 'SmokeMod.swf') -Destination (Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf')
     Get-ChildItem -LiteralPath $gameRoot -File | Where-Object { $_.Name -eq 'pfe.swf' -or $_.Name -match '^(sound|sprite|texture).*\.swf$' -or $_.Extension -eq '.xml' } | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $runtimeDir }
+    $settingsDir=Join-Path $runtimeDir 'mods\ModSettings\release'
+    New-Item -ItemType Directory -Force $settingsDir | Out-Null
+    if(!$SettingsSwf){$SettingsSwf=Join-Path $gameRoot 'mods\ModSettings\release\ModSettingsMod.swf'}
+    Copy-Item -LiteralPath $SettingsSwf -Destination $settingsDir
+    if($HostSwf){Copy-Item -LiteralPath $HostSwf -Destination (Join-Path $runtimeDir 'pfe.swf')}
     if (-not (Test-Path -LiteralPath (Join-Path $runtimeDir 'Rooms'))) { Copy-Item -LiteralPath (Join-Path $gameRoot 'Rooms') -Destination $runtimeDir -Recurse }
     $testId = 'pfe-msw-game-' + [guid]::NewGuid().ToString('N')
     $descriptor = Join-Path $runtimeDir 'app_msw_test.xml'

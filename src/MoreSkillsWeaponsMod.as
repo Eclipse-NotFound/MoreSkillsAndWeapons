@@ -1,6 +1,5 @@
 package
 {
-   import flash.display.MovieClip;
    import flash.display.Sprite;
    import flash.events.Event;
    import flash.events.KeyboardEvent;
@@ -58,9 +57,6 @@ package
       public var autotest:MSWAutoTest;
       /** 模组设置聚合页登记簿（design/mod-settings-hub.md），2026-08-29 一期 */
       public var settings:MSWSettingsHub;
-      /** 跨模组通道载体（动态 MovieClip，挂 World.w.main；兄弟模组经
-       *  getChildByName("MSWModAPICarrier").modAPI 可达） */
-      private var apiCarrier:MovieClip = null;
 
       private var stage_:* = null;
       private var booted:Boolean = false;
@@ -84,9 +80,7 @@ package
          autotest = new MSWAutoTest(this);
       }
 
-      /** 模组设置聚合页注册契约（同域直调备用通道）。
-       *  主通道 = World.w.modAPI（登记簿实例，兄弟模组经父域对象可达）；
-       *  契约见 design/mod-settings-hub.md §3。 */
+      /** Legacy same-domain facade: queue/forward registrations to independent ModSettings. */
       public static function settingsRegister(modId:String, displayName:String, items:Array,
                                               onPageClose:Function = null, desc:String = ""):Boolean
       {
@@ -150,7 +144,7 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.5.0-smart-weapons");
+         cfg.diagSet("ver", "1.5.1-modsettings");
          settings.registerPage("msw", "MoreSkills&Weapons",
             MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");
          settings.registerPage("msw-smart", "智能武器", MSWSettingsHub.buildSmartItems(this), mswPageClose,
@@ -193,28 +187,8 @@ package
             frameN++;
             cfg.diagAdd("frames");
             autotest.update(w); // 测试实例自动驱动（用户实例空转）
-            // 跨模组注册通道：World 实例是密封类挂不了动态属性（#1056），
-            // 改用显示树会合点——动态 MovieClip 载体挂 World.w.main（幂等），
-            // 兄弟模组 getChildByName("MSWModAPICarrier").modAPI 即可达
-            try
-            {
-               if(apiCarrier == null)
-               {
-                  apiCarrier = new MovieClip();
-                  apiCarrier["name"] = "MSWModAPICarrier";
-                  apiCarrier["modAPI"] = settings;
-               }
-               var mainC:* = w["main"];
-               if(mainC != null && mainC["getChildByName"]("MSWModAPICarrier") == null)
-               {
-                  mainC["addChild"](apiCarrier);
-                  cfg.diagSet("modAPI", "published");
-               }
-            }
-            catch(ePub:*)
-            {
-               cfg.diagSet("modAPI", "err:" + ePub);
-            }
+            settings.connect(w);
+            cfg.diagSet("modAPI", settings.api != null ? "ModSettings-connected" : "waiting-ModSettings");
             if(frameN % 300 == 0) cfg.diagFlush();
             if(!worldSeen)
             {

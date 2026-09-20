@@ -1,5 +1,5 @@
 param(
-    [string]$ExpectedVersion = '1.5.0-smart-weapons',
+    [string]$ExpectedVersion = '1.5.1-modsettings',
     [string]$PythonPath = 'C:\Users\hello\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
 )
 $ErrorActionPreference = 'Stop'
@@ -12,6 +12,9 @@ $testMod = Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release\MoreSkillsWeap
 if (-not (Test-Path -LiteralPath $testMod)) { throw 'Run test-game-smoke.ps1 first to prepare isolated assets' }
 if ((Get-FileHash -LiteralPath (Join-Path $gameRoot 'pfe.swf')).Hash -ne (Get-FileHash -LiteralPath (Join-Path $runtimeDir 'pfe.swf')).Hash) { throw 'Isolated host differs from current game; rebuild test assets first' }
 Copy-Item -LiteralPath $installed -Destination $testMod
+$settingsDir=Join-Path $runtimeDir 'mods\ModSettings\release'
+New-Item -ItemType Directory -Force $settingsDir | Out-Null
+Copy-Item -LiteralPath (Join-Path $gameRoot 'mods\ModSettings\release\ModSettingsMod.swf') -Destination $settingsDir
 $installedHash = (Get-FileHash -LiteralPath $installed).Hash
 if ((Get-FileHash -LiteralPath $testMod).Hash -ne $installedHash) { throw 'Production copy mismatch' }
 $testId = 'pfe-msw-install-' + [guid]::NewGuid().ToString('N')
@@ -39,7 +42,7 @@ try {
         if ($diag.ver -ne $ExpectedVersion) { throw 'Installed version marker mismatch' }
         if ($diag.lastErr) { throw "Installed build error: $($diag.lastErr)" }
         if ($diag.smartError) { throw "Installed smart error: $($diag.smartError)" }
-        if ($diag.frames -ge 900 -and $diag.modAPI -eq 'published' -and $diag.tabOn -eq 1) {
+        if ($diag.frames -ge 900 -and $diag.modAPI -eq 'ModSettings-connected' -and $diag.tabOn -eq 1) {
             $data | Add-Member -NotePropertyName installedSHA256 -NotePropertyValue $installedHash
             $data | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $outputDir 'install-smoke.json') -Encoding utf8
             $passed = $true

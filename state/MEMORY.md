@@ -1,5 +1,11 @@
 # MoreSkills&Weapons —— 开发记忆入口
 
+## 2026-09-20 当前发布覆盖：v1.5.1 独立设置客户端
+本轮用户授权安装 ModSettings 并切换入口。当前 release 为 26957 字节，SHA256 4783CC1943CB8CC58DB4610144FB959E37E3A41C652E82BFE714C74E3A30A8A1，诊断版本 1.5.1-modsettings；下文 v1.5.0 宿主与 SHA 为上次发布记录。
+共享渲染器已移至 ModSettings；本模组仅经 ModSettingsCarrier.modAPI 注册 18+10 项，F6 浮层/配置/玩法保留，Pip 内 F6 路由到独立面板。settingsRegister 同域 facade 保留，旧 MSWModAPICarrier 不再发布。依赖 ModSettings 提供 Pip 聚合界面，其他客户端运行不再依赖 MSW。
+完整组合/无 MSW 独立组合/重启持久化通过；MSW 原控件和真实跳弹回归通过；正式字节启动 frames=900、modAPI=ModSettings-connected、tabOn=1。原跳弹和智能玩法未改。新的弹道平滑 WIP 属于其他正在进行的任务，未纳入本次发布与提交。
+备份和成套回滚在 ../ModSettings/build/backups/before-migration-20260920-142036；只回滚本 SWF 会造成新旧宿主混装，应同步恢复 loader/客户端。当前状态详情见 ../ModSettings/knowledge/experiments/2026-09-20-migration.md。旧 dist 未更新。
+
 > 新会话从这里开始。协议见工作区 GOVERNANCE.md §8；本模组参数见 ../AGENT_SCOPE.md。
 
 ## 1. 这个模组是什么

@@ -6,14 +6,8 @@ package
    import flash.utils.getQualifiedClassName;
 
    /**
-    * 设置面板：两个宿主，同一份配置。
-    *
-    * 1) 哔哔小马"模组"子页（主，2026-08-28 v2）：Opt 页子按钮栏的"模组"按钮
-    *    （见 MSWPipTab），点击后以原版控件（CheckBox/滑块）显示设置行。
-    *    取代 v1 的主页签栏按钮与文字面板。纯鼠标交互。
-    *
-    * 2) F6 浮层宿主（辅）：挂在 World.w.main 左上角，纯游戏中快速调参（键盘）。
-    *    pip 打开期间 F6 = 开/关"模组"面板，浮层不叠加。
+    * MSW-owned F6 overlay; when Pip is open the shortcut routes to ModSettings.
+    * Both entries use the same MSW-owned setting definitions and configuration.
     */
    public class MSWPanel
    {
@@ -22,7 +16,6 @@ package
       public var overlayOpen:Boolean = false;
 
       private var sel:int = 0;
-      private var tab:MSWPipTab;
       private var ovTf:TextField = null; // F6 浮层内容（黑底白字框）
 
       private var items:Array; // 与模组设置页共用同一份设置定义
@@ -31,7 +24,6 @@ package
       public function MSWPanel(m:*)
       {
          mod = m;
-         tab = new MSWPipTab(m);
          items = MSWSettingsHub.buildMswItems(m);
       }
 
@@ -59,25 +51,29 @@ package
       /** 模组面板是否展开。 */
       public function tabActive():Boolean
       {
-         return tab.isActive();
+         var api:* = mod.settings.api;
+         return api != null && api.isOpen();
       }
 
       /** pip 开着时 F6 开/关模组面板。 */
       public function tabToggle(w:*):void
       {
-         tab.toggle(w);
+         var api:* = mod.settings.api;
+         if(api != null && api.togglePage(smartPage ? "msw-smart" : "msw")) mod.cfg.diagAdd("tabOn");
       }
 
       /** 自动测试用：对模组按钮派发真实点击。 */
       public function debugClick():void
       {
-         tab.debugClick();
+         tabToggle(MSWU.world());
       }
 
       /** 自动测试用：切换模组子页。 */
       public function debugSwitchPage(i:int):void
       {
-         tab.debugSwitchPage(i);
+         var api:* = mod.settings.api;
+         var pages:Array = mod.settings.getPages();
+         if(api != null && i >= 0 && i < pages.length) api.selectPage(pages[i].modId);
       }
 
       /** 按键绑定对话框（visSetKey）是否可见：可见期间不消费键盘。 */
@@ -170,7 +166,6 @@ package
             }
             // pip 打开时不保留 F6 浮层（避免与哔哔小马 UI 叠加；F6 改开模组面板）
             if(pipOn && overlayOpen) overlayOpen = false;
-            tab.update(w);
             if(overlayOpen)
             {
                var main:* = w["main"];

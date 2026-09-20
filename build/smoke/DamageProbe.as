@@ -36,7 +36,7 @@ package
             w=getDefinitionByName("fe.World")["w"];
             if(w==null || w.gg==null || w.loc==null || !w.loc.active || w.gg.loc!==w.loc)return;
             if(w.verror!=null && w.verror.visible)throw new Error(w.verror.txt.text);
-            var carrier:*=w.main.getChildByName("MSWModAPICarrier"); if(carrier==null)return;
+            var carrier:*=w.main.getChildByName("ModSettingsCarrier"); if(carrier==null)return;
             if(phase==0)
             {
                var items:Array;
