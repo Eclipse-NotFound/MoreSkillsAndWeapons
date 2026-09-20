@@ -129,6 +129,26 @@ package
          return result;
       }
 
+      public static function buildLaserItems(mod:*):Array
+      {
+         var defs:Array=[
+            ["laserEnabled","非致命激光枪","check",0,0,1,"每存档仅赠送一次；关闭会解除当前失明控制。",true,""],
+            ["laserDuration","失明时长","slider",0.5,30,0.5,"跟随敌人行动时间，命中刷新而不叠加；首领同规则。",6,"秒"],
+            ["laserEye","眼区基础半径","slider",3,10,0.5,"按体型缩放，最终限制在3–10像素；必须从正面射入。",6,"px"],
+            ["laserRadius","准星辅助范围","slider",0,160,4,"准星到身体轮廓的距离；只辅助可见且眼部无遮挡的敌人。",40,"px"],
+            ["laserAngle","最大修正角度","slider",0,20,0.5,"开火时修正一次；高速减弱，手动精瞄不受影响。",5,"°"],
+            ["laserSpeed","辅助归零速度","slider",1,40,0.5,"水平与垂直速度合算；达到一半速度时辅助角度减半。",10,"px/步"],
+            ["laserInterval","射击最短间隔","slider",0.1,3,0.1,"半自动：松开后才能再次点射。",0.8,"秒"],
+            ["laserMagazine","每匣可射次数","slider",1,30,1,"容量按次数×每发耗弹计算，不赠送弹药。",6,"次"],
+            ["laserReload","装填时间","slider",0.5,6,0.1,"本枪的装填时间。",2,"秒"],
+            ["laserAmmo","每发电池消耗","slider",1,10,1,"使用原版电池类弹药；固定消耗，不受电池回收专长减免。",2,"份"],
+            ["laserAP","SATS基础行动点","slider",1,100,1,"SATS选中敌人自动瞄眼；正面与遮挡条件仍适用。",17,"AP"]
+         ];
+         var result:Array=[];
+         for each(var d:Array in defs)result.push({key:d[0],label:d[1],kind:d[2],min:d[3],max:d[4],step:d[5],hint:d[6],def:d[7],suffix:d[8],get:makeGetter(mod,d[0]),set:makeSetter(mod,d[0],d[2])});
+         return result;
+      }
+
       /** check 即时持久化；slider 只写内存（onPageClose 统一 save）。 */
       private static function makeSetter(mod:*, k:String, kind:String):Function
       {

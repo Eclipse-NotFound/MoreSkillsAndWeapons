@@ -29,6 +29,19 @@ package
       public var smartTurn:Number = 1080;
       public var smartLife:Number = 2;
 
+      public var laserEnabled:Boolean = true;
+      public var laserDuration:Number = 6;
+      public var laserEye:Number = 6;
+      public var laserRadius:Number = 40;
+      public var laserAngle:Number = 5;
+      public var laserSpeed:Number = 10;
+      public var laserInterval:Number = 0.8;
+      public var laserMagazine:Number = 6;
+      public var laserReload:Number = 2;
+      public var laserAmmo:Number = 2;
+      public var laserAP:Number = 17;
+      private static const LASER_KEYS:Array=["laserEnabled","laserDuration","laserEye","laserRadius","laserAngle","laserSpeed","laserInterval","laserMagazine","laserReload","laserAmmo","laserAP"];
+
       /** 可编程榴弹炮下坠速率 = weapon.grav（1.0 = 原版，0 = 无下坠） */
       public var dropRate:Number = 1.0;
 
@@ -84,6 +97,7 @@ package
          try
          {
             so = SharedObject.getLocal("MSWConfig");
+            for each(var laserKey:String in LASER_KEYS)if(so.data[laserKey]!==undefined)this[laserKey]=so.data[laserKey];
             if(so.data.ricochet != undefined) ricochet = so.data.ricochet;
             if(so.data.smartEnabled != undefined) smartEnabled = so.data.smartEnabled;
             if(so.data.smartRadius != undefined) smartRadius = so.data.smartRadius;
@@ -172,6 +186,7 @@ package
          try
          {
             if(so == null) so = SharedObject.getLocal("MSWConfig");
+            for each(var laserKey:String in LASER_KEYS)so.data[laserKey]=this[laserKey];
             so.data.ricochet = ricochet;
             so.data.smartEnabled = smartEnabled;
             so.data.smartRadius = smartRadius;
@@ -212,6 +227,16 @@ package
 
       public function clamp():void
       {
+         laserDuration=smartClamp(laserDuration,6,0.5,30,0.5);
+         laserEye=smartClamp(laserEye,6,3,10,0.5);
+         laserRadius=smartClamp(laserRadius,40,0,160,4);
+         laserAngle=smartClamp(laserAngle,5,0,20,0.5);
+         laserSpeed=smartClamp(laserSpeed,10,1,40,0.5);
+         laserInterval=smartClamp(laserInterval,0.8,0.1,3,0.1);
+         laserMagazine=smartClamp(laserMagazine,6,1,30,1);
+         laserReload=smartClamp(laserReload,2,0.5,6,0.1);
+         laserAmmo=smartClamp(laserAmmo,2,1,10,1);
+         laserAP=smartClamp(laserAP,17,1,100,1);
          smartRadius = smartClamp(smartRadius,48,0,200,4);
          smartAcquire = smartClamp(smartAcquire,0.6,0.1,3,0.1);
          smartGrace = smartClamp(smartGrace,0.15,0,0.5,0.05);

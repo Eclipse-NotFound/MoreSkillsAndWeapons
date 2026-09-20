@@ -1,6 +1,7 @@
 param(
     [string]$ExpectedVersion = '1.5.3-smart-diamond',
     [string]$ExpectedHudVersion = '',
+    [string]$ProductionSwf = '',
     [string]$RuntimeDirectory = 'test-runtime',
     [string]$OutputDirectory = 'out',
     [string]$PythonPath = 'C:\Users\hello\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
@@ -11,6 +12,7 @@ $runtimeDir = Join-Path $PSScriptRoot $RuntimeDirectory
 $outputDir = Join-Path $PSScriptRoot $OutputDirectory
 New-Item -ItemType Directory -Force $outputDir | Out-Null
 $installed = Join-Path $PSScriptRoot '..\release\MoreSkillsWeaponsMod.swf'
+if($ProductionSwf){$installed=[IO.Path]::GetFullPath($ProductionSwf)}
 $testMod = Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf'
 # Run after test-game-smoke: reuse isolated assets, but replace its probe with production bytes.
 if (-not (Test-Path -LiteralPath $testMod)) { throw 'Run test-game-smoke.ps1 first to prepare isolated assets' }
@@ -47,6 +49,7 @@ try {
         if ($ExpectedHudVersion -and $diag.smartHudVersion -ne $ExpectedHudVersion) { throw 'Installed HUD version marker mismatch' }
         if ($diag.lastErr) { throw "Installed build error: $($diag.lastErr)" }
         if ($diag.smartError) { throw "Installed smart error: $($diag.smartError)" }
+        if ($diag.laserError) { throw "Production laser error: $($diag.laserError)" }
         if ($diag.frames -ge 900 -and $diag.modAPI -eq 'ModSettings-connected' -and $diag.tabOn -eq 1) {
             $data | Add-Member -NotePropertyName installedSHA256 -NotePropertyValue $installedHash
             $data | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $outputDir 'install-smoke.json') -Encoding utf8

@@ -19,7 +19,7 @@ package
       private var ovTf:TextField = null; // F6 浮层内容（黑底白字框）
 
       private var items:Array; // 与模组设置页共用同一份设置定义
-      private var smartPage:Boolean = false;
+      private var pageIndex:int = 0;
 
       public function MSWPanel(m:*)
       {
@@ -59,7 +59,7 @@ package
       public function tabToggle(w:*):void
       {
          var api:* = mod.settings.api;
-         if(api != null && api.togglePage(smartPage ? "msw-smart" : "msw")) mod.cfg.diagAdd("tabOn");
+         if(api != null && api.togglePage(pageIndex==2?"msw-laser":pageIndex==1?"msw-smart":"msw")) mod.cfg.diagAdd("tabOn");
       }
 
       /** 自动测试用：对模组按钮派发真实点击。 */
@@ -111,8 +111,8 @@ package
       {
          if(code==9 || code==33 || code==34)
          {
-            smartPage=!smartPage; sel=0;
-            items=smartPage?MSWSettingsHub.buildSmartItems(mod):MSWSettingsHub.buildMswItems(mod);
+            pageIndex=(pageIndex+(code==33?2:1))%3;sel=0;
+            items=pageIndex==2?MSWSettingsHub.buildLaserItems(mod):pageIndex==1?MSWSettingsHub.buildSmartItems(mod):MSWSettingsHub.buildMswItems(mod);
             refresh(); return true;
          }
          if(code == 38) // Up
@@ -227,7 +227,7 @@ package
          if(ovTf == null) return;
          var c:* = mod.cfg;
          var s:String = "";
-         s += (smartPage ? "智能武器" : MSWWeapon.WEAPON_NAME) + " 模组设置 [Tab 切页]\n";
+         s += (pageIndex==2?"非致命激光枪":pageIndex==1?"智能武器":MSWWeapon.WEAPON_NAME) + " 模组设置 [Tab 切页]\n";
          s += "--------------------------------\n";
          for(var i:int = 0; i < items.length; i++)
          {

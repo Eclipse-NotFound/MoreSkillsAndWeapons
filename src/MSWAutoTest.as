@@ -70,7 +70,7 @@ package
             if(stage == "idle")
             {
                // 第 -1 步：boot stage-2 没跑完（landData 空）就动菜单会 #1009
-               if(w["landData"] == null) return;
+               if(w["landData"] == null || !w["allLandsLoaded"]) return;
                var mm:* = w["mm"];
                if(mm == null) return;
                if(mm["active"] == true)

@@ -9,9 +9,9 @@ $compilerPath = Join-Path $AnimateRoot 'Common\Configuration\ActionScript 3.0\bi
 New-Item -ItemType Directory -Force $runtimeDir,$outputDir,(Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release') | Out-Null
 Push-Location $PSScriptRoot
 try {
-    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-target-player=11.1' '-source-path+=../src' '-external-library-path+=out/SmartHost.swc' '-output=out/MoreSkillsWeaponsMod.swf' '../src/MoreSkillsWeaponsMod.as'
+    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-target-player=11.1' '-source-path+=../src' '-includes=fe.unit.MSWBlindAccess,fe.inter.MSWLaserSats,fe.weapon.MSWPanicBlade,fe.weapon.MSWDazzlerWeapon' '-external-library-path+=out/SmartHost.swc' '-output=out/MoreSkillsWeaponsMod.swf' '../src/MoreSkillsWeaponsMod.as'
     if ($LASTEXITCODE -ne 0) { throw 'Mod compilation failed' }
-    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-debug=true' '-target-player=11.1' '-source-path+=../src' '-external-library-path+=out/SmartHost.swc' '-source-path+=smoke' '-output=out/smoke/SmokeMod.swf' 'smoke/SmokeMod.as'
+    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-debug=true' '-target-player=11.1' '-source-path+=../src' '-includes=fe.unit.MSWBlindAccess,fe.inter.MSWLaserSats,fe.weapon.MSWPanicBlade,fe.weapon.MSWDazzlerWeapon' '-external-library-path+=out/SmartHost.swc' '-source-path+=smoke' '-output=out/smoke/SmokeMod.swf' 'smoke/SmokeMod.as'
     if ($LASTEXITCODE -ne 0) { throw 'Smoke harness compilation failed' }
     Copy-Item -LiteralPath (Join-Path $outputDir 'SmokeMod.swf') -Destination (Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf')
     Get-ChildItem -LiteralPath $gameRoot -File | Where-Object { $_.Name -eq 'pfe.swf' -or $_.Name -match '^(sound|sprite|texture).*\.swf$' -or $_.Extension -eq '.xml' } | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $runtimeDir }

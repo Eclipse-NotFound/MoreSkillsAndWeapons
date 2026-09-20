@@ -20,11 +20,12 @@ v1.5.1 起真实游戏 UI 测试需要正式安装 ModSettings 及其 loader。`
 2. 该 mxmlc 不会自动挂 playerglobal.swc，必须在 flex-config.xml 的
    `compiler.library-path` 里显式追加。
 3. `-external-library-path` 不接受 SWF（只认 SWC）。主体保留动态访问；v1.5.0
-   仅新增 `fe.Pt` 外部存根，用于继承原游戏链表节点，在玩家开火后、子弹第一步前执行制导。
+   使用 `fe.Pt` 外部存根继承原游戏链表节点；v1.6.0 另有 Unit/UnitRaider、SatsCel、Weapon/Bullet 的最小外部声明，供同包访问与唯一子类编译。
    `build-smart-host.ps1` 先用 compc 生成 `out/SmartHost.swc`；必须作为 external 链接，
    不能把 `stubs` 加进模组 source-path，不能在产物中定义第二个 `fe.Pt`。
    compc 默认路径为 `D:/RemainsMod/mods/Sandevistan/build/tools/flexsdk/lib/compc.jar`，
    仅作为只读工具链使用，可传 FlexRoot 覆盖。源码主入口和 loader 契约不变。
+   激光枪的四个宿主适配类由 `-includes` 保留、运行时延迟解析；build.ps1 自动检查链接报告，拒绝嵌入原生宿主类或 Smoke/Probe。
 
 ## 使用
 
@@ -39,6 +40,10 @@ v1.5.1 起真实游戏 UI 测试需要正式安装 ModSettings 及其 loader。`
 伤害诊断：`./test-damage.ps1` 在隔离游戏副本中调用原版 Bullet.step/run 和 Unit.udarBullet，验证十次连续反弹的实际扣血、护甲/穿甲、精确墙面碰撞及轻机枪基础精度下的距离命中率。世界暂停后手动推进子弹，并非自然实战录像；命中率统计是随机样本。结果在 `out/damage/results.txt`，`out/damage/DamageSmokeMod.swf` 是测试探针，禁止部署到正式 release。
 
 智能武器：`test-smart-unit.ps1` 验证锁定状态机、参数保存和寻路/转弯数学；`test-smart.ps1` 验证原版首步、绕实体箱体命中、跳弹继承、霰弹特殊弹药、64 发局部寻路、实际帧锁定/遮挡/恢复/暂停，以及 10 项设置与 F6。`test-smart-sandy.ps1` 只读复制已安装 Sandevistan 到隔离副本，用独立配置验证真实时停/回放和重建弹丸匹配，绝不修改其正式配置。
+
+非致命激光枪：`test-laser.ps1` 验证眼部几何、原生半自动/装填/SATS、赠枪与存档接续、36 类敌人接管/恢复及实际攻击、恐慌子弹/爆炸/近战误伤、11 项配置与 HUD。`-Sandevistan` 只读复制已安装时停模组，追加冻结/慢步/开火/回放检查。输出在 `out/laser`；`LaserSmokeMod`、测试专用的 `smoke/SandevistanMod.as` 错误捕获器和任何测试副本都不能安装。
+
+发布前也可运行同字节生产检查，无须先装到 release：`test-installed.ps1 -ProductionSwf <候选SWF绝对路径> -ExpectedVersion '1.6.0-dazzler' -ExpectedHudVersion '1-top-ccw' -RuntimeDirectory 'out\laser\runtime' -OutputDirectory 'out\laser-production'`。省略 ProductionSwf 才默认读取正式 release。
 
 菱形 HUD：`./test-smart-hud.ps1` 做 18 项实际光栅检查并生成状态对照图；`./test-smart-hud-game.ps1` 做 10 项原游戏 HUD 检查并保存真实 Raider 上的标记截图，分别输出到 `out/smart-hud`、`out/smart-hud-game`。后者支持 SourcePath，用于固定源码快照。所有 Smoke/Probe 均不可部署。
 
