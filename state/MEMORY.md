@@ -29,7 +29,8 @@
 ## 4. 正在进行与卡点
 
 - **设置中枢独立模组探查（2026-09-20，未批准实施）**：已核对当前宿主、Sandevistan/RV 注册方、TDFC 诊断读取方及正式 SWF 字符串。建议独立 Pip 聚合页和接口，MSW 改为普通客户端，保留旧载体名称兼容；F6 当前为 MSW 私有浮层，建议首版保留，是否通用化待定。不能仅增加新宿主而让旧 MSW 同时渲染 UI。报告见 design/settings-hub-extraction-investigation.md；未修改实现或部署。
-- **2026-09-20 智能武器设想（讨论中，未批准实现）**：用户指定《赛博朋克2077》智能武器为灵感，要求 game-brainstorming + grilling。Q1–Q13 已记录在 design/smart-weapons.md：局部绕障、基本目视、单目标、准星移开保持、遮挡后渐弱；最新 Q8=A（发射目标/强度快照，独立追踪）、Q9=B（重见渐复）、Q10=B（有限速掉头）、Q11=A（跳弹继续制导）、Q12=A（实弹枪/霰弹及其特殊弹药）、Q13=B（豁免普通命中抽签，保留特殊防御）。下一步收敛制导时限、锁定中断与换枪、开关、数值和反馈；候选建议不是已定需求。
+- **2026-09-20 智能武器设想（待最终确认，未批准实现）**：用户指定《赛博朋克2077》智能武器为灵感，要求 game-brainstorming + grilling。Q1–Q20 已记录在 design/smart-weapons.md；最新 Q14–18=A（默认关闭总开关、合格枪间换枪保留、整弹链默认 2 秒制导预算、中断容错、主要参数可调），Q19=B（遮挡后框追踪真实位置），Q20=B（可操作时停中锁定时钟继续，弹丸预算仅实际推进时消耗）。已整理一份初值与边界建议供最终共同理解确认；这些新增建议尚非已定需求，不因前 20 题答完而直接实现/安装。
+- **智能武器未验风险**：优先验证出生当帧接管及 Sandevistan 时停/回放。只读发现时停会临时将弹丸伤害归零，不能以此当死亡或私自补回；回放会重建部分子弹，引用快照不能自动继承；原本开无敌时仅靠 onPause/godMode 不能可靠区分回放。细节与验收顺序已写 design/smart-weapons.md，未改其他模组/游戏本体，未声称兼容通过。
 - 跳弹伤害排查后续 v1.4.1 已完成用户要求的距离重置开关、验证与安装，未混入同期智能武器设计。游戏原进程未关闭，用户保存后重启加载新文件。
 - 本次跳弹功能已实现、验证并安装；未修改游戏本体 loader。基础次数 0–20、百分比 0–100，整条链保护上限 100 次；低速/零伤害终止；快照随续弹继承，允许再次命中同一目标。
 - 历史记录仍留有面板手感、D-044 冲刺落感、换机后举枪/疾跑切枪确认项；已读记录中未见后续闭环，本轮未重跑，不能据此判定功能失效。
@@ -43,7 +44,7 @@
 
 ## 6. 下一步（优先级排序）
 
-0. 智能武器先按 grilling 收敛规则并等用户确认共同理解；当前不修改实现或部署。已安装跳弹功能继续保持。
+0. 智能武器 Q1–Q20 已确认，等待用户对 design/smart-weapons.md 的初值/边界收尾建议与共同理解做最终确认。确认后先隔离验证出生接管和时停/回放接入，再实现与测试；当前只更新设计，部署另按实际授权和门禁执行。
 1. v1.4.1 安装已完成，用户保存后重启即可体验。若需回滚到 v1.4.0，将 release/MoreSkillsWeaponsMod.before-v1.4.1-20260920.swf 复制覆盖 release/MoreSkillsWeaponsMod.swf，再重启；哈希见上。只想恢复累计命中距离，可直接关闭新开关，不必回滚。
 2. 可重跑 build/test-ricochet.ps1、build/test-game-smoke.ps1、build/test-damage.ps1；build/test-installed.ps1 复验正式生产 SWF。均使用唯一应用 ID，正式 pfe 实例不碰；未声称完成自然实战、高弹量或多模组共存复验。
 3. 若进入发布，核对上述历史未闭环项，走发布门禁并更新 dist；不要把旧 v1.2.11 验收要求误当当前版本。
@@ -54,7 +55,7 @@
 
 - **开发历程**：state/journal.md（含 Sandevistan 技能迁入与 D-037~D-044 全链路摘要；迁移报告原文在 git 历史）
 - **决策**：decisions/decisions.md（至 D-046；关键索引：D-001 动态架构 / D-002 帧后重生 / D-007 构建链 / D-010 pfe 合并 / D-016 F6-only / D-026~D-033 举枪与时停共存 / D-037~D-044 冲刺姿态 / D-045 分发 / D-046 面板）
-- **设计**：design/ricochet-settings.md（v1.4.0 规则、公式、实现与验证边界）；旧 design/features.md、mechanics-notes.md、skill-aim-sit-ladder.md、design-冲刺保持趴姿.md。
+- **设计**：design/smart-weapons.md（Q1–Q20 已选规则、待确认收尾建议、静态工程证据与验收顺序）；design/ricochet-settings.md（跳弹规则、公式、实现与验证边界）；旧 design/features.md、mechanics-notes.md、skill-aim-sit-ladder.md、design-冲刺保持趴姿.md。
 - **源码结构**：src 下 15 个 AS 文件，v1.4.0 新增 MSWRicochet（每条跳弹链的快照/次数/概率）；其余入口/配置/武器/追踪/UI 等结构不变。配置存 SharedObject `MSWConfig`。
 - **诊断读取法**：`python build/tools/read_sol.py "%APPDATA%\pfe\Local Store\#SharedObjects\mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf\MSWConfig.sol"`——完整解析 AMF3 键值（格式规律沉淀在 shared-knowledge `knowledge-validation/methods/sol-diag-reading.md`）；diag 计数器跨会话累积、换机/换用户重置
 - **构建/部署**：build/README.md 已更新当前 Java/编译器路径、隔离构建与测试命令。旧 build.bat 使用裸 java，直接覆盖运行时 release，因此不是只读编译检查；实际部署走 remains-release-gate，修改 loader 走 remains-swf-patching。
