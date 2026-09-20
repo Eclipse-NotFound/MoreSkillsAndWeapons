@@ -60,6 +60,7 @@ package
             ["ricochetChanceDecay", "额外概率衰减", "slider", 0, 100, 1, "每次成功额外跳弹后降低下次概率；50%：80%→40%→20%。", 0],
             ["ricochetDamageDecay", "额外伤害衰减", "slider", 0, 100, 1, "仅额外跳弹后减伤；20%：100→80→64。伤害归零终止。", 0],
             ["ricochetSpeedDecay", "额外速度衰减", "slider", 0, 100, 1, "仅额外跳弹后减速；低于1像素/游戏步终止。", 0],
+            ["ricochetResetDistance", "跳弹重置命中距离", "check", 0, 0, 1, "开：每次反弹重新计距；关：累计距离。仍受武器精度、敌人闪避影响；仅影响新发射子弹。", true],
             ["dropRate", "下坠速率", "slider", 0, 3, 0.1, "0.1步进 0-3", 1],
             ["wallHits", "撞墙次数", "slider", 0, 5, 1, "0=撞墙即爆", 0],
             ["muzzleVel", "初速度", "slider", 10, 100, 1, "10-100", 35],
@@ -79,7 +80,7 @@ package
             items[items.length] = {
                "key": d[0], "label": d[1], "kind": d[2],
                "min": d[3], "max": d[4], "step": d[5], "hint": d[6],
-               "def": d[7], "suffix": String(d[0]).indexOf("ricochet") == 0 && d[0] != "ricochet" && d[0] != "ricochetCount" ? "%" : "",
+               "def": d[7], "suffix": d[2] == "slider" && String(d[0]).indexOf("ricochet") == 0 && d[0] != "ricochetCount" ? "%" : "",
                "get": makeGetter(mod, d[0]),
                "set": makeSetter(mod, d[0], d[2])
             };

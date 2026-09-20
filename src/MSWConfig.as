@@ -16,6 +16,7 @@ package
       public var ricochetChanceDecay:Number = 0;
       public var ricochetDamageDecay:Number = 0;
       public var ricochetSpeedDecay:Number = 0;
+      public var ricochetResetDistance:Boolean = true;
 
       /** 可编程榴弹炮下坠速率 = weapon.grav（1.0 = 原版，0 = 无下坠） */
       public var dropRate:Number = 1.0;
@@ -78,6 +79,7 @@ package
             if(so.data.ricochetChanceDecay != undefined) ricochetChanceDecay = so.data.ricochetChanceDecay;
             if(so.data.ricochetDamageDecay != undefined) ricochetDamageDecay = so.data.ricochetDamageDecay;
             if(so.data.ricochetSpeedDecay != undefined) ricochetSpeedDecay = so.data.ricochetSpeedDecay;
+            if(so.data.ricochetResetDistance != undefined) ricochetResetDistance = so.data.ricochetResetDistance;
             if(so.data.dropRate != undefined) dropRate = so.data.dropRate;
             if(so.data.wallHits != undefined) wallHits = so.data.wallHits;
             if(so.data.muzzleVel != undefined) muzzleVel = so.data.muzzleVel;
@@ -155,6 +157,7 @@ package
             so.data.ricochetChanceDecay = ricochetChanceDecay;
             so.data.ricochetDamageDecay = ricochetDamageDecay;
             so.data.ricochetSpeedDecay = ricochetSpeedDecay;
+            so.data.ricochetResetDistance = ricochetResetDistance;
             so.data.dropRate = dropRate;
             so.data.wallHits = wallHits;
             so.data.muzzleVel = muzzleVel;

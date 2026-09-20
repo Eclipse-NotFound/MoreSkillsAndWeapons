@@ -14,7 +14,7 @@ package
          trace("START RicochetTests");
          try
          {
-            rules(); chains(); wallBoundaries(); configAndPanel();
+            rules(); chains(); distanceModes(); wallBoundaries(); configAndPanel();
             finish("PASS " + checks + " assertions", 0);
          }
          catch(e:*) { finish("FAIL " + e + "\n" + e.getStackTrace(), 1); }
@@ -82,7 +82,7 @@ package
       }
       private function chains():void
       {
-         var c:MSWConfig=cfg(); c.ricochetCount=3;
+         var c:MSWConfig=cfg(); c.ricochetCount=3; c.ricochetResetDistance=false;
          var s:Object=scene(c); var b:Bullet=initial(s); s.engine.process(s.w);
          c.ricochet=false; c.ricochetCount=0; // Already flying retains enabled state + all settings.
          for(var i:int=0;i<3;i++)
@@ -114,6 +114,25 @@ package
          c=cfg(); s=scene(c); b=initial(s); b.owner.player=false; s.engine.process(s.w);
          ok(hit(s,b)==null,"enemy bullet excluded");
       }
+      private function distanceModes():void
+      {
+         for each(var reset:Boolean in [true,false])
+         {
+            var c:MSWConfig=cfg(); c.ricochetCount=1; c.ricochetChance=100;
+            c.ricochetResetDistance=reset;
+            var s:Object=scene(c); var b:Bullet=initial(s);
+            b.dist=5000; b.precision=480; b.antiprec=80; b.miss=0.2;
+            s.engine.process(s.w); c.ricochetResetDistance=!reset;
+            for(var i:int=0;i<3;i++)
+            {
+               b=hit(s,b); ok(b!=null,"distance mode bounce "+reset+"/"+i);
+               near(b.dist,reset?0:5000+i*100,"distance snapshot base and extra "+reset+"/"+i);
+               near(b.damage,100,"distance mode damage "+reset+"/"+i);
+               ok(b.precision==480 && b.antiprec==80 && b.miss==0.2,"accuracy fields retained "+reset+"/"+i);
+               b.dist+=100;
+            }
+         }
+      }
       private function wallBoundaries():void
       {
          // Inclusive wall collision: reflecting an exact face hit must spawn outside it.
@@ -138,20 +157,25 @@ package
          var old:SharedObject=SharedObject.getLocal("MSWConfig"); old.clear(); old.data.ricochet=true; old.flush();
          var c:MSWConfig=new MSWConfig(); c.load();
          ok(c.ricochet && c.ricochetCount==1 && c.ricochetChance==0,"old save migration");
-         c.ricochetCount=5; c.ricochetChance=80; c.ricochetChanceDecay=50; c.ricochetDamageDecay=20; c.ricochetSpeedDecay=25; c.save();
+         ok(c.ricochetResetDistance,"old save defaults to distance reset");
+         c.ricochetCount=5; c.ricochetChance=80; c.ricochetChanceDecay=50; c.ricochetDamageDecay=20; c.ricochetSpeedDecay=25; c.ricochetResetDistance=false; c.save();
          c=new MSWConfig(); c.load();
          ok(c.ricochetCount==5 && c.ricochetChance==80 && c.ricochetChanceDecay==50 && c.ricochetDamageDecay==20 && c.ricochetSpeedDecay==25,"all five values round trip");
+         ok(!c.ricochetResetDistance,"distance reset off persists");
          c.ricochetCount=99; c.ricochetChance=NaN; c.ricochetChanceDecay=Infinity; c.ricochetDamageDecay=-1; c.ricochetSpeedDecay=999; c.clamp();
          ok(c.ricochetCount==20 && c.ricochetChance==0 && c.ricochetChanceDecay==0 && c.ricochetDamageDecay==0 && c.ricochetSpeedDecay==100,"invalid values bounded");
          var m:Object={cfg:c}; var items:Array=MSWSettingsHub.buildMswItems(m);
-         ok(items.length==17,"settings fit all 17 rows");
+         ok(items.length==18,"settings fit all 18 rows");
          for each(var it:Object in items) it["set"](it.def);
          c.save(); c=new MSWConfig(); c.load(); m.cfg=c;
          ok(c.ricochetCount==1 && c.ricochetChance==0 && c.ricochetChanceDecay==0 && c.ricochetDamageDecay==0 && c.ricochetSpeedDecay==0,"restore default contract persisted");
+         ok(c.ricochetResetDistance,"restore default enables distance reset");
          var panel:MSWPanel=new MSWPanel(m); panel.handleKey(40); panel.handleKey(39);
          ok(c.ricochetCount==2,"F6 count increment");
          for(var i:int=0;i<4;i++) { panel.handleKey(40); panel.handleKey(39); }
          ok(c.ricochetChance==1 && c.ricochetChanceDecay==1 && c.ricochetDamageDecay==1 && c.ricochetSpeedDecay==1,"F6 percent fields increment by one");
+         panel.handleKey(40); panel.handleKey(39); ok(!c.ricochetResetDistance,"F6 distance reset toggle");
+         ok(items[6].suffix=="","distance check has no percent suffix");
          for(i=0;i<11;i++) panel.handleKey(40);
          panel.handleKey(39); ok(!c.dashKeepPose,"F6 last row reachable");
          panel.handleKey(40); panel.handleKey(39); ok(c.ricochet,"F6 wraps to first row");

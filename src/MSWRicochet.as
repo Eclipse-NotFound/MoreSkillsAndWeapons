@@ -10,6 +10,7 @@ package
       private var chanceKeep:Number;
       private var damageKeep:Number;
       private var speedKeep:Number;
+      private var resetDistance:Boolean;
 
       public function MSWRicochet(cfg:MSWConfig)
       {
@@ -18,6 +19,7 @@ package
          chanceKeep = 1 - cfg.ricochetChanceDecay / 100;
          damageKeep = 1 - cfg.ricochetDamageDecay / 100;
          speedKeep = 1 - cfg.ricochetSpeedDecay / 100;
+         resetDistance = cfg.ricochetResetDistance;
       }
 
       /** null 表示终止；显式 roll 仅供确定性测试，正常调用用 Math.random。 */
@@ -33,7 +35,7 @@ package
          var scale:Number = extra ? speedKeep : 1;
          var nextDamage:Number = damage * (extra ? damageKeep : 1);
          if(nextDamage <= 0 || speed * scale < 1) return null;
-         return {damage: nextDamage, speedScale: scale, extra: extra};
+         return {damage: nextDamage, speedScale: scale, extra: extra, resetDistance: resetDistance};
       }
 
       public function recordBounce():void

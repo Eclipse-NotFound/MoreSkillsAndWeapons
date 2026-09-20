@@ -601,6 +601,8 @@ package
          {
             nb["liv"] = 100;
             nb["damage"] = ricPlan.damage;
+            // 新飞行段从反弹点计算命中距离；关闭时保留 copyBullet 的累计距离。
+            if(ricPlan.resetDistance) nb["dist"] = 0;
             var chain:MSWRicochet = inf["ric"] as MSWRicochet;
             chain.recordBounce();
             mod.cfg.diagAdd("ricBounce");

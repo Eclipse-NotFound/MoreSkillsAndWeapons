@@ -12,6 +12,7 @@ package
       private var phase:int=0;
       private var since:int=0;
       private var count:int=0;
+      private var resetMode:Boolean=true;
       private var w:*;
       private var b:*;
       private var target:*;
@@ -45,6 +46,7 @@ package
                {
                   if(it.key=="ricochet")it["set"](true);
                   else if(it.key=="ricochetCount")it["set"](10);
+                  else if(it.key=="ricochetResetDistance")it["set"](resetMode);
                   else if(String(it.key).indexOf("ricochet")==0)it["set"](0);
                }
                w.onPause=true; w.testDam=true; w.showHit=0;
@@ -72,6 +74,7 @@ package
                // Alternate exact-face and penetrating substep collisions.
                b.X=wall.phX1-(count%2==0?5:6); b.Y=(wall.phY1+wall.phY2)/2;
                b.dx=Math.abs(b.dx); b.dy=0;
+               b.dist=5000; // Long incoming path must be reset only with the switch on.
                b.step(); // Actual original wall collision, including crash/popadalo.
                var impact:*=w.loc.getAbsTile(b.X,b.Y);
                check(impact===wall && impact.phis==1,"collision reaches selected intact wall "+count);
@@ -90,9 +93,14 @@ package
                if(count==10)
                {
                   check(next==null,"stops after ten base bounces");
+                  if(resetMode)
+                  {
+                     resetMode=false; count=0; phase=0; return;
+                  }
                   finish("PASS damage baseline",0); return;
                }
                check(next!=null,"continuation exists "+(count+1)); count++; b=next;
+               check(resetMode ? b.dist==0 : b.dist>5000,"real distance mode "+resetMode+" bounce "+count);
                var neutral:Number=hit(b);
                log+="MEASURE bounce="+count+" raw="+b.damage+" neutralHP="+neutral+" dist="+b.dist+" precision="+b.precision+"\n";
                check(neutral==100,"bounce neutral target HP "+count);

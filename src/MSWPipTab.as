@@ -374,7 +374,7 @@ package
       private static const COL_BORDER_HI:int = 0x00FF99;
       private static const COL_FILL:int = 0x03170E;
       private static const COL_FILL_HI:int = 0x0A3A24;
-      private static const ROW_CAP:int = 17; // 内容区容量（100..610，stride 30）
+      private static const ROW_CAP:int = 18; // 内容区容量（100..610，stride 28）
 
       private function drawButtonFace(g:*, w:Number, h:Number, hi:Boolean):void
       {
@@ -851,7 +851,7 @@ package
             if(it == null || it["key"] == null) continue;
             var r:MovieClip = new MovieClip();
             r["x"] = 30;
-            r["y"] = 100 + i * 30;
+            r["y"] = 100 + i * 28;
             var bg:Sprite = new Sprite();
             bg["graphics"].beginFill(0x000000, 1);
             bg["graphics"].lineStyle(1, 0x0F4A2E, 1);

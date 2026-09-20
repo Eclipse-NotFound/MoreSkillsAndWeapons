@@ -76,14 +76,23 @@ package
             if(phase==0)
             {
                rows=[]; findRows(w.main);
-               if(rows.length!=17) return; // Existing isolated auto-driver opens the real Pip panel.
+               if(rows.length!=18) return; // Existing isolated auto-driver opens the real Pip panel.
                if(phaseTick==0) { phaseTick=ticks; return; }
                if(ticks-phaseTick<10) return;
-               check(items.length==17,"real Pip renders all 17 settings");
-               check(rows[16].mswItem.key=="dashKeepPose","last original setting visible");
+               check(items.length==18,"real Pip renders all 18 settings");
+               check(rows[17].mswItem.key=="dashKeepPose","last original setting visible");
                for each(var row:* in rows)
                {
                   var key:String=row.mswItem.key;
+                  if(key=="ricochetResetDistance")
+                  {
+                     check(value(key)===true,"real distance reset defaults on");
+                     row.mswSc.selected=false;
+                     row.mswSc.dispatchEvent(new Event("change"));
+                     check(value(key)===false,"real distance reset checkbox off");
+                     var saved:MSWConfig=new MSWConfig(); saved.load();
+                     check(!saved.ricochetResetDistance,"real checkbox persists immediately");
+                  }
                   if(key=="ricochetCount" || key=="ricochetChance" || key=="ricochetChanceDecay" || key=="ricochetDamageDecay" || key=="ricochetSpeedDecay")
                   {
                      var target:Number=key=="ricochetCount"?3:(key=="ricochetChance"?80:(key=="ricochetChanceDecay"?50:(key=="ricochetDamageDecay"?20:25)));
@@ -95,6 +104,7 @@ package
                screenshot("settings.png");
                var reset:*=resetButton(w.main); check(reset!=null,"reset button found");
                reset.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));
+               check(value("ricochetResetDistance")===true,"real reset click restores distance reset");
                check(value("ricochetCount")==1 && value("ricochetChance")==0 && value("ricochetChanceDecay")==0 && value("ricochetDamageDecay")==0 && value("ricochetSpeedDecay")==0,"real reset click restores all five");
                setValue("ricochet",true); setValue("ricochetCount",3); setValue("ricochetChance",100); setValue("ricochetChanceDecay",100); setValue("ricochetDamageDecay",20); setValue("ricochetSpeedDecay",50);
                w.onPause=true;
@@ -108,13 +118,14 @@ package
                check(wall!=null,"actual solid wall found");
                var B:Class=getDefinitionByName("fe.weapon.Bullet") as Class;
                bullet=new B(w.gg,wall.phX1-5,(wall.phY1+wall.phY2)/2,null,true);
-               bullet.dx=10; bullet.dy=0; bullet.vel=10; bullet.damage=100; bullet.tipDamage=0;
+               bullet.dx=10; bullet.dy=0; bullet.vel=10; bullet.damage=100; bullet.tipDamage=0; bullet.dist=5000;
                phase=1; phaseTick=ticks; return;
             }
             if(phase==1 && ticks-phaseTick>=3)
             {
                // Changing the live UI must not change the already registered bullet.
                setValue("ricochet",false); setValue("ricochetCount",0); setValue("ricochetChance",0);
+               setValue("ricochetResetDistance",false);
                bullet.X=wall.phX1+5; bullet.dx=Math.abs(bullet.dx); bullet.babah=true; bullet.liv=3;
                phase=2; phaseTick=ticks; return;
             }
@@ -131,6 +142,7 @@ package
                bounceN++;
                check(Math.abs(next.damage-(bounceN<=3?100:80))<0.00001,"real damage step "+bounceN);
                check(Math.abs(next.vel-(bounceN<=3?10:5))<0.00001,"real speed step "+bounceN);
+               check(next.dist==0,"real distance reset base and extra "+bounceN);
                bullet=next; phase=1; phaseTick=ticks;
             }
          }

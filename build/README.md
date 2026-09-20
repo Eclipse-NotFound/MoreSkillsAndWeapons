@@ -31,6 +31,8 @@ New-Item -ItemType Directory -Force out | Out-Null
 
 伤害诊断：`./test-damage.ps1` 在隔离游戏副本中调用原版 Bullet.step/run 和 Unit.udarBullet，验证十次连续反弹的实际扣血、护甲/穿甲、精确墙面碰撞及轻机枪基础精度下的距离命中率。世界暂停后手动推进子弹，并非自然实战录像；命中率统计是随机样本。结果在 `out/damage/results.txt`，`out/damage/DamageSmokeMod.swf` 是测试探针，禁止部署到正式 release。
 
+安装后验证：先由 `test-game-smoke.ps1` 准备隔离资源，再运行 `./test-installed.ps1`。它复制正式 release 的同字节生产 SWF 到隔离实例，检查版本、持续帧计数及设置入口，输出 `out/install-smoke.json`。脚本不替换正式 release，失败时部署方须恢复已留存的备份；默认期望 v1.4.1，可用 ExpectedVersion 参数指定。真实 pfe 进程和存储不受影响。
+
 旧入口如下，**直接覆盖正式 release**，使用前走发布门禁；其裸 java 命令需要 PATH 可用：
 
 ```
