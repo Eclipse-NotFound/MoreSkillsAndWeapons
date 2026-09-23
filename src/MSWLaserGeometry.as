@@ -1,7 +1,7 @@
 package
 {
    import flash.utils.getQualifiedClassName;
-   /** Geometry only. Resolve the first body/obstacle before testing its eye. */
+   /** First contact among obstacles, bodies and their visible eye regions. */
    public class MSWLaserGeometry
    {
       private static var access:Class;
@@ -18,7 +18,8 @@ package
       public static function radius(u:*,r:Number):Number
       {return Math.max(3,Math.min(10,r*Math.sqrt(Math.max(1,u.scX*u.scY)/2400)));}
       public static function front(u:*,dx:Number):Boolean {return dx*u.storona< -0.000001;}
-      public static function eye(u:*):Object {return {x:u.eyeX,y:u.eyeY};}
+      public static function eye(u:*):Object
+      {return MSWLaserEyes.point(u);}
       public static function angle(a:Number):Number {while(a>Math.PI)a-=2*Math.PI;while(a< -Math.PI)a+=2*Math.PI;return a;}
       public static function rect(x:Number,y:Number,dx:Number,dy:Number,b:*,limit:Number):Number
       {
@@ -62,21 +63,22 @@ package
       public static function castRay(w:*,x:Number,y:Number,a:Number,eyeRadius:Number,limit:Number=2000,owner:*=null):Object
       {
          var dx:Number=Math.cos(a),dy:Number=Math.sin(a),end:Number=wall(w.loc,x,y,dx,dy,limit);
-         var first:*=null,best:Number=end;
+         var first:*=null,best:Number=end,eyeAlong:Number=0,hit:Boolean=false;
          for each(var u:* in w.loc.units)
          {
             if(u===owner || !live(u,w.loc))continue;
-            var d:Number=rect(x,y,dx,dy,u,best);
-            if(d<best) {first=u;best=d;}
-         }
-         var hit:Boolean=false;
-         if(first!=null)
-         {
-            var e:Object=eye(first),along:Number=(e.x-x)*dx+(e.y-y)*dy;
+            var e:Object=eye(u),along:Number=(e.x-x)*dx+(e.y-y)*dy,r:Number=radius(u,eyeRadius);
             var cross:Number=Math.abs((e.x-x)*dy-(e.y-y)*dx);
-            hit=along>=0 && along<=end && cross<=radius(first,eyeRadius) && front(first,dx) && MSWU.num(first,"shithp")<=0;
-            if(hit)best=along;
+            var throughEye:Boolean=along>=0 && along<=end && cross<=r;
+            var eyeEntry:Number=throughEye?Math.max(0,along-Math.sqrt(Math.max(0,r*r-cross*cross))):Infinity;
+            var d:Number=Math.min(rect(x,y,dx,dy,u,end),eyeEntry);
+            if(d<best)
+            {
+               first=u;best=d;eyeAlong=along;
+               hit=throughEye && front(u,dx) && MSWU.num(u,"shithp")<=0;
+            }
          }
+         if(hit)best=eyeAlong;
          return {unit:first,eye:hit,x:x+dx*best,y:y+dy*best,distance:best,angle:a};
       }
       public static function assist(w:*,wp:*,cfg:*):*

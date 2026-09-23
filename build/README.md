@@ -45,6 +45,8 @@ v1.5.1 起真实游戏 UI 测试需要正式安装 ModSettings 及其 loader。`
 
 激光发布行为检查：`test-laser-production.ps1 -ProductionSwf <生产SWF绝对路径> -Nodebug`（省略 ProductionSwf 则读正式 release）。独立驱动不链接 MSW 源码，原样加载产物，检查原生开火耗弹、光束中点实际像素、6 秒致盲与零生命伤害。输出 out/laser-shot；依赖当前通用 loader，仅修改测试副本清单。必须与前述 debug 机制测试区分：曾因自定义 trace 被发布编译删除，debug 测试与正式启动均过而正式开火失败。详见 knowledge/experiments/laser-release-fix-20260923.md。
 
+激光可见眼位检查：`test-laser-combat.ps1 -ProductionSwf <生产SWF绝对路径> -Nodebug`，输出 out/laser-combat。独立驱动正常换枪/开火，不手写眼位、枪口或身体矩形，以截图测量坐标检查真正眼部命中；另测框外传感器、移动/转身、自然战斗失明持续、原版激光素材/图层/4步淡出。生成36类眼位对照图（青点=旧感知点、红点=现判定点）。使用 pfe-modsettings-combat 唯一ID避开旧自动打开Pip流程，不读写真实存档。此前按 eyeX/Y 构造的244条规则测试不能验证眼位与美术一致，发布时须同时运行此生产场景。
+
 发布前也可运行同字节生产检查，无须先装到 release：`test-installed.ps1 -ProductionSwf <候选SWF绝对路径> -ExpectedVersion '1.6.0-dazzler' -ExpectedHudVersion '1-top-ccw' -RuntimeDirectory 'out\laser\runtime' -OutputDirectory 'out\laser-production'`。省略 ProductionSwf 才默认读取正式 release。
 
 菱形 HUD：`./test-smart-hud.ps1` 做 30 项实际光栅检查并生成状态对照图；`./test-smart-hud-game.ps1` 做 14 项原游戏 HUD 检查并保存真实 Raider 上的标记截图，分别输出到 `out/smart-hud`、`out/smart-hud-game`。后者支持 SourcePath，用于固定源码快照。所有 Smoke/Probe 均不可部署。

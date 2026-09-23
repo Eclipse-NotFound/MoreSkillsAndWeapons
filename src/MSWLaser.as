@@ -1,19 +1,18 @@
 package
 {
    import flash.utils.Dictionary;
-   import flash.utils.getTimer;
    public class MSWLaser
    {
       public static const ID:String="mswdazzler";
       public static const NAME:String="非致命激光枪";
       public static const GIFT:String="msw_dazzler_granted_v1";
-      public static const VERSION:String="2-cast-ray";
+      public static const VERSION:String="3-visual-eyes";
       private var mod:*;
       public var blind:MSWBlindController;
       private var hud:MSWLaserHUD=new MSWLaserHUD();
       private var loc:*,player:*;
       private var seen:Dictionary=new Dictionary(true);
-      private var flashes:Array=[];
+      private var beams:Array=[];
       private var sats:Class;
       private var weaponClass:Class;
       public function MSWLaser(m:*) {mod=m;blind=new MSWBlindController(m);}
@@ -107,7 +106,7 @@ package
          var wp:*=ensureWeapon(w);if(wp!=null)configure(wp);
       }
       public function clear():void
-      {blind.clear();flashes=[];hud.visible=false;}
+      {blind.clear();for each(var b:MSWLaserBeam in beams)b.dispose();beams=[];hud.visible=false;}
       public function fire(w:*,wp:*):Object
       {
          if(sats==null)sats=MSWU.cls("fe.inter.MSWLaserSats");
@@ -116,22 +115,23 @@ package
          {
             if(sats==null)throw new Error("Laser SATS access missing from build");
             u=sats["target"](w.gg.sats.que[0]);
-            if(u!=null && MSWLaserGeometry.hostile(u,w))a=Math.atan2(u.eyeY-wp.bulY,u.eyeX-wp.bulX);
+            if(u!=null && MSWLaserGeometry.hostile(u,w)) {var e:Object=MSWLaserGeometry.eye(u);a=Math.atan2(e.y-wp.bulY,e.x-wp.bulX);}
          }
-         else {u=MSWLaserGeometry.assist(w,wp,mod.cfg);if(u!=null)a=Math.atan2(u.eyeY-wp.bulY,u.eyeX-wp.bulX);}
+         else {u=MSWLaserGeometry.assist(w,wp,mod.cfg);if(u!=null) {e=MSWLaserGeometry.eye(u);a=Math.atan2(e.y-wp.bulY,e.x-wp.bulX);}}
          var hit:Object=MSWLaserGeometry.castRay(w,wp.bulX,wp.bulY,a,mod.cfg.laserEye,2000,w.gg);
-         if(hit.eye && MSWLaserGeometry.hostile(hit.unit,w))blind.apply(hit.unit,w);
-         flashes.push({x:wp.bulX,y:wp.bulY,tx:hit.x,ty:hit.y,hit:hit.eye,time:getTimer()});
+         var applied:Boolean=hit.eye && MSWLaserGeometry.hostile(hit.unit,w) && blind.apply(hit.unit,w);
+         mod.cfg.diagSet("laserLastHit",applied?"blind":(hit.unit==null?"obstacle-or-miss":(hit.eye?"ineligible":"body-back-or-shield")));
+         beams.push(new MSWLaserBeam(w,wp,hit));
          mod.cfg.diagAdd("laserShots");return hit;
       }
       private function render(w:*):void
       {
-         var now:int=getTimer();while(flashes.length>0 && now-flashes[0].time>130)flashes.shift();
+         for(var i:int=beams.length-1;i>=0;i--)if(!beams[i].in_chain)beams.splice(i,1);
          var wp:*=w.gg.currentWeapon;
          var equipped:Boolean=wp!=null && wp.id==ID && !w.pip.active && !mod.panel.overlayOpen;
          var target:*=null;
          if(equipped) {wp.getBulXY();target=MSWLaserGeometry.assist(w,wp,mod.cfg);}
-         hud.render(w,equipped,target,blind.states,flashes);
+         hud.render(w,equipped,target,blind.states);
       }
    }
 }

@@ -1,6 +1,6 @@
 # MoreSkills&Weapons —— 开发记忆入口
 
-> 协议见工作区 GOVERNANCE.md §8；本模组参数见 ../AGENT_SCOPE.md。最近正式安装：2026-09-23，v1.6.2-smart-keep-lock（保留 v1.6.1 智能参数与激光热修复）。
+> 协议见工作区 GOVERNANCE.md §8；本模组参数见 ../AGENT_SCOPE.md。最近正式安装：2026-09-23，v1.6.2-smart-keep-lock + 激光组件 3-visual-eyes。
 
 ## 1. 这个模组是什么
 
@@ -18,7 +18,8 @@
 
 ## 3. 当前状态
 
-- **正式已安装 v1.6.2-smart-keep-lock**。release/MoreSkillsWeaponsMod.swf 与已验证候选同字节，39991 字节，SHA256 `909CEF05D810A8F0C0093B34DD0999DC0CE6847E24E0402C1818BFCF435C3744`。新增智能页第 13 项「视野外保持锁定」，默认关闭；开启后已有锁定离屏、被墙遮挡时不脱锁。HUD 标记 `2-adjustable-size`、运动 `1.2-radius`、激光 `2-cast-ray` 保留。
+- **正式已安装 v1.6.2-smart-keep-lock + 激光组件 3-visual-eyes**。41512 字节，SHA256 `D16523C35BE414FB200D5FFDD31B1453B85F1AF3802A91180805D8FDD0F21BBD`。修正感知点冒充视觉眼位、身体框外传感器漏判；辅助/SATS/HUD/命中统一眼位，复用原生激光手枪素材及4游戏步淡出。HUD `2-adjustable-size`、智能运动 `1.2-radius` 与既有13项智能设置保留。
+- 激光本轮生产场景24条PASS（独立测量的可见眼睛命中、正常换枪/开火、身体框外传感器、12组移动转身、自然战斗失明持续、光束图层/素材/淡出），机制244条及实际时停/回放251条通过；安装前后相同字节900帧、设置正常，无模块错误。详见 knowledge/experiments/laser-visual-eyes-20260923.md。旧生产版本相同实测扣弹2却blind=0，修复后blind=6且HP不变。
 - 本版 58 项智能规则、真实游戏离屏/墙遮挡/恢复及 13 项设置、30 定义生产链接、同字节 900 帧启动及生产激光真实开火回归通过；安装后相同字节再达 900 帧，设置入口正常，无模块错误。证据 knowledge/experiments/smart-keep-lock-20260923.md。上版 v1.6.1 激光热修复备份为 release/MoreSkillsWeaponsMod.before-v1.6.2-keep-lock-20260923.swf，SHA256 `573709F879ED6A538D49110A73836053123DC859F47376D2C63D221090E5B089`。
 - 智能页保留“转弯半径倍率”10–200%、步长 10、默认 50%；“锁定菱形大小”12–80 屏幕 px、步长 2、默认 24，加上本次开关共 13 项设置。半径同时影响追踪曲率和转角上限，开火时固定并在跳弹/回放中继承；HUD 即时读取大小。
 - 本轮 53 条智能规则、30 项像素、14 项真实游戏 HUD、完整智能设置/锁定/绕障/跳弹、四档原生半径对照及实际时停回放通过。安装前后同字节启动均达 900 帧，ModSettings-connected、tabOn=1，无 lastErr/smartError/laserError；证据 build/out/smart-tuning-installed/install-smoke.json。
@@ -27,17 +28,17 @@
 - 本次固定源回归 244 条 PASS；最终正式字节在 -nodebug 中真实开火通过：扣弹 2、光束回调 1、光束中点像素存在、失明 6 秒、生命不变。安装后同字节 900 帧、赠枪/设置正常、无模块错误；证据 build/out/laser-fix/production-final-results.txt 与 build/out/laser-fix-installed/install-smoke.json。独立 AIR 存储，不读写真实存档；30 个定义，无宿主原类或探针。
 - 原功能回归：智能规则 42 条、跳弹规则 315 条、智能原生游戏场景（绕障/64 弹/锁定/设置）通过。激光有 11 个设置，Pip 独立页 msw-laser，F6 三页；眼圈/倒计时截图已检查。
 - 旧 v1.5.3-smart-diamond 已备份为 release/MoreSkillsWeaponsMod.before-v1.6.0-20260920.swf，28580 字节，SHA256 671FD977ECA722B9272FF916426E64E5DF8C8C4DEFDA1ECADACDF1778C5EB72A。
-- 根 pfe.swf 现为 2026-09-22 通用 loader，SHA256 `252E7B34FC8BF0DD8CF566F45876597FE999562BE0F2E6AB596215D1A514C6DB`，加载矩阵以 mods/loader-manifest.txt 为准。游戏测试副本必须带清单。本轮未改本体、清单、ModSettings 或其他模组正式文件。dist 仍旧 v1.0。
+- 根 pfe.swf 使用通用 loader，本轮期间被其他工作更新；当前已核对 SHA256 `B78244657ED407D03808C90E97325509DB35F802122835F58933FFF8003305AC`。本轮所有最终激光测试宿主副本与其同字节，加载矩阵以 mods/loader-manifest.txt 为准。未改本体、清单、ModSettings 或其他模组正式文件。dist 仍旧 v1.0。
 
 ## 4. 正在进行与卡点
 
-- 智能参数、激光修复和视野外保持锁定均已安装，用户重启后生效。真实游戏进程未关闭；正式版已有 13 项智能设置。源码、生产候选与正式文件已核对同字节。
+- 激光视觉眼位修复已安装，用户重启后生效，现有枪继续使用；真实游戏进程未关闭。同期多目标智能锁定另有工作区改动，本次用2121565冻结源加激光改动构建，没有混入未发布功能。32类反编译证明仅4个激光类改变、2类新增，其他26类一致；后续智能发布须保留本次修复。
 - 激光开火最终采用 MSWDazzlerWeapon 的原生 shoot 回调，已移除轮询射击计数/激光头节点方案。固定扣弹，电池回收专长不会改变“每匣次数”。原生保存 id，恢复后重新接成子类。
 - 同包 internal 访问已实测；旧“只能 public”的公共记录新增了范围补充。四个适配类必须显式 includes 并在场景就绪后解析，避免早期 loader 死等。
 
 ## 5. 已知问题与验证边界
 
-- 激光首版借用原激光手枪外形；眼位使用公开 eyeX/eyeY 加体型容差，尚未逐套美术逐帧标注。射线最长 2000 场景像素。未覆盖全敌人变体、全剧情状态、长期自然战斗、联机和 DLC 1.03/1.04。
+- 激光借用原激光手枪外形与光束。眼位已改为显示部位解析，36类抽样图已核对；位图头部表随已显示帧更新，部分类型仍为局部传感器锚点。尚未逐套变体逐帧标注，射线最长2000场景像素；未覆盖全部剧情、长期战斗、联机和DLC。原 eyeX/Y 是近似感知原点，不能当精准眼区。
 - Sandevistan v1.140 进入后第一显示帧尚无开火录制基线，首帧立刻开火可能不重播；本轮联测在进入后等待 6×50ms 再射击，不声称修复了该模组既有首帧边界。
 - 原有“时停预演 + 跳弹 + 智能绕障”三者组合仍未解决/未通过；本次激光不参与两种弹道机制，不能据此宣称旧问题已修复。
 - 局部智能绕障不保证封闭/多拐角或极高速命中；智能 HUD 位置为体型近似。原 godMode 已开启时的回放识别、所有模组组合没有完整认证。
@@ -45,7 +46,8 @@
 
 ## 6. 下一步
 
-- 用户重启游戏后生效；当前未关闭真实游戏进程。仅回退本轮开关，将 release/MoreSkillsWeaponsMod.before-v1.6.2-keep-lock-20260923.swf（39842 字节、SHA256 `573709F879ED6A538D49110A73836053123DC859F47376D2C63D221090E5B089`）复制回正式 SWF 并重启，可保留 v1.6.1 激光修复。更早的 before-v1.6.1-laser-fix 会恢复旧激光故障，不要混用。
+- 用户重启游戏后生效；本轮回滚用 release/MoreSkillsWeaponsMod.before-laser-eyes-20260923.swf（39991字节、SHA256 `909CEF05D810A8F0C0093B34DD0999DC0CE6847E24E0402C1818BFCF435C3744`），复制回正式SWF并重启，会恢复本次眼部漏判。更早备份对应不同功能范围，不要混用。
+- 后续构建须保留 MSWLaserEyes/Beam 和 MSWBlindAccess.pose 及对应外部声明；正式字节新增 test-laser-combat.ps1，必须测可见眼睛的独立坐标，不能只测函数自己返回的点。固定候选在 build/out/laser-visual/source/build/out/MoreSkillsWeaponsMod.swf。
 - 后续发布保留 castRay 修复并用 test-laser-production.ps1 验证准确的生产 SWF；只通过 debug 测试或启动冒烟不够。build/out/smart-tuning 是未含激光修复的旧候选，不能覆盖当前 release。
 - 不要部署 build/out/laser/LaserSmokeMod.swf、smoke/SandevistanMod.as 的错误捕获器或任何测试副本。
 - 若另开新任务，优先读本文件及激光实验记录；Q1–Q25 不再询问。普通功能已完成，不自行建立提醒/待办。
@@ -53,6 +55,7 @@
 
 ## 7. 深入了解
 
+- knowledge/experiments/laser-visual-eyes-20260923.md：可见眼睛/框外传感器红绿对照、视觉样本、原版光束、生产场景与安装回滚；shared-knowledge/entities/discoveries/perception-eye-vs-rendered-eye.md：感知点与显示眼位区别。
 - knowledge/experiments/laser-release-fix-20260923.md：真实复现、编译单变量对照、两类差异校验及安装记录；shared-knowledge/knowledge-validation/discoveries/as3-custom-trace-release-stripping.md：编译陷阱。
 - knowledge/experiments/smart-tuning-20260923.md：当前两项参数、原生半径对照、控件/回放/像素检查、通用清单适配、部署与回滚。
 - knowledge/experiments/smart-keep-lock-20260923.md：本轮视野外保持锁定语义、真实游戏验证、生产激光回归与部署回滚。

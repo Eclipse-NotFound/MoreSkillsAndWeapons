@@ -12,6 +12,7 @@ package
    import flash.utils.getDefinitionByName;
    import flash.utils.getQualifiedClassName;
    import flash.geom.Point;
+   import flash.geom.Matrix;
 
    /** TEST ONLY. Loads the exact production bytes; never links MSW source. */
    public class LaserProductionSmoke extends Sprite
@@ -59,9 +60,11 @@ package
             position(w.gg,240,320);w.gg.dx=w.gg.dy=0;w.loc.units=[w.gg,target];w.loc.objs=[];
             var wp:*=w.invent.weapons["mswdazzler"];
             ok(wp!=null,"production save receives dazzler");
+            var geometry:Class=domain.getDefinition("MSWLaserGeometry") as Class;
+            var eye:Object=geometry["eye"](target);
             w.gg.currentWeapon=wp;w.gg.childObjs[0]=wp;
-            w.celX=w.gg.celX=target.eyeX;w.celY=w.gg.celY=target.eyeY;
-            wp.loc=w.loc;wp.X=300;wp.Y=target.eyeY;wp.bulX=300;wp.bulY=target.eyeY;
+            w.celX=w.gg.celX=eye.x;w.celY=w.gg.celY=eye.y;
+            wp.loc=w.loc;wp.X=300;wp.Y=eye.y;wp.bulX=300;wp.bulY=eye.y;
             wp.hold=12;wp.t_attack=wp.rapid;wp.t_reload=0;wp.t_prep=20;
             var shots:Number=Number(m.cfg.diag.laserShots||0),hp:Number=target.hp;
             log+="BEFORE weapon="+getQualifiedClassName(wp)+" laserError="+m.cfg.diag.laserError+"\n";
@@ -70,9 +73,11 @@ package
             ok(wp.hold==10,"native shot consumes two batteries");
             ok(Number(m.cfg.diag.laserShots)==shots+1,"native production shot emits one beam callback");
             ok(m.laser.blind.remaining(target)==6 && target.hp==hp,"production eye shot blinds without direct damage");
-            var hud:*=host.getChildByName("MSWLaserHUD");ok(hud!=null,"production beam HUD exists");
-            var midpoint:Point=hud.globalToLocal(w.visual.localToGlobal(new Point((wp.bulX+target.eyeX)/2,(wp.bulY+target.eyeY)/2)));
-            var b:BitmapData=new BitmapData(host.stage.stageWidth,host.stage.stageHeight,true,0);b.draw(hud);
+            var beam:*=w.loc.firstObj;
+            while(beam!=null && getQualifiedClassName(beam)!="MSWLaserBeam")beam=beam.nobj;
+            ok(beam!=null && beam.vis.parent===w.grafon.visObjs[2],"production native beam exists in world layer");
+            var midpoint:Point=new Point(400-Number(beam.vis.laser.scaleX)*50,100);
+            var b:BitmapData=new BitmapData(800,200,true,0);b.draw(beam.vis,new Matrix(1,0,0,1,400,100));
             var painted:Boolean=false;
             for(x=int(midpoint.x)-3;x<=int(midpoint.x)+3;x++)for(y=int(midpoint.y)-3;y<=int(midpoint.y)+3;y++)if(x>=0 && y>=0 && x<b.width && y<b.height && (b.getPixel32(x,y)>>>24)>0)painted=true;
             b.dispose();ok(painted,"production beam is actually drawn between muzzle and eye");
