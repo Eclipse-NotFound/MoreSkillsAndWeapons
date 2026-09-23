@@ -82,8 +82,8 @@ package
                // The fixture's final automatic page switch occurs about 800 frames
                // after the world starts. Begin only after it relinquishes the UI.
                if(m.cfg.diag.frames<1100)return;
-               ok(m.cfg.diag.ver=="1.9.1-exemption-menu","exact production version loaded");
-               ok(m.cfg.diag.smartMotionVersion=="1.3-smooth-mode" && m.cfg.diag.laserRuntimeVersion=="4-reload-debug","installed smooth and laser fixes preserved");
+               ok(m.cfg.diag.ver=="1.10.0-body-assist","exact production version loaded");
+               ok(m.cfg.diag.smartMotionVersion=="1.3-smooth-mode" && m.cfg.diag.laserRuntimeVersion=="5-body-assist","installed smooth and current laser components preserved");
                var exemptionPages:int=0;
                for each(var registered:Object in m.settings.getPages())if(String(registered.modId).indexOf("msw-exempt")==0){exemptionPages++;ok(registered.modId=="msw-exempt" && registered.items.length==31,"one registered menu contains all 31 options");}
                ok(exemptionPages==1,"only one exemption entry alongside other mods");

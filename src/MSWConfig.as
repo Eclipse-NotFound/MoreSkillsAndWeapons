@@ -40,15 +40,20 @@ package
       public var laserDebug:Boolean = false;
       public var laserDuration:Number = 6;
       public var laserEye:Number = 6;
+      // Retain the former angle-assist settings for rollback to older builds.
       public var laserRadius:Number = 40;
       public var laserAngle:Number = 5;
       public var laserSpeed:Number = 10;
+      public var laserAssist:Boolean = true;
+      public var laserBodyRadius:Number = 60;
+      public var laserAssistFloor:Number = 50;
+      public var laserAssistSpeed:Number = 10;
       public var laserInterval:Number = 0.8;
       public var laserMagazine:Number = 6;
       public var laserReload:Number = 2;
       public var laserAmmo:Number = 2;
       public var laserAP:Number = 17;
-      private static const LASER_KEYS:Array=["laserEnabled","laserDebug","laserDuration","laserEye","laserRadius","laserAngle","laserSpeed","laserInterval","laserMagazine","laserReload","laserAmmo","laserAP"];
+      private static const LASER_KEYS:Array=["laserEnabled","laserDebug","laserDuration","laserEye","laserRadius","laserAngle","laserSpeed","laserInterval","laserMagazine","laserReload","laserAmmo","laserAP","laserAssist","laserBodyRadius","laserAssistFloor","laserAssistSpeed"];
 
       /** 可编程榴弹炮下坠速率 = weapon.grav（1.0 = 原版，0 = 无下坠） */
       public var dropRate:Number = 1.0;
@@ -106,6 +111,9 @@ package
          {
             so = SharedObject.getLocal("MSWConfig");
             for each(var laserKey:String in LASER_KEYS)if(so.data[laserKey]!==undefined)this[laserKey]=so.data[laserKey];
+            // Only the first upgrade inherits the old speed. The new radius and
+            // floor use their own defaults, without rewriting the legacy keys.
+            if(so.data.laserAssistSpeed===undefined)laserAssistSpeed=laserSpeed;
             if(so.data.ricochet != undefined) ricochet = so.data.ricochet;
             if(so.data.smartEnabled != undefined) smartEnabled = so.data.smartEnabled;
             if(so.data.smartMultiLock != undefined) smartMultiLock = so.data.smartMultiLock == true;
@@ -254,6 +262,9 @@ package
          laserRadius=smartClamp(laserRadius,40,0,160,4);
          laserAngle=smartClamp(laserAngle,5,0,20,0.5);
          laserSpeed=smartClamp(laserSpeed,10,1,40,0.5);
+         laserBodyRadius=smartClamp(laserBodyRadius,60,0,160,4);
+         laserAssistFloor=smartClamp(laserAssistFloor,50,10,100,5);
+         laserAssistSpeed=smartClamp(laserAssistSpeed,10,1,40,0.5);
          laserInterval=smartClamp(laserInterval,0.8,0.1,3,0.1);
          laserMagazine=smartClamp(laserMagazine,6,1,30,1);
          laserReload=smartClamp(laserReload,2,0.5,6,0.1);

@@ -6,7 +6,7 @@ package
       public static const ID:String="mswdazzler";
       public static const NAME:String="非致命激光枪";
       public static const GIFT:String="msw_dazzler_granted_v1";
-      public static const VERSION:String="4-reload-debug";
+      public static const VERSION:String="5-body-assist";
       private var mod:*;
       public var blind:MSWBlindController;
       private var hud:MSWLaserHUD=new MSWLaserHUD();

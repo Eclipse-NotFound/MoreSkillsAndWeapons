@@ -18,6 +18,7 @@ package
    {
       private static var probe:LaserReloadSmoke;
       private var host:*,loader:Loader=new Loader(),timer:Timer=new Timer(100);
+      private var legacyLoader:Loader=new Loader(),legacyConfig:Class;
       private var domain:ApplicationDomain,ticks:int=0,log:String="",started:Boolean=false;
       private var liveTarget:*,liveFrame:int=0, reloadPlayer:*, reloadTick:int=0;
       private var naturalPixels:int=0,naturalFrames:int=0,naturalShots:Number=0;
@@ -25,8 +26,36 @@ package
       public static function init(main:*):void {probe=new LaserReloadSmoke();probe.start(main);}
       private function start(main:*):void
       {
-         host=main;loader.contentLoaderInfo.addEventListener(Event.COMPLETE,loaded);
-         loader.load(new URLRequest("app:/mods/MoreSkills&Weapons/release/MoreSkillsWeaponsMod.swf"),new LoaderContext(false,new ApplicationDomain(main.loaderInfo.applicationDomain)));
+         host=main;
+         var F:Class=getDefinitionByName("flash.filesystem.File") as Class;
+         if(F["applicationDirectory"].resolvePath("mods/MoreSkills&Weapons/release/LegacyConfig.swf").exists)
+         {
+            // SharedObject's default path includes the SWF filename. Load both
+            // versions from the real runtime URL, in sibling domains, so this
+            // is an actual upgrade/rollback rather than two unrelated stores.
+            legacyLoader.contentLoaderInfo.addEventListener(Event.COMPLETE,legacyLoaded);
+            legacyLoader.load(new URLRequest("app:/mods/MoreSkills&Weapons/release/MoreSkillsWeaponsMod.swf"),new LoaderContext(false,new ApplicationDomain(host.loaderInfo.applicationDomain)));
+         }
+         else loadProduction();
+      }
+      private function legacyLoaded(e:Event):void
+      {
+         legacyConfig=legacyLoader.contentLoaderInfo.applicationDomain.getDefinition("MSWConfig") as Class;
+         var old:*=new legacyConfig();old.load();old.laserRadius=116;old.laserAngle=13;old.laserSpeed=18;old.laserDuration=8;old.save();
+         var F:Class=getDefinitionByName("flash.filesystem.File") as Class,S:Class=getDefinitionByName("flash.filesystem.FileStream") as Class,fs:*=new S();
+         fs.open(F["applicationStorageDirectory"].resolvePath("legacy-config-ready.txt"),"write");fs.writeUTFBytes("ready");fs.close();
+         timer.addEventListener("timer",waitProduction);timer.start();
+      }
+      private function waitProduction(e:Event):void
+      {
+         var F:Class=getDefinitionByName("flash.filesystem.File") as Class;
+         if(!F["applicationStorageDirectory"].resolvePath("production-ready.txt").exists)return;
+         timer.stop();timer.removeEventListener("timer",waitProduction);loadProduction();
+      }
+      private function loadProduction():void
+      {
+         loader.contentLoaderInfo.addEventListener(Event.COMPLETE,loaded);
+         loader.load(new URLRequest("app:/mods/MoreSkills&Weapons/release/MoreSkillsWeaponsMod.swf"),new LoaderContext(false,new ApplicationDomain(host.loaderInfo.applicationDomain)));
       }
       private function loaded(e:Event):void
       {
@@ -87,9 +116,11 @@ package
             for each(var page:Object in m.settings.api.getPages())if(page.modId=="msw-laser")
                for each(var item:Object in page.items)if(item.key=="laserDebug")setting=item;
             ok(setting!=null && setting.def===false && setting.get()===true,"ModSettings shares the diagnostic switch and default");
+            LaserBodyAssistChecks.settings(domain,w,m,legacyConfig,ok,savePNG);
+            m.cfg.laserDebug=true;
             // This visual eye is measured from the native raider sprite, not
             // copied from the production target resolver under test.
-            m.cfg.laserAngle=0;
+            m.cfg.laserAssist=false;
             w.celX=w.gg.celX=target.X-26;w.celY=w.gg.celY=target.Y-68;
             for(var i:int=0;i<20;i++){w.gg.setWeaponPos();wp.step();}
             wp.getBulXY();
@@ -116,7 +147,7 @@ package
             beam.step();beam.step();beam.step();ok(!beam.in_chain && beam.vis.parent==null,"beam removes itself after four game steps");
             var geometry:Class=domain.getDefinition("MSWLaserGeometry") as Class;
             // Actual fire/cast/AI path for each rejection, not synthetic HUD messages.
-            m.cfg.laserAngle=0;m.laser.blind.clear();
+            m.cfg.laserAssist=false;m.laser.blind.clear();
             target.storona=-1;target.shithp=0;target.setPos(500,320);target.animate();target.setVisPos();
             var eyeDebug:Object=geometry["eye"](target);
             wp.bulX=300;wp.bulY=300;w.gg.celX=500;w.gg.celY=300;m.laser.fire(w,wp);m.laser.frame(w);
@@ -148,7 +179,7 @@ package
             target.exterminate();target=w.loc.createUnit("raider",500,320,true);target.storona=-1;target.shithp=0;target.t_emerg=0;target.setPos(500,320);target.actions();target.setVisPos();target.animate();w.loc.units=[w.gg,target];
             // Real gun/assist path after turning and animated movement. Eye
             // geometry was independently checked against sprite pixels above.
-            m.cfg.laserAngle=5;
+            m.cfg.laserAssist=true;
             for(i=0;i<12;i++)
             {
                m.laser.blind.clear();target.storona=i%2?-1:1;target.stay=true;target.dx=i%3?4:0;target.animate();target.setVisPos();
@@ -159,6 +190,7 @@ package
                wp.attack();wp.step();m.laser.frame(w);
                ok(m.laser.blind.remaining(target)==6,"native aim assist hits displayed eye after move/turn "+i);
             }
+            LaserBodyAssistChecks.combat(domain,w,m,wp,target,ok,savePNG);
             // Arm the gun, then let the real World/Location loop shoot and
             // inspect the complete stage at EXIT_FRAME, before it is displayed.
             m.laser.clear();target.storona=-1;target.dx=target.dy=0;target.setPos(500,320);target.actions();target.animate();target.setVisPos();

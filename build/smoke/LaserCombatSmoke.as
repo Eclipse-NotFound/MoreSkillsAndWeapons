@@ -66,7 +66,7 @@ package
             var wp:*=w.gg.currentWeapon;
             // This visual eye is measured from the native raider sprite, not
             // copied from the production target resolver under test.
-            m.cfg.laserAngle=0;
+            m.cfg.laserAssist=false;
             w.celX=w.gg.celX=target.X-26;w.celY=w.gg.celY=target.Y-68;
             for(var i:int=0;i<20;i++){w.gg.setWeaponPos();wp.step();}
             wp.getBulXY();
@@ -101,7 +101,7 @@ package
             target.exterminate();target=w.loc.createUnit("raider",500,320,true);target.storona=-1;target.shithp=0;target.t_emerg=0;target.setPos(500,320);target.actions();target.setVisPos();target.animate();w.loc.units=[w.gg,target];
             // Real gun/assist path after turning and animated movement. Eye
             // geometry was independently checked against sprite pixels above.
-            m.cfg.laserAngle=5;
+            m.cfg.laserAssist=true;
             for(i=0;i<12;i++)
             {
                m.laser.blind.clear();target.storona=i%2?-1:1;target.stay=true;target.dx=i%3?4:0;target.animate();target.setVisPos();

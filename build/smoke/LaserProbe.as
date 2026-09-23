@@ -139,11 +139,11 @@ package
          hit=MSWLaserGeometry.castRay(w,300,MSWLaserGeometry.eye(target).y,0,6,1000,w.gg);ok(hit.unit===blocker,"first enemy prevents penetration into second");
          blocker.exterminate();w.loc.units=[w.gg,target];
          wp.bulX=300;wp.bulY=MSWLaserGeometry.eye(target).y;w.celX=w.gg.celX=MSWLaserGeometry.eye(target).x;w.celY=w.gg.celY=MSWLaserGeometry.eye(target).y+10;
-         ok(MSWLaserGeometry.assist(w,wp,m.cfg)===target,"standing 5-degree correction acquires nearby visible eye");
+         ok(MSWLaserGeometry.assist(w,wp,m.cfg)===target,"standing body assistance acquires nearby visible eye");
          target.invis=true;ok(MSWLaserGeometry.assist(w,wp,m.cfg)==null,"cloaked target receives no automatic eye assistance");target.invis=false;
-         w.gg.dx=10;ok(MSWLaserGeometry.assist(w,wp,m.cfg)==null,"running speed removes automatic correction");w.gg.dx=0;w.gg.dy=10;
-         ok(MSWLaserGeometry.assist(w,wp,m.cfg)==null,"vertical speed also removes correction");
-         w.celY=w.gg.celY=MSWLaserGeometry.eye(target).y;hit=m.laser.fire(w,wp);ok(hit.eye,"manual precision still works at high speed");w.gg.dy=0;m.laser.blind.clear();
+         w.gg.dx=10;ok(MSWLaserGeometry.assist(w,wp,m.cfg)===target,"running retains automatic correction near body");w.gg.dx=0;w.gg.dy=10;
+         ok(MSWLaserGeometry.assist(w,wp,m.cfg)===target,"vertical speed retains minimum correction");
+         m.cfg.laserAssist=false;w.celY=w.gg.celY=MSWLaserGeometry.eye(target).y;hit=m.laser.fire(w,wp);ok(hit.eye,"manual precision still works with assistance off at high speed");w.gg.dy=0;m.laser.blind.clear();m.cfg.laserAssist=true;
          // Force the native firing path, not merely a custom effect invocation.
          wp.hold=12;wp.t_attack=wp.rapid;wp.t_reload=0;wp.t_prep=20;wp.loc=w.loc;wp.X=300;wp.Y=MSWLaserGeometry.eye(target).y;
          var shots:Number=m.cfg.diag.laserShots;wp.step();m.laser.frame(w);
@@ -181,7 +181,7 @@ package
          var object:*=w.loc.firstObj;while(object!=null){var following:*=object.nobj;if(MSWU.has(object,"owner") || getQualifiedClassName(object)=="fe.graph::Part")w.loc.remObj(object);object=following;}
          target=actor("raider");w.loc.units=[w.gg,target];m.laser.blind.apply(target,w);
          if(target.currentWeapon!=null)target.currentWeapon.damage=0;
-         ok(MSWSettingsHub.buildLaserItems(m).length==12,"twelve laser settings provided");
+         ok(MSWSettingsHub.buildLaserItems(m).length==13,"thirteen laser settings provided");
          m.cfg.laserDuration=8;m.cfg.save();var cfg:MSWConfig=new MSWConfig();cfg.load();ok(cfg.laserDuration==8,"laser settings persist");m.cfg.laserDuration=6;
          ui();
          ok(m.cfg.diag.laserError==null,"all paused rule checks have no runtime errors");

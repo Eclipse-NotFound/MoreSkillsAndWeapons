@@ -84,23 +84,35 @@ package
       }
       public static function assist(w:*,wp:*,cfg:*):*
       {
+         if(!cfg.laserAssist)return null;
          var speed:Number=Math.sqrt(w.gg.dx*w.gg.dx+w.gg.dy*w.gg.dy);
-         var maxAngle:Number=cfg.laserAngle*Math.PI/180*Math.max(0,1-speed/cfg.laserSpeed);
-         if(maxAngle<=0)return null;
-         var base:Number=Math.atan2(w.gg.celY-wp.bulY,w.gg.celX-wp.bulX),best:Number=Infinity,result:*=null;
+         var range:Number=cfg.laserBodyRadius*(1-(1-cfg.laserAssistFloor/100)*Math.min(1,speed/cfg.laserAssistSpeed));
+         var pointed:*=null,pointedEye:Number=Infinity,result:*=null,bestBody:Number=Infinity,bestEye:Number=Infinity;
          for each(var u:* in w.loc.units)
          {
             if(!hostile(u,w) || !u.isVis || u.invis || (u.vis!=null && !u.vis.visible))continue;
             var bx:Number=Math.max(u.X1-w.celX,0,w.celX-u.X2),by:Number=Math.max(u.Y1-w.celY,0,w.celY-u.Y2);
-            if(bx*bx+by*by>cfg.laserRadius*cfg.laserRadius)continue;
-            var e:Object=eye(u),a:Number=Math.atan2(e.y-wp.bulY,e.x-wp.bulX);
-            if(Math.abs(angle(a-base))>maxAngle)continue;
+            var body:Number=bx*bx+by*by;
+            if(body>range*range)continue;
+            var e:Object=eye(u);
             var dist:Number=(e.x-w.celX)*(e.x-w.celX)+(e.y-w.celY)*(e.y-w.celY);
-            if(dist>=best)continue;
-            var hit:Object=castRay(w,wp.bulX,wp.bulY,a,cfg.laserEye,2000,w.gg);
-            if(hit.unit===u && hit.eye) {best=dist;result=u;}
+            // Identify the body under the cursor BEFORE checking its eye ray.
+            // An invalid pointed target must not redirect this shot to a neighbour.
+            if(body==0)
+            {
+               if(dist<pointedEye) {pointed=u;pointedEye=dist;}
+               continue;
+            }
+            if(pointed!=null || body>bestBody || (body==bestBody && dist>=bestEye))continue;
+            if(reachable(w,wp,u,e,cfg)) {bestBody=body;bestEye=dist;result=u;}
          }
+         if(pointed!=null)return reachable(w,wp,pointed,eye(pointed),cfg)?pointed:null;
          return result;
+      }
+      private static function reachable(w:*,wp:*,u:*,e:Object,cfg:*):Boolean
+      {
+         var hit:Object=castRay(w,wp.bulX,wp.bulY,Math.atan2(e.y-wp.bulY,e.x-wp.bulX),cfg.laserEye,2000,w.gg);
+         return hit.unit===u && hit.eye;
       }
    }
 }
