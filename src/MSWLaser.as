@@ -7,6 +7,7 @@ package
       public static const ID:String="mswdazzler";
       public static const NAME:String="非致命激光枪";
       public static const GIFT:String="msw_dazzler_granted_v1";
+      public static const VERSION:String="2-cast-ray";
       private var mod:*;
       public var blind:MSWBlindController;
       private var hud:MSWLaserHUD=new MSWLaserHUD();
@@ -18,6 +19,8 @@ package
       public function MSWLaser(m:*) {mod=m;blind=new MSWBlindController(m);}
       public function injectXml():void
       {
+         mod.cfg.diagSet("laserRuntimeVersion",VERSION);
+         mod.cfg.diagSet("laserError",null);
          var c:Class=MSWU.cls("fe.AllData");if(c==null)return;
          var d:XML=c["d"];
          if(d.weapon.(@id==ID).length())return;
@@ -116,7 +119,7 @@ package
             if(u!=null && MSWLaserGeometry.hostile(u,w))a=Math.atan2(u.eyeY-wp.bulY,u.eyeX-wp.bulX);
          }
          else {u=MSWLaserGeometry.assist(w,wp,mod.cfg);if(u!=null)a=Math.atan2(u.eyeY-wp.bulY,u.eyeX-wp.bulX);}
-         var hit:Object=MSWLaserGeometry.trace(w,wp.bulX,wp.bulY,a,mod.cfg.laserEye,2000,w.gg);
+         var hit:Object=MSWLaserGeometry.castRay(w,wp.bulX,wp.bulY,a,mod.cfg.laserEye,2000,w.gg);
          if(hit.eye && MSWLaserGeometry.hostile(hit.unit,w))blind.apply(hit.unit,w);
          flashes.push({x:wp.bulX,y:wp.bulY,tx:hit.x,ty:hit.y,hit:hit.eye,time:getTimer()});
          mod.cfg.diagAdd("laserShots");return hit;

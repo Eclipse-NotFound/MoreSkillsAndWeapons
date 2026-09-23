@@ -18,6 +18,8 @@ $testMod = Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release\MoreSkillsWeap
 if (-not (Test-Path -LiteralPath $testMod)) { throw 'Run test-game-smoke.ps1 first to prepare isolated assets' }
 if ((Get-FileHash -LiteralPath (Join-Path $gameRoot 'pfe.swf')).Hash -ne (Get-FileHash -LiteralPath (Join-Path $runtimeDir 'pfe.swf')).Hash) { throw 'Isolated host differs from current game; rebuild test assets first' }
 Copy-Item -LiteralPath $installed -Destination $testMod
+$manifest=Join-Path $gameRoot 'mods\loader-manifest.txt'
+if(Test-Path -LiteralPath $manifest){Copy-Item -LiteralPath $manifest -Destination (Join-Path $runtimeDir 'mods\loader-manifest.txt')}
 $settingsDir=Join-Path $runtimeDir 'mods\ModSettings\release'
 New-Item -ItemType Directory -Force $settingsDir | Out-Null
 Copy-Item -LiteralPath (Join-Path $gameRoot 'mods\ModSettings\release\ModSettingsMod.swf') -Destination $settingsDir

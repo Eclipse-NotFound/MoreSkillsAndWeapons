@@ -57,7 +57,9 @@ package
          }
          return best;
       }
-      public static function trace(w:*,x:Number,y:Number,a:Number,eyeRadius:Number,limit:Number=2000,owner:*=null):Object
+      // Do not name this trace: release mxmlc can erase an unqualified call as
+      // a debug trace while leaving its return-value coercion (VerifyError 1024).
+      public static function castRay(w:*,x:Number,y:Number,a:Number,eyeRadius:Number,limit:Number=2000,owner:*=null):Object
       {
          var dx:Number=Math.cos(a),dy:Number=Math.sin(a),end:Number=wall(w.loc,x,y,dx,dy,limit);
          var first:*=null,best:Number=end;
@@ -92,7 +94,7 @@ package
             if(Math.abs(angle(a-base))>maxAngle)continue;
             var dist:Number=(e.x-w.celX)*(e.x-w.celX)+(e.y-w.celY)*(e.y-w.celY);
             if(dist>=best)continue;
-            var hit:Object=trace(w,wp.bulX,wp.bulY,a,cfg.laserEye,2000,w.gg);
+            var hit:Object=castRay(w,wp.bulX,wp.bulY,a,cfg.laserEye,2000,w.gg);
             if(hit.unit===u && hit.eye) {best=dist;result=u;}
          }
          return result;

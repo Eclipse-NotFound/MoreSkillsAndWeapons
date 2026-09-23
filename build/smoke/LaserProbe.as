@@ -25,7 +25,7 @@ package
             if(m!=null && m.cfg.diag.lastErr!=null)throw new Error(m.cfg.diag.lastErr);
             if(w!=null && w.verror!=null && w.verror.visible)throw new Error("startup dialog: "+w.verror.txt.text);
             if(ticks>1200)throw new Error("timeout");
-            if(m==null || w==null || w.gg==null || w.loc==null || !w.loc.active || ticks<180)return;
+            if(m==null || w==null || w.gg==null || w.loc==null || !w.loc.active || ticks<180 || m.cfg.diag.auto!="pip-opt-open")return;
             if(w.verror.visible)throw new Error(w.verror.txt.text);
             if(phase==2)
             {
@@ -50,8 +50,11 @@ package
             if(phase==1)
             {
                if(ticks-since<24)return;
+               // Wait for actual world progress under load, not a fixed number
+               // of wall-clock Timer ticks. Still fail if the actor never steps.
+               if(ticks-since<200 && target.hp>0 && m.laser.blind.remaining(target)>=5.5)return;
                w.onPause=true;
-               ok(m.laser.blind.remaining(target)>0 && m.laser.blind.remaining(target)<5.5 && target.hp>0,"blind timer advances through actual Location.step");
+               ok(m.laser.blind.remaining(target)>0 && m.laser.blind.remaining(target)<5.5 && target.hp>0,"blind timer advances through actual Location.step (remaining="+m.laser.blind.remaining(target)+", hp="+target.hp+", pause="+w.onPause+", pip="+w.pip.active+")");
                ok(target.celUnit==null,"live scene does not reacquire moving player while blind");
                ok(m.cfg.diag.laserError==null,"live actor update has no laser errors");
                m.cfg.laserEnabled=false;m.laser.frame(w);
@@ -120,20 +123,20 @@ package
          ok(m.laser.blind.remaining(target)==6,"display frames during time stop consume no enemy time");
          m.laser.blind.clear();position(target,500,320);
          var eyeY:Number=target.eyeY;
-         hit=MSWLaserGeometry.trace(w,300,target.Y-5,0,6,1000,w.gg);
+         hit=MSWLaserGeometry.castRay(w,300,target.Y-5,0,6,1000,w.gg);
          ok(hit.unit===target && !hit.eye,"body hit stops beam without blindness");
          target.storona=1;position(target,500,320);
-         hit=MSWLaserGeometry.trace(w,300,target.eyeY,0,6,1000,w.gg);ok(!hit.eye,"rear eye-coordinate hit does not blind");
+         hit=MSWLaserGeometry.castRay(w,300,target.eyeY,0,6,1000,w.gg);ok(!hit.eye,"rear eye-coordinate hit does not blind");
          target.storona=-1;position(target,500,320);target.shithp=50;
-         hit=MSWLaserGeometry.trace(w,300,target.eyeY,0,6,1000,w.gg);ok(!hit.eye,"active shield blocks eye effect");target.shithp=0;
-         target.armor=9999;target.dexter=9999;hit=MSWLaserGeometry.trace(w,300,target.eyeY,0,6,1000,w.gg);
+         hit=MSWLaserGeometry.castRay(w,300,target.eyeY,0,6,1000,w.gg);ok(!hit.eye,"active shield blocks eye effect");target.shithp=0;
+         target.armor=9999;target.dexter=9999;hit=MSWLaserGeometry.castRay(w,300,target.eyeY,0,6,1000,w.gg);
          ok(hit.eye,"armor and hidden hit chance do not negate geometry");
          t=w.loc.getAbsTile(400,target.eyeY);var orig:Object={phis:t.phis,x1:t.phX1,x2:t.phX2,y1:t.phY1,y2:t.phY2};
          t.phis=1;t.phX1=390;t.phX2=430;t.phY1=160;t.phY2=350;
-         hit=MSWLaserGeometry.trace(w,300,target.eyeY,0,6,1000,w.gg);ok(hit.unit==null && hit.x<=390,"terrain stops beam before enemy");
+         hit=MSWLaserGeometry.castRay(w,300,target.eyeY,0,6,1000,w.gg);ok(hit.unit==null && hit.x<=390,"terrain stops beam before enemy");
          t.phis=orig.phis;t.phX1=orig.x1;t.phX2=orig.x2;t.phY1=orig.y1;t.phY2=orig.y2;
          var blocker:*=actor("raider",420);position(blocker,420,320);w.loc.units=[w.gg,blocker,target];
-         hit=MSWLaserGeometry.trace(w,300,target.eyeY,0,6,1000,w.gg);ok(hit.unit===blocker,"first enemy prevents penetration into second");
+         hit=MSWLaserGeometry.castRay(w,300,target.eyeY,0,6,1000,w.gg);ok(hit.unit===blocker,"first enemy prevents penetration into second");
          blocker.exterminate();w.loc.units=[w.gg,target];
          wp.bulX=300;wp.bulY=target.eyeY;w.celX=w.gg.celX=target.eyeX;w.celY=w.gg.celY=target.eyeY+10;
          ok(MSWLaserGeometry.assist(w,wp,m.cfg)===target,"standing 5-degree correction acquires nearby visible eye");

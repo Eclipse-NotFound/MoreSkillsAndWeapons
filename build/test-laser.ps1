@@ -15,6 +15,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Smoke harness compilation failed' }
     Copy-Item -LiteralPath (Join-Path $outputDir 'LaserSmokeMod.swf') -Destination (Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf')
     Get-ChildItem -LiteralPath $gameRoot -File | Where-Object { $_.Name -eq 'pfe.swf' -or $_.Name -match '^(sound|sprite|texture).*\.swf$' -or $_.Extension -eq '.xml' } | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $runtimeDir }
+    $manifest=Join-Path $gameRoot 'mods\loader-manifest.txt'
+    if(Test-Path -LiteralPath $manifest){Copy-Item -LiteralPath $manifest -Destination (Join-Path $runtimeDir 'mods\loader-manifest.txt')}
     $settingsDir=Join-Path $runtimeDir 'mods\ModSettings\release'
     New-Item -ItemType Directory -Force $settingsDir | Out-Null
     if(!$SettingsSwf){$SettingsSwf=Join-Path $gameRoot 'mods\ModSettings\release\ModSettingsMod.swf'}

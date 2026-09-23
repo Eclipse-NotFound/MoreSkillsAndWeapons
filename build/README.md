@@ -43,6 +43,8 @@ v1.5.1 起真实游戏 UI 测试需要正式安装 ModSettings 及其 loader。`
 
 非致命激光枪：`test-laser.ps1` 验证眼部几何、原生半自动/装填/SATS、赠枪与存档接续、36 类敌人接管/恢复及实际攻击、恐慌子弹/爆炸/近战误伤、11 项配置与 HUD。`-Sandevistan` 只读复制已安装时停模组，追加冻结/慢步/开火/回放检查。输出在 `out/laser`；`LaserSmokeMod`、测试专用的 `smoke/SandevistanMod.as` 错误捕获器和任何测试副本都不能安装。
 
+激光发布行为检查：`test-laser-production.ps1 -ProductionSwf <生产SWF绝对路径> -Nodebug`（省略 ProductionSwf 则读正式 release）。独立驱动不链接 MSW 源码，原样加载产物，检查原生开火耗弹、光束中点实际像素、6 秒致盲与零生命伤害。输出 out/laser-shot；依赖当前通用 loader，仅修改测试副本清单。必须与前述 debug 机制测试区分：曾因自定义 trace 被发布编译删除，debug 测试与正式启动均过而正式开火失败。详见 knowledge/experiments/laser-release-fix-20260923.md。
+
 发布前也可运行同字节生产检查，无须先装到 release：`test-installed.ps1 -ProductionSwf <候选SWF绝对路径> -ExpectedVersion '1.6.0-dazzler' -ExpectedHudVersion '1-top-ccw' -RuntimeDirectory 'out\laser\runtime' -OutputDirectory 'out\laser-production'`。省略 ProductionSwf 才默认读取正式 release。
 
 菱形 HUD：`./test-smart-hud.ps1` 做 30 项实际光栅检查并生成状态对照图；`./test-smart-hud-game.ps1` 做 14 项原游戏 HUD 检查并保存真实 Raider 上的标记截图，分别输出到 `out/smart-hud`、`out/smart-hud-game`。后者支持 SourcePath，用于固定源码快照。所有 Smoke/Probe 均不可部署。
