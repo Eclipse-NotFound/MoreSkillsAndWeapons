@@ -35,6 +35,9 @@
 
 ## 4. 正在进行与卡点
 
+- 用户实战反馈旧平滑仍连续小弧，澄清改为「自适应转弯半径」。新一轮grilling已答：Q1替换并改名；Q2复用现有普通倍率、最小倍率另调；Q3提前预测才收紧；Q4稳定后逐渐恢复。整体确认稿design/smart-adaptive-radius.md；最小倍率默认10%等衔接建议待整体确认，本轮仅只读核查/记录，未改功能。此新需求取代下面旧平滑已完成状态中的后续方向，旧测试不能证明新目标已满足。
+- 用户提出激光实战难命中，正在grilling辅助增强：Q1=A身体附近选敌、开火自动瞄眼；Q2=A高速减弱但保留最低辅助；Q3=A速度只缩小身体外围范围，直接指着合格目标身体仍可靠瞄眼。Q4多目标选择待答（推荐直接指身体优先，其次身体距离，重叠按眼距）。正面/可见/无遮挡、直线与原致盲规则沿用；数值及整套确认未完成，尚未修改实现或安装。
+
 - 锁定豁免第一批31项已实现、验证并安装，无待确认或待执行步骤。类别调查中的32组是完整候选目录，不等于本批选项；第一批范围见design/smart-lock-exemptions.md。调查原始证据保留在knowledge/discoveries/smart-lock-exemption-catalog-20260923.md。
 - 平滑弹道开发、实测与安装已完成；无需等待新的实施确认。设计与实测见design/smart-smooth-mode.md、knowledge/experiments/smart-smooth-mode-20260923.md。
 - 激光开火采用 MSWDazzlerWeapon 原生 shoot 回调。原生保存id，恢复子类时同步invent/currentWeapon/childObjs/newWeapon/SATS引用；必须用真实comLoad回归，强制即时装备会漏测。固定扣弹，无轮询计数补偿。
@@ -60,6 +63,7 @@
 
 ## 7. 深入了解
 
+- design/smart-adaptive-radius.md：用户对平滑目标的修正、已答Q1–Q4、整体确认稿、当前固定倍率与短弧预测边界；尚未实施。
 - design/smart-lock-exemptions.md、knowledge/experiments/smart-lock-exemptions-20260923.md：第一批五组31项、精确变种、UI与过滤/在途弹/回放语义、1123/289/52/22/39验证、组合发布与回滚。
 - knowledge/experiments/laser-reload-debug-20260923.md：读档延迟装备引用红绿复现、调试标志、39/251/51验证、生产类差分与指纹。公共武器切换知识weapon-switch-flow.md已补读档替换窗口。
 
