@@ -157,3 +157,17 @@ v1.9.0-lock-exemption 在平滑弹道和激光4基础上增加五组31项。Pip�
 ## 2026-09-24 非正面致盲与当前设置宿主（v1.12.0）
 
 候选/冻结源码在`out/laser-nonfront/release`；完整验证与安装/回滚见`../knowledge/experiments/laser-nonfront-20260924.md`。`test-laser-reload.ps1`现在同时验证15项设置及非正面辅助，`-LegacySwf`可指向v1.11.1验证真实同URL升级/回退；`test-turret-laser.ps1`补齐各方向与30/60边界。`copy-settings-host.ps1`按根1.02清单选择ModSettings或ModLoader，供读档、炮塔、激光机制及安装脚本复制实际启用的设置宿主；不要因旧文件还在而假定它仍被加载。
+
+
+## 2026-09-24 激光笔候选（v1.13.0，未安装）
+
+`out/laser-pointer/`保留准确候选、冻结src、manifest和verification；详见`../knowledge/experiments/laser-pointer-20260924.md`。增加MSWPointerWeapon外部宿主适配，生产40定义；不得嵌入测试驱动或原生宿主存根。
+
+```powershell
+./build.ps1 -OutputDirectory out/laser-pointer
+./test-pointer.ps1 -ProductionSwf (Join-Path $PWD 'out/laser-pointer/MoreSkillsWeaponsMod.swf') -OutputDirectory out/pointer-test -Nodebug -Sandevistan
+```
+
+`test-pointer`真实装备/保存/读档后验证40类敌人、连续光束、库存余量、快速扫眼和真实时停，输出results及两张画面。所有驱动都用独立AIR应用ID；嵌套工作树加`-GameDirectory <游戏根>`，不可操作用户存档。原枪、炮塔、智能多锁/豁免脚本同样指定准确ProductionSwf；多锁/豁免新增OutputDirectory，按当前清单复制实际设置宿主。五页F6导航与失明按来源计时的测试预期已同步。
+
+`test-installed`是隔离启动检查，不会自行安装；指定`-ExpectedVersion 1.13.0-laser-pointer -ExpectedHudVersion 3-multi-lock`并复用已经准备好的独立RuntimeDirectory，不能与使用同目录的其他测试同时运行。候选未部署，正式release仍v1.12。

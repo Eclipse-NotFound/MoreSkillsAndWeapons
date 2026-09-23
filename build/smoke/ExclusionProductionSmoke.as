@@ -93,7 +93,11 @@ package
                if(!m.settings.api.selectPage("msw-exempt"))return;next(1);return;
             }
             if(phase==1 && elapsed>200) {
-               rows=[];collect(host);ok(rows.length==sizes[page],"internal page "+page+" count="+rows.length);
+               rows=[];collect(host);
+               // Both supported settings hosts paginate the same 31 MSW items:
+               // ModSettings uses 18 rows, the current ModLoader uses 16.
+               if(page==0){ok(rows.length==16 || rows.length==18,"known settings-host page capacity");sizes=[rows.length,31-rows.length];}
+               ok(rows.length==sizes[page],"internal page "+page+" count="+rows.length);
                for each(r in rows) {
                   item=r.settingsItem;var previous:Boolean=item.key=="smartExclude_rat" || item.key=="smartExclude_mine" || item.key=="smartExclude_transmitter";
                   ok(item.get()==previous && r.settingsSc.selected==previous,"existing choice preserved "+item.key);
@@ -104,7 +108,7 @@ package
                if(page==0){r=named(host,"SettingsNextItems");ok(r!=null && r.mouseEnabled,"internal next page enabled");r.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));page=1;next(1);return;}
                ok(allRows.length==31,"all options reached through internal paging");
                r=named(host,"SettingsPreviousItems");ok(r!=null && r.mouseEnabled,"internal previous page enabled");r.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));
-               rows=[];collect(host);ok(rows.length==18 && rows[0].settingsItem.key=="smartExclude_bloodwing" && rows[0].settingsSc.selected,"return to first internal page keeps choices");
+               rows=[];collect(host);ok(rows.length==sizes[0] && rows[0].settingsItem.key=="smartExclude_bloodwing" && rows[0].settingsSc.selected,"return to first internal page keeps choices");
                r=named(host,"SettingsReset");ok(r!=null,"page reset exists");r.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));
                for each(r in allRows)ok(!r.settingsItem.get(),"all-group default restored "+r.settingsItem.key);
                w.pip.onoff();m.panel.toggleOverlay();
@@ -116,7 +120,7 @@ package
                }
                m.panel.handleKey(9);m.panel.update(w);ok(host.getChildByName("MSWF6Panel").text.indexOf("激光笔")>=0,"F6 reaches pointer after exclusions");
                m.panel.handleKey(9);m.panel.update(w);ok(host.getChildByName("MSWF6Panel").text.indexOf("MoreSkills&Weapons")==0,"F6 cycles five menus back to main");
-               m.panel.handleKey(33);m.panel.handleKey(39);ok(!m.cfg.smartExclusions.bloodwing,"F6 wraps backwards to single exemption menu");m.panel.toggleOverlay();
+               m.panel.handleKey(33);m.panel.handleKey(33);m.panel.handleKey(39);ok(!m.cfg.smartExclusions.bloodwing,"F6 wraps backwards to single exemption menu");m.panel.toggleOverlay();
                m.cfg.smartExclusions={};matrix();
                w.onPause=true;w.godMode=false;w.catPause=false;w.gg.ggControl=true;
                for(var x:int=100;x<1200;x+=20)for(var y:int=40;y<650;y+=20){tile=w.loc.getAbsTile(x,y);tile.phis=0;tile.water=0;}
