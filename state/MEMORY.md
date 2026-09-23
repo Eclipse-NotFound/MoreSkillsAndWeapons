@@ -30,7 +30,7 @@
 
 ## 4. 正在进行与卡点
 
-- 本轮多重锁定开发、实测与安装已完成，用户重启后生效，当前没有待拍板项。未关闭真实游戏进程。旧单目标、视野外保持、半径/菱形设置及最新激光修复均保留。
+- 多重锁定开发、实测与安装已完成。新需求为可开关的「平滑弹道」，grilling已答Q1=B命中优先可紧急急转、Q2=B偏短路线圆滑拐角、Q3=A全部智能追踪/绕障、Q4=A开关加平滑程度滑块。整体确认稿见design/smart-smooth-mode.md；等待用户确认后才实施，当前源码与正式版未改。
 - 激光开火最终采用 MSWDazzlerWeapon 的原生 shoot 回调，已移除轮询射击计数/激光头节点方案。固定扣弹，电池回收专长不会改变“每匣次数”。原生保存 id，恢复后重新接成子类。
 - 同包 internal 访问已实测；旧“只能 public”的公共记录新增了范围补充。四个适配类必须显式 includes 并在场景就绪后解析，避免早期 loader 死等。
 
@@ -44,6 +44,7 @@
 
 ## 6. 下一步
 
+- 先收束平滑弹道整体确认：新增开关建议默认关闭，紧急补救不突破原转向能力，继承出膛/跳弹/回放设置，参数由实测校准。已回答四题不重问；工程事实/算法细节自行核查。该轮仅设计记录，未进行新运行测试。
 - 用户重启后在 Pip「模组 → 智能武器」或 F6 智能页开启「多重锁定」（默认关闭）；智能武器总开关也须开启。
 - 本轮回滚用 release/MoreSkillsWeaponsMod.before-v1.7.0-multi-lock-20260923.swf（41512字节，SHA256 `D16523C35BE414FB200D5FFDD31B1453B85F1AF3802A91180805D8FDD0F21BBD`），复制回正式SWF并重启：撤销多重锁定，保留视野外保持及最新激光眼位/光束修复。更早备份对应不同范围，不要混用。
 - 本轮最终候选 build/out/multi-lock/MoreSkillsWeaponsMod.swf 与正式同字节；对应冻结源在 build/out/multi-lock/src。早期多重候选、build/out/smart-tuning 与旧 laser-fix 产物缺少后续修复，不能覆盖当前 release。
@@ -53,6 +54,7 @@
 
 ## 7. 深入了解
 
+- design/smart-smooth-mode.md：平滑弹道Q1–Q4、待整体确认的范围、静态核查与验收方向。
 - design/smart-multi-lock.md、knowledge/experiments/smart-multi-lock-20260923.md：用户A/A、逐目标锁定/分弹、回放顺序、79/30/51及设置/联测证据、最终安装和回滚。
 - knowledge/experiments/laser-visual-eyes-20260923.md：可见眼睛/框外传感器红绿对照、视觉样本、原版光束、生产场景与安装回滚；shared-knowledge/entities/discoveries/perception-eye-vs-rendered-eye.md：感知点与显示眼位区别。
 - knowledge/experiments/laser-release-fix-20260923.md：真实复现、编译单变量对照、两类差异校验及安装记录；shared-knowledge/knowledge-validation/discoveries/as3-custom-trace-release-stripping.md：编译陷阱。
