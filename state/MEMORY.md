@@ -1,6 +1,6 @@
 # MoreSkills&Weapons —— 开发记忆入口
 
-> 协议见工作区 GOVERNANCE.md §8；本模组参数见 ../AGENT_SCOPE.md。最近正式安装：2026-09-23，v1.7.0-multi-lock + 激光组件 3-visual-eyes。
+> 协议见工作区 GOVERNANCE.md §8；本模组参数见 ../AGENT_SCOPE.md。最近正式安装：2026-09-23，v1.7.0-multi-lock + 激光组件 4-reload-debug。
 
 ## 1. 这个模组是什么
 
@@ -19,20 +19,22 @@
 
 ## 3. 当前状态
 
-- **正式已安装 v1.7.0-multi-lock**，42525 字节，SHA256 `F02FF3DBC917F557C59ADEF2EBC9605163E132FAC964952A1B437B8BF1BB5E97`。HUD `3-multi-lock`、智能运动 `1.2-radius`、激光 `3-visual-eyes`。最终候选以提交 8678a9b 加本轮智能改动冻结，保留最新激光视觉眼位/原版光束修复。
+- **正式已安装 v1.7.0-multi-lock + 激光4-reload-debug**，43654字节，SHA256 `04A7E69F62044840F9BCA112E235632546096FB9C360C6F5869446DAF4E1E0B9`。HUD `3-multi-lock`、智能运动 `1.2-radius`。本轮从已安装多重锁定基线冻结，仅修改5个激光/配置类；同期平滑弹道未完成改动不混入。
+- 读档无光束/失明已真实复现并修复：UnitPlayer.attach 的延迟换枪缓存 newWeapon，原先只替换背包/手持，导致稍后又装备原 Weapon。现在同步待装备引用。激光页新增默认关的「失明命中调试标志」，Pip/F6共用保存，显示命中点/眼区和身体、背面、护盾、不适用、成功失明等原因，标志3秒。共12项设置。
+- 当前候选39行PASS读档/开火/调试/UI验证，含未暂停EXIT_FRAME完整舞台光束差分（6帧可见、峰值174像素）；251行PASS机制/实际时停回放；准确生产SWF的51项多目标行为保留。安装前后同字节均900帧、ModSettings-connected、tabOn=1、激光4-reload-debug，无lastErr/smartError/laserError；结果见build/out/laser-debug/installed。详情见laser-reload-debug-20260923.md。
 - 多重锁定有独立获取、保持、衰减和菱形；稳定轮流分弹，不设固定目标上限。Pip/F6 智能页共 14 项。半径仍为10–200%/步长10/默认50%；菱形12–80屏幕px/步长2/默认24。原单目标规则、特殊弹药、跳弹和视野外保持开关保留。
 - 本轮79条规则、30项HUD像素、14项真实设置的操作/保存/默认与单目标场景通过；最终生产字节51条实战断言通过，含三目标并行获取、9弹各3发、真实5弹粒霰弹、各目标实际伤害、独立遮挡/脱锁/保持/死亡和模式切换。
 - 实际 Sandevistan 录制/回放通过：三发分别保留各自目标及30/40/50%半径，回放前改为200%并关闭多重模式仍逐发对应。回放按同武器录制顺序匹配，既有97px位置容差只作门槛；每帧观察出生顺序。原已存在子弹预算及真实回放伤害也通过。
 - 最终生产 SWF 真实激光开火回归通过（扣弹2、光束回调1、原版光束像素、失明6秒、HP不变）。正式链接33个定义，无宿主原类或测试探针；安装前后相同字节均900帧，ModSettings-connected、tabOn=1，无 lastErr/smartError/laserError。详见 knowledge/experiments/smart-multi-lock-20260923.md。
 - 激光之前独立完成24条视觉生产场景、244条机制及251条实际时停/回放；36类原生敌人抽样、存档/装填/SATS等证据见 laser-visual-eyes-20260923.md 与 nonlethal-laser-20260920.md。本轮保留该代码并补准确生产字节开火检查，没有宣称重跑全部历史测试。
-- 发布编译自定义 trace 被删除造成的激光校验栈下溢已用 castRay 修复；仅 debug 测试或启动成功不能证明激光可开火。激光11项设置，Pip独立页msw-laser，F6三页。
+- 发布编译自定义 trace 被删除造成的激光校验栈下溢已用 castRay 修复；仅 debug 测试或启动成功不能证明激光可开火。激光12项设置，Pip独立页msw-laser，F6三页。
 - 根 pfe.swf 使用通用 loader，本轮期间被其他工作更新；当前 SHA256 `B78244657ED407D03808C90E97325509DB35F802122835F58933FFF8003305AC`，加载矩阵以 mods/loader-manifest.txt 为准。本轮最终生产/启动场景复制当前宿主；未改本体、清单、ModSettings、其他模组正式文件或真实存档。dist仍旧v1.0。
 
 ## 4. 正在进行与卡点
 
 - 新增锁定豁免需求，本轮先完成敌人类别调查：现用SWF的148个unit定义与1.02参考一致，图鉴3大类/14分组/104条不等于敌人数。已按豁免用途列32个物种/型号候选及首领、机关边界；尚未决定最终粒度/豁免项，也未实现。见knowledge/discoveries/smart-lock-exemption-catalog-20260923.md。
 - 多重锁定开发、实测与安装已完成。新需求为可开关的「平滑弹道」，grilling已答Q1=B命中优先可紧急急转、Q2=B偏短路线圆滑拐角、Q3=A全部智能追踪/绕障、Q4=A开关加平滑程度滑块。整体确认稿见design/smart-smooth-mode.md；等待用户确认后才实施，当前源码与正式版未改。
-- 激光开火最终采用 MSWDazzlerWeapon 的原生 shoot 回调，已移除轮询射击计数/激光头节点方案。固定扣弹，电池回收专长不会改变“每匣次数”。原生保存 id，恢复后重新接成子类。
+- 激光开火采用 MSWDazzlerWeapon 原生 shoot 回调。原生保存id，恢复子类时同步invent/currentWeapon/childObjs/newWeapon/SATS引用；必须用真实comLoad回归，强制即时装备会漏测。固定扣弹，无轮询计数补偿。
 - 同包 internal 访问已实测；旧“只能 public”的公共记录新增了范围补充。四个适配类必须显式 includes 并在场景就绪后解析，避免早期 loader 死等。
 
 ## 5. 已知问题与验证边界
@@ -47,13 +49,15 @@
 
 - 先收束平滑弹道整体确认：新增开关建议默认关闭，紧急补救不突破原转向能力，继承出膛/跳弹/回放设置，参数由实测校准。已回答四题不重问；工程事实/算法细节自行核查。该轮仅设计记录，未进行新运行测试。
 - 用户重启后在 Pip「模组 → 智能武器」或 F6 智能页开启「多重锁定」（默认关闭）；智能武器总开关也须开启。
-- 本轮回滚用 release/MoreSkillsWeaponsMod.before-v1.7.0-multi-lock-20260923.swf（41512字节，SHA256 `D16523C35BE414FB200D5FFDD31B1453B85F1AF3802A91180805D8FDD0F21BBD`），复制回正式SWF并重启：撤销多重锁定，保留视野外保持及最新激光眼位/光束修复。更早备份对应不同范围，不要混用。
-- 本轮最终候选 build/out/multi-lock/MoreSkillsWeaponsMod.swf 与正式同字节；对应冻结源在 build/out/multi-lock/src。早期多重候选、build/out/smart-tuning 与旧 laser-fix 产物缺少后续修复，不能覆盖当前 release。
-- 后续发布必须验证准确生产字节的多目标实战与激光真实开火；保留 MSWLaserEyes/Beam、MSWBlindAccess.pose、castRay 和外部宿主声明。视觉修复还须用 test-laser-combat.ps1 独立测量可见眼睛，不能只测函数自己返回的点。
+- 当前回滚用 release/MoreSkillsWeaponsMod.before-laser-reload-debug-20260923.swf（42525字节，SHA256 `F02FF3DBC917F557C59ADEF2EBC9605163E132FAC964952A1B437B8BF1BB5E97`），换回正式文件并重启：只撤销读档修复及调试开关，保留多重锁定。之前before-v1.7.0-multi-lock备份会连多重锁定一起撤销，不要混用。
+- 当前生产候选与冻结源在 build/out/laser-debug/，SWF与正式同字节。历史out/multi-lock等产物缺少读档引用修复和调试开关，不能覆盖当前release。用户须重启游戏；Pip「模组→非致命激光枪」或F6激光页打开「失明命中调试标志」后实战可见。
+- 后续发布必须验证准确生产字节的多目标实战与激光真实开火；保留 MSWLaserEyes/Beam、MSWBlindAccess.pose、castRay 和外部宿主声明。增加test-laser-reload.ps1覆盖装备→保存→comLoad→延迟装备→开火及完整舞台光束；旧combat即时装备测试不能替代。眼位测试仍须独立测量可见部位。
 - 测试使用独立 AIR ID；本环境隔离游戏启动需沙箱提权，否则可能无存储/无输出超时。不要部署任何 Smoke/Probe 或测试用 SandevistanMod.as；不要关闭用户游戏。
 - 若另开新任务，优先读本文件及多重锁定/激光实验记录；已确认规则不重问。普通功能已完成，不自行建立提醒/待办。回到历史设置拆分前须成套恢复 ModSettings loader/客户端，不能只换本 SWF。
 
 ## 7. 深入了解
+
+- knowledge/experiments/laser-reload-debug-20260923.md：读档延迟装备引用红绿复现、调试标志、39/251/51验证、生产类差分与指纹。公共武器切换知识weapon-switch-flow.md已补读档替换窗口。
 
 - knowledge/discoveries/smart-lock-exemption-catalog-20260923.md：锁定豁免的类别/中文名/变种/实体ID清单，当前SWF核对、伙伴/机关/首领及共用行为类边界；本轮只读调查。
 - design/smart-smooth-mode.md：平滑弹道Q1–Q4、待整体确认的范围、静态核查与验收方向。

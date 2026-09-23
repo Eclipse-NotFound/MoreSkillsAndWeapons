@@ -96,6 +96,8 @@ pfe.swf 的 MainFE 已追加本模组 loader 并部署到游戏目录：
 
 ## 2026-09-23 多重锁定
 
+激光读档回归新增 `test-laser-reload.ps1 -ProductionSwf <准确生产SWF> -Nodebug`：装备保存后经原生 comLoad 读回，等待延迟换枪完成再射击；验证调试开关与命中分类，并在未暂停 EXIT_FRAME 对完整舞台做光束像素差分。独立输出 out/laser-reload；不可用直接强制装备的旧测试替代。详见 knowledge/experiments/laser-reload-debug-20260923.md。
+
 智能规则增至 79 条，包含独立获取/脱锁、轮换与 256 目标无固定上限。`test-multi-lock-production.ps1 -ProductionSwf <生产SWF> -Nodebug` 原样加载生产文件，验证 51 项多目标行为：目视排除、三目标实际伤害、9 发均分、真实霰弹分散、独立遮挡/保持、死亡、模式切换及菱形。输出在 out/multi-lock-production。
 
 `test-smart-sandy.ps1 -MultiLock` 使用单独 out/sandy-multi 副本，三次实际开火分别记录 30/40/50% 半径与不同目标。回放前改为 200% 并关闭多重模式，按每帧出生顺序核对原快照。开始前等待自动 Pip 初始化结束；超时也保留心跳，宿主异常会转为失败报告。原单目标测试入口保留。

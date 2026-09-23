@@ -146,7 +146,8 @@ package
             ["laserMagazine","每匣可射次数","slider",1,30,1,"容量按次数×每发耗弹计算，不赠送弹药。",6,"次"],
             ["laserReload","装填时间","slider",0.5,6,0.1,"本枪的装填时间。",2,"秒"],
             ["laserAmmo","每发电池消耗","slider",1,10,1,"使用原版电池类弹药；固定消耗，不受电池回收专长减免。",2,"份"],
-            ["laserAP","SATS基础行动点","slider",1,100,1,"SATS选中敌人自动瞄眼；正面与遮挡条件仍适用。",17,"AP"]
+            ["laserAP","SATS基础行动点","slider",1,100,1,"SATS选中敌人自动瞄眼；正面与遮挡条件仍适用。",17,"AP"],
+            ["laserDebug","失明命中调试标志","check",0,0,1,"装备本枪时显示开火状态及命中原因，标出命中点与眼区，持续3秒。",false,""]
          ];
          var result:Array=[];
          for each(var d:Array in defs)result.push({key:d[0],label:d[1],kind:d[2],min:d[3],max:d[4],step:d[5],hint:d[6],def:d[7],suffix:d[8],get:makeGetter(mod,d[0]),set:makeSetter(mod,d[0],d[2])});

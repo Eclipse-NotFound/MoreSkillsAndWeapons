@@ -6,7 +6,7 @@ package
       public static const ID:String="mswdazzler";
       public static const NAME:String="非致命激光枪";
       public static const GIFT:String="msw_dazzler_granted_v1";
-      public static const VERSION:String="3-visual-eyes";
+      public static const VERSION:String="4-reload-debug";
       private var mod:*;
       public var blind:MSWBlindController;
       private var hud:MSWLaserHUD=new MSWLaserHUD();
@@ -48,13 +48,16 @@ package
          if(old is weaponClass)return old;
          var wp:*=new weaponClass(old);w.invent.weapons[ID]=wp;
          if(w.gg.currentWeapon===old)w.gg.currentWeapon=wp;
+         // Loading queues the saved gun before the equip animation finishes.
+         // That pending reference must follow the inventory replacement too.
+         if(w.gg.newWeapon===old)w.gg.newWeapon=wp;
          for(var key:String in w.gg.childObjs)if(w.gg.childObjs[key]===old)w.gg.childObjs[key]=wp;
          if(w.gg.sats.weapon===old)w.gg.sats.weapon=wp;
          wp.onShot=function(fired:*):void
          {
             var current:*=MSWU.world();
             try {if(current!=null && fired.owner===current.gg && mod.cfg.laserEnabled)fire(current,fired);}
-            catch(e:*) {mod.cfg.diagSet("laserError","shot:"+e);}
+            catch(e:*) {mod.cfg.diagSet("laserError","shot:"+e);if(mod.cfg.laserDebug)hud.error(String(e));}
          };
          return wp;
       }
@@ -106,9 +109,10 @@ package
          var wp:*=ensureWeapon(w);if(wp!=null)configure(wp);
       }
       public function clear():void
-      {blind.clear();for each(var b:MSWLaserBeam in beams)b.dispose();beams=[];hud.visible=false;}
+      {blind.clear();for each(var b:MSWLaserBeam in beams)b.dispose();beams=[];hud.clearDebug();hud.visible=false;}
       public function fire(w:*,wp:*):Object
       {
+         mod.cfg.diagAdd("laserShotEntered");
          if(sats==null)sats=MSWU.cls("fe.inter.MSWLaserSats");
          var a:Number=Math.atan2(w.gg.celY-wp.bulY,w.gg.celX-wp.bulX),u:*=null;
          if(w.gg.sats.que.length>0)
@@ -120,7 +124,9 @@ package
          else {u=MSWLaserGeometry.assist(w,wp,mod.cfg);if(u!=null) {e=MSWLaserGeometry.eye(u);a=Math.atan2(e.y-wp.bulY,e.x-wp.bulX);}}
          var hit:Object=MSWLaserGeometry.castRay(w,wp.bulX,wp.bulY,a,mod.cfg.laserEye,2000,w.gg);
          var applied:Boolean=hit.eye && MSWLaserGeometry.hostile(hit.unit,w) && blind.apply(hit.unit,w);
-         mod.cfg.diagSet("laserLastHit",applied?"blind":(hit.unit==null?"obstacle-or-miss":(hit.eye?"ineligible":"body-back-or-shield")));
+         var result:String=applied?"blind":(hit.eye?"ineligible":hit.reason);
+         mod.cfg.diagSet("laserLastHit",result);
+         if(mod.cfg.laserDebug)hud.report(hit,result,blind.remaining(hit.unit),mod.cfg.laserEye);
          beams.push(new MSWLaserBeam(w,wp,hit));
          mod.cfg.diagAdd("laserShots");return hit;
       }
@@ -131,7 +137,7 @@ package
          var equipped:Boolean=wp!=null && wp.id==ID && !w.pip.active && !mod.panel.overlayOpen;
          var target:*=null;
          if(equipped) {wp.getBulXY();target=MSWLaserGeometry.assist(w,wp,mod.cfg);}
-         hud.render(w,equipped,target,blind.states);
+         hud.render(w,equipped,target,blind.states,mod.cfg.laserDebug);
       }
    }
 }

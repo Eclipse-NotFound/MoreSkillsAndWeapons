@@ -34,6 +34,7 @@ package
       public var smartHudSize:Number = 24;
 
       public var laserEnabled:Boolean = true;
+      public var laserDebug:Boolean = false;
       public var laserDuration:Number = 6;
       public var laserEye:Number = 6;
       public var laserRadius:Number = 40;
@@ -44,7 +45,7 @@ package
       public var laserReload:Number = 2;
       public var laserAmmo:Number = 2;
       public var laserAP:Number = 17;
-      private static const LASER_KEYS:Array=["laserEnabled","laserDuration","laserEye","laserRadius","laserAngle","laserSpeed","laserInterval","laserMagazine","laserReload","laserAmmo","laserAP"];
+      private static const LASER_KEYS:Array=["laserEnabled","laserDebug","laserDuration","laserEye","laserRadius","laserAngle","laserSpeed","laserInterval","laserMagazine","laserReload","laserAmmo","laserAP"];
 
       /** 可编程榴弹炮下坠速率 = weapon.grav（1.0 = 原版，0 = 无下坠） */
       public var dropRate:Number = 1.0;

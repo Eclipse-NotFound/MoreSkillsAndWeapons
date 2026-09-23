@@ -63,7 +63,7 @@ package
       public static function castRay(w:*,x:Number,y:Number,a:Number,eyeRadius:Number,limit:Number=2000,owner:*=null):Object
       {
          var dx:Number=Math.cos(a),dy:Number=Math.sin(a),end:Number=wall(w.loc,x,y,dx,dy,limit);
-         var first:*=null,best:Number=end,eyeAlong:Number=0,hit:Boolean=false;
+         var first:*=null,best:Number=end,eyeAlong:Number=0,hit:Boolean=false,reason:String="miss";
          for each(var u:* in w.loc.units)
          {
             if(u===owner || !live(u,w.loc))continue;
@@ -76,10 +76,11 @@ package
             {
                first=u;best=d;eyeAlong=along;
                hit=throughEye && front(u,dx) && MSWU.num(u,"shithp")<=0;
+               reason=!throughEye?"body":(!front(u,dx)?"back":(MSWU.num(u,"shithp")>0?"shield":"eye"));
             }
          }
          if(hit)best=eyeAlong;
-         return {unit:first,eye:hit,x:x+dx*best,y:y+dy*best,distance:best,angle:a};
+         return {unit:first,eye:hit,x:x+dx*best,y:y+dy*best,distance:best,angle:a,reason:reason};
       }
       public static function assist(w:*,wp:*,cfg:*):*
       {
