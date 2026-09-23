@@ -53,6 +53,12 @@ package
       public var laserReload:Number = 2;
       public var laserAmmo:Number = 2;
       public var laserAP:Number = 17;
+      public var pointerEnabled:Boolean = true;
+      public var pointerDebug:Boolean = false;
+      public var pointerDuration:Number = 6;
+      public var pointerEye:Number = 6;
+      public var pointerRate:Number = 2;
+      private static const POINTER_KEYS:Array=["pointerEnabled","pointerDebug","pointerDuration","pointerEye","pointerRate"];
       private static const LASER_KEYS:Array=["laserEnabled","laserDebug","laserDuration","laserEye","laserRadius","laserAngle","laserSpeed","laserInterval","laserMagazine","laserReload","laserAmmo","laserAP","laserAssist","laserBodyRadius","laserAssistFloor","laserAssistSpeed"];
 
       /** 可编程榴弹炮下坠速率 = weapon.grav（1.0 = 原版，0 = 无下坠） */
@@ -110,7 +116,7 @@ package
          try
          {
             so = SharedObject.getLocal("MSWConfig");
-            for each(var laserKey:String in LASER_KEYS)if(so.data[laserKey]!==undefined)this[laserKey]=so.data[laserKey];
+            for each(var laserKey:String in LASER_KEYS.concat(POINTER_KEYS))if(so.data[laserKey]!==undefined)this[laserKey]=so.data[laserKey];
             // Only the first upgrade inherits the old speed. The new radius and
             // floor use their own defaults, without rewriting the legacy keys.
             if(so.data.laserAssistSpeed===undefined)laserAssistSpeed=laserSpeed;
@@ -210,7 +216,7 @@ package
          try
          {
             if(so == null) so = SharedObject.getLocal("MSWConfig");
-            for each(var laserKey:String in LASER_KEYS)so.data[laserKey]=this[laserKey];
+            for each(var laserKey:String in LASER_KEYS.concat(POINTER_KEYS))so.data[laserKey]=this[laserKey];
             so.data.ricochet = ricochet;
             so.data.smartEnabled = smartEnabled;
             so.data.smartMultiLock = smartMultiLock;
@@ -258,6 +264,9 @@ package
 
       public function clamp():void
       {
+         pointerDuration=smartClamp(pointerDuration,6,0.5,30,0.5);
+         pointerEye=smartClamp(pointerEye,6,3,10,0.5);
+         pointerRate=smartClamp(pointerRate,2,0.1,10,0.1);
          laserDuration=smartClamp(laserDuration,6,0.5,30,0.5);
          laserEye=smartClamp(laserEye,6,3,10,0.5);
          laserRadius=smartClamp(laserRadius,40,0,160,4);

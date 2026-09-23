@@ -1,6 +1,7 @@
 package
 {
    import flash.utils.getQualifiedClassName;
+   import flash.utils.Dictionary;
    /** First contact among obstacles, bodies and their visible eye regions. */
    public class MSWLaserGeometry
    {
@@ -72,18 +73,19 @@ package
       }
       // Do not name this trace: release mxmlc can erase an unqualified call as
       // a debug trace while leaving its return-value coercion (VerifyError 1024).
-      public static function castRay(w:*,x:Number,y:Number,a:Number,eyeRadius:Number,limit:Number=2000,owner:*=null):Object
+      public static function castRay(w:*,x:Number,y:Number,a:Number,eyeRadius:Number,limit:Number=2000,owner:*=null,poses:Dictionary=null):Object
       {
          var dx:Number=Math.cos(a),dy:Number=Math.sin(a),end:Number=wall(w.loc,x,y,dx,dy,limit);
          var first:*=null,best:Number=end,eyeAlong:Number=0,hit:Boolean=false,reason:String="miss";
          for each(var u:* in w.loc.units)
          {
             if(u===owner || !live(u,w.loc))continue;
-            var e:Object=eye(u),along:Number=(e.x-x)*dx+(e.y-y)*dy,r:Number=radius(u,eyeRadius);
+            var pose:Object=poses==null?null:poses[u];
+            var e:Object=pose==null?eye(u):pose.eye,along:Number=(e.x-x)*dx+(e.y-y)*dy,r:Number=radius(u,eyeRadius);
             var cross:Number=Math.abs((e.x-x)*dy-(e.y-y)*dx);
             var throughEye:Boolean=MSWLaserEyes.available(u) && along>=0 && along<=end && cross<=r;
             var eyeEntry:Number=throughEye?Math.max(0,along-Math.sqrt(Math.max(0,r*r-cross*cross))):Infinity;
-            var d:Number=Math.min(rect(x,y,dx,dy,u,end),eyeEntry);
+            var d:Number=Math.min(rect(x,y,dx,dy,pose==null?u:pose,end),eyeEntry);
             if(d<best)
             {
                first=u;best=d;eyeAlong=along;

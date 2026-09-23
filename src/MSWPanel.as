@@ -30,7 +30,7 @@ package
       /** Keep F6 limited to this mod's pages, independent of test/legacy registrations. */
       private function localPages():Array
       {
-         var ids:Array=["msw","msw-smart","msw-laser","msw-exempt"],result:Array=[];
+         var ids:Array=["msw","msw-smart","msw-laser","msw-exempt","msw-pointer"],result:Array=[];
          for each(var id:String in ids)
             for each(var page:Object in mod.settings.getPages())
                if(page.modId==id) {result.push(page);break;}

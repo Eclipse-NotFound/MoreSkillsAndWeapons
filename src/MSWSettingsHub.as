@@ -32,8 +32,8 @@ package
             if(api == null || sentRevision == revision) return;
             for each(var page:Object in pages)
             {
-               var ids:Array = ["msw", "msw-smart", "msw-laser", "msw-exempt"];
-               var labels:Array = ["基础设置", "智能武器", "非致命激光枪", "锁定豁免"];
+               var ids:Array = ["msw", "msw-smart", "msw-laser", "msw-exempt", "msw-pointer"];
+               var labels:Array = ["基础设置", "智能武器", "非致命激光枪", "锁定豁免", "激光笔"];
                var order:int = ids.indexOf(page.modId);
                if("menuVersion" in api && api.menuVersion >= 1 && order >= 0)
                   api.registerPage(page.modId, page.displayName, page.items, page.onPageClose, page.desc,
@@ -159,6 +159,20 @@ package
             ["laserAmmo","每发电池消耗","slider",1,10,1,"使用原版电池类弹药；固定消耗，不受电池回收专长减免。",2,"份"],
             ["laserAP","SATS基础行动点","slider",1,100,1,"SATS选中敌人自动瞄眼；正面与遮挡条件仍适用。",17,"AP"],
             ["laserDebug","失明命中调试标志","check",0,0,1,"装备本枪时显示开火状态及命中原因，标出命中点与眼区，持续3秒。",false,""]
+         ];
+         var result:Array=[];
+         for each(var d:Array in defs)result.push({key:d[0],label:d[1],kind:d[2],min:d[3],max:d[4],step:d[5],hint:d[6],def:d[7],suffix:d[8],get:makeGetter(mod,d[0]),set:makeSetter(mod,d[0],d[2])});
+         return result;
+      }
+
+      public static function buildPointerItems(mod:*):Array
+      {
+         var defs:Array=[
+            ["pointerEnabled","激光笔","check",0,0,1,"每存档赠送一支；关闭只解除本武器造成的失明。",true,""],
+            ["pointerDuration","失明时长","slider",0.5,30,0.5,"扫眼立即失明，持续照射刷新；与已有剩余时长取较长值。",6,"秒"],
+            ["pointerEye","眼区基础半径","slider",3,10,0.5,"按体型缩放至3–10像素；始终须正面或斜前方，无辅助瞄准。",6,"px"],
+            ["pointerRate","每秒电池消耗","slider",0.1,10,0.1,"按累计亮灯时间消耗随身电池；已付余量跨切换和存读档保留。",2,"份/秒"],
+            ["pointerDebug","失明命中调试标志","check",0,0,1,"标出命中点和眼区，说明未致盲原因。",false,""]
          ];
          var result:Array=[];
          for each(var d:Array in defs)result.push({key:d[0],label:d[1],kind:d[2],min:d[3],max:d[4],step:d[5],hint:d[6],def:d[7],suffix:d[8],get:makeGetter(mod,d[0]),set:makeSetter(mod,d[0],d[2])});

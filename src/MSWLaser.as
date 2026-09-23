@@ -97,7 +97,7 @@ package
             if(loc==null || player==null || player.hp<=0) {clear();return;}
             if(!loc.active || w.invent==null || w.invent.weapons==null)return;
             var wp:*=ensureWeapon(w);if(wp!=null)configure(wp);
-            if(!mod.cfg.laserEnabled) {clear();return;}
+            if(!mod.cfg.laserEnabled) {blind.clearSource("laser");clearVisuals();blind.prune(w);return;}
             provision(w);blind.prune(w);
             render(w);
          }
@@ -109,7 +109,9 @@ package
          var wp:*=ensureWeapon(w);if(wp!=null)configure(wp);
       }
       public function clear():void
-      {blind.clear();for each(var b:MSWLaserBeam in beams)b.dispose();beams=[];hud.clearDebug();hud.visible=false;}
+      {blind.clear();clearVisuals();}
+      private function clearVisuals():void
+      {for each(var b:MSWLaserBeam in beams)b.dispose();beams=[];hud.clearDebug();hud.visible=false;}
       public function fire(w:*,wp:*):Object
       {
          mod.cfg.diagAdd("laserShotEntered");

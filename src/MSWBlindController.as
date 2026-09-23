@@ -10,18 +10,19 @@ package
       public var states:Dictionary=new Dictionary(true);
       private var shots:Dictionary=new Dictionary(true);
       public function MSWBlindController(m:*) {mod=m;}
-      public function apply(u:*,w:*):Boolean
+      public function apply(u:*,w:*,duration:Number=NaN,source:String="laser"):Boolean
       {
          if(!MSWLaserGeometry.hostile(u,w) || !MSWLaserEyes.available(u))return false;
          if(access==null)access=MSWU.cls("fe.unit.MSWBlindAccess");
          if(access==null)throw new Error("Laser host access missing from build");
+         if(isNaN(duration))duration=mod.cfg.laserDuration;
          var s:Object=states[u];
-         if(s!=null) {s.remaining=mod.cfg.laserDuration*30;return true;}
+         if(s!=null) {s.sources[source]=Math.max(Number(s.sources[source]||0),duration*30);sync(s);return true;}
          // Never resume an actor a script had already disabled.
          if(MSWU.has(u,"controlOn") && !u.controlOn)return false;
-         s={unit:u,remaining:mod.cfg.laserDuration*30,x:u.X,y:u.Y,next:0,burst:0,dir:1,meleeWait:0,
+         s={unit:u,sources:{},remaining:duration*30,x:u.X,y:u.Y,next:0,burst:0,dir:1,meleeWait:0,
             vision:u.vision,hearing:MSWU.num(u,"hearing"),wp:u.currentWeapon,find:null,force:0,turret:MSWLaserGeometry.turret(u)};
-         states[u]=s;
+         s.sources[source]=duration*30;states[u]=s;
          if(s.wp!=null) {s.find=s.wp.findCel;s.force=s.wp.forceRot;}
          if(s.wp!=null && s.wp.tip==1)
          {
@@ -33,6 +34,18 @@ package
          insertBefore(s.node,u);
          access["clearTarget"](u);u.vision=0;
          mod.cfg.diagAdd("laserBlinds");return true;
+      }
+      private function sync(s:Object):void
+      {
+         if(!mod.cfg.laserEnabled)delete s.sources.laser;
+         if(!mod.cfg.pointerEnabled)delete s.sources.pointer;
+         s.remaining=0;for each(var time:Number in s.sources)s.remaining=Math.max(s.remaining,time);
+      }
+      public function clearSource(source:String):void
+      {
+         var ended:Array=[];
+         for each(var s:Object in states) {delete s.sources[source];sync(s);if(s.remaining<=0)ended.push(s);}
+         for each(s in ended)end(s);
       }
       public function remaining(u:*):Number {return states[u]==null?0:states[u].remaining/30;}
       public static function insertBefore(node:*,target:*):void
@@ -71,7 +84,8 @@ package
          var ended:Array=[];
          for each(var s:Object in states)
          {
-            if(!MSWLaserGeometry.live(s.unit,w.loc) || s.unit.sost!=1 || access["scriptStopped"](s.unit))ended.push(s);
+            sync(s);
+            if(s.remaining<=0 || !MSWLaserGeometry.live(s.unit,w.loc) || s.unit.sost!=1 || access["scriptStopped"](s.unit))ended.push(s);
             else insertBefore(s.node,s.unit);
          }
          for each(s in ended)end(s);
@@ -80,8 +94,8 @@ package
       }
       private function advance(s:Object,node:*):void
       {
-         var u:*=s.unit,w:*=MSWU.world(),loc:*=node.loc;
-         if(!u.in_chain || !MSWLaserGeometry.live(u,loc) || u.sost!=1 || access["scriptStopped"](u) || !mod.cfg.laserEnabled) {end(s);return;}
+         var u:*=s.unit,w:*=MSWU.world(),loc:*=node.loc;sync(s);
+         if(!u.in_chain || !MSWLaserGeometry.live(u,loc) || u.sost!=1 || access["scriptStopped"](u)) {end(s);return;}
          if(s.remaining<=0) {end(s);return;}
          // Location.step saved nextObj before invoking this guard. Skip exactly
          // this actor, including when the actor removes itself during effects.
@@ -89,7 +103,8 @@ package
          try
          {
             if(u.t_emerg>0) {u.t_emerg--;u.setVisPos();return;}
-            s.remaining--;s.meleeWait--;access["clearTarget"](u);u.vision=0;
+            for(var source:String in s.sources)s.sources[source]=Math.max(0,s.sources[source]-1);
+            sync(s);s.meleeWait--;access["clearTarget"](u);u.vision=0;
             if(u.inter!=null)u.inter.step();
             u.getRasst2();if(u.radioactiv)u.ggModum();
             u.forces();
