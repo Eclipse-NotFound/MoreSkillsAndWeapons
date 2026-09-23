@@ -13,7 +13,7 @@ date-updated: 2026-09-24
 
 # 激光笔常亮变体：实现与验收
 
-用户Q1–Q12均A，完整方案获“按此实现”确认。源码已合入主目录，**v1.13.0-laser-pointer候选完成；未安装**。正式release仍是v1.12.0-nonfront-laser。设计见../../design/laser-pointer.md。
+用户Q1–Q12均A，完整方案获“按此实现”确认。源码已合入主目录，**v1.13.0-laser-pointer已按后续“请安装”部署**，安装后准确字节900帧检查通过。设计见../../design/laser-pointer.md。
 
 ## 产物及复现入口
 
@@ -65,4 +65,12 @@ date-updated: 2026-09-24
 - 连续命中是有限显示采样和插值，不能保证任意瞬移、复杂转身或高速动态遮挡都不漏；朝向/护盾使用当前帧，未声称完整连续碰撞证明。眼位沿用已有可见部位锚点，未逐套皮肤逐帧重新标注。
 - 时停沿用MSW现有`onPause && godMode`回放识别；预先开原生godMode时的可操作时停未认证。未改Sandevistan接口，不通过可隐藏HUD文本推测内部状态。
 - 验证覆盖1.02隔离场景；未认证所有剧情、联机、DLC、长期战斗和全部模组组合。30秒60电池为计费核心推进，实际连续照射另有4.67秒及真实时停采样，不把前者冒称30秒实战。
-- 正式release未替换，仍49560字节，SHA256 `B8EB77D2005B427FA06F40D8FC2A9A5AA68C3E5A5E4DF282CC43FC2629B2684F`。根pfe.swf维持`B78244657ED407D03808C90E97325509DB35F802122835F58933FFF8003305AC`。用户后续要求安装时，再走发布门禁、备份和安装后同字节启动检查；不要重新拿旧单功能候选覆盖。
+- 正式release现为v1.13.0，54248字节，SHA256 `476430BC9B1A475267D76A4C31FFC0A7A7718582498F149DD51B1C93B4C9BF9F`。根pfe.swf及加载清单与安装前指纹一致；本次不修改游戏本体和其他模组。
+
+## 2026-09-24 安装记录
+
+- 用户本轮明确“请安装”；复核候选/冻结源码/40生产定义及全部通过记录后，备份v1.12到`release/MoreSkillsWeaponsMod.before-v1.13.0-laser-pointer-20260924.swf`。备份49560字节、SHA256 `B8EB77D2005B427FA06F40D8FC2A9A5AA68C3E5A5E4DF282CC43FC2629B2684F`，拒绝覆盖既有同名备份。
+- 部署准确候选后，`postinstall/install-smoke.json`记录正式文件SHA与900帧、v1.13.0-laser-pointer、ModSettings-connected、tabOn=1、pointer/laser/smart无错误。新独立AIR进程退出后正式hash再次一致，未关闭用户游戏或操作真实存档；用户重启生效。
+- 安装检查初次采用通用XML解析器，遇mxmlc报告源码路径未转义&而失败；修正为与构建脚本一致的def扫描。首次File.Replace又因PowerShell空路径参数未执行替换；当时release仍为完整v1.12，随后的版本断言如实失败。记录后核对基线与备份完整，再复制候选并重跑，通过最终检查；没有忽略失败或运行半写文件。
+- 回滚：将上述备份复制回同目录`MoreSkillsWeaponsMod.swf`并重启，恢复v1.12。安装记录与失败输出分别保留在preinstall-check.json、postinstall/、postinstall-before-replace/。
+- 安装期间同期设置分组开发开始修改3个MSW源码文件并标记1.13.1，本次保留它们而只安装已冻结验证的v1.13；没有重新编译未完成修改。已有journal重排也保持未提交。
