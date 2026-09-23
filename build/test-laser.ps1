@@ -19,8 +19,10 @@ try {
     if(Test-Path -LiteralPath $manifest){Copy-Item -LiteralPath $manifest -Destination (Join-Path $runtimeDir 'mods\loader-manifest.txt')}
     $settingsDir=Join-Path $runtimeDir 'mods\ModSettings\release'
     New-Item -ItemType Directory -Force $settingsDir | Out-Null
-    if(!$SettingsSwf){$SettingsSwf=Join-Path $gameRoot 'mods\ModSettings\release\ModSettingsMod.swf'}
-    Copy-Item -LiteralPath $SettingsSwf -Destination $settingsDir
+    if($SettingsSwf){Copy-Item -LiteralPath $SettingsSwf -Destination $settingsDir}
+    else {
+        & (Join-Path $PSScriptRoot 'copy-settings-host.ps1') -GameDirectory $gameRoot -RuntimeDirectory $runtimeDir | Out-Null
+    }
     if($HostSwf){Copy-Item -LiteralPath $HostSwf -Destination (Join-Path $runtimeDir 'pfe.swf')}
     if (-not (Test-Path -LiteralPath (Join-Path $runtimeDir 'Rooms'))) { Copy-Item -LiteralPath (Join-Path $gameRoot 'Rooms') -Destination $runtimeDir -Recurse }
 

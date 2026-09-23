@@ -147,7 +147,7 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.11.1-turret-blind");
+         cfg.diagSet("ver", "1.12.0-nonfront-laser");
          cfg.diagSet("smartHudVersion", MSWSmartHUD.VERSION);
          settings.registerPage("msw", "MoreSkills&Weapons",
             MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");

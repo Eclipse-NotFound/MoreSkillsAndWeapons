@@ -181,7 +181,7 @@ package
          var object:*=w.loc.firstObj;while(object!=null){var following:*=object.nobj;if(MSWU.has(object,"owner") || getQualifiedClassName(object)=="fe.graph::Part")w.loc.remObj(object);object=following;}
          target=actor("raider");w.loc.units=[w.gg,target];m.laser.blind.apply(target,w);
          if(target.currentWeapon!=null)target.currentWeapon.damage=0;
-         ok(MSWSettingsHub.buildLaserItems(m).length==13,"thirteen laser settings provided");
+         ok(MSWSettingsHub.buildLaserItems(m).length==15,"fifteen laser settings provided");
          m.cfg.laserDuration=8;m.cfg.save();var cfg:MSWConfig=new MSWConfig();cfg.load();ok(cfg.laserDuration==8,"laser settings persist");m.cfg.laserDuration=6;
          ui();
          ok(m.cfg.diag.laserError==null,"all paused rule checks have no runtime errors");

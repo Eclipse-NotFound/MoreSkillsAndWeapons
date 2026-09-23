@@ -18,7 +18,7 @@ package
          }
          var page:Object,items:Object={},item:Object;
          for each(var p:Object in m.settings.api.getPages())if(p.modId=="msw-laser")page=p;
-         ok(page!=null && page.items.length==13,"registered laser page contains thirteen settings");
+         ok(page!=null && page.items.length==15,"registered laser page contains fifteen settings");
          for each(item in page.items)items[item.key]=item;
          ok(items.laserRadius==null && items.laserAngle==null && items.laserSpeed==null,"old angle controls leave the UI without losing stored keys");
          ok(items.laserAssist.def===true && items.laserBodyRadius.def==60 && items.laserAssistFloor.def==50 && items.laserAssistSpeed.def==10,"new UI defaults match fresh configuration");

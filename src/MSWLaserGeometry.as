@@ -72,7 +72,7 @@ package
       }
       // Do not name this trace: release mxmlc can erase an unqualified call as
       // a debug trace while leaving its return-value coercion (VerifyError 1024).
-      public static function castRay(w:*,x:Number,y:Number,a:Number,eyeRadius:Number,limit:Number=2000,owner:*=null):Object
+      public static function castRay(w:*,x:Number,y:Number,a:Number,eyeRadius:Number,limit:Number=2000,owner:*=null,allowNonFront:Boolean=false):Object
       {
          var dx:Number=Math.cos(a),dy:Number=Math.sin(a),end:Number=wall(w.loc,x,y,dx,dy,limit);
          var first:*=null,best:Number=end,eyeAlong:Number=0,hit:Boolean=false,reason:String="miss";
@@ -87,8 +87,9 @@ package
             if(d<best)
             {
                first=u;best=d;eyeAlong=along;
-               hit=throughEye && front(u,dx,dy) && MSWU.num(u,"shithp")<=0;
-               reason=!throughEye?"body":(!front(u,dx,dy)?"back":(MSWU.num(u,"shithp")>0?"shield":"eye"));
+               var directionAllowed:Boolean=allowNonFront || front(u,dx,dy);
+               hit=throughEye && directionAllowed && MSWU.num(u,"shithp")<=0;
+               reason=!throughEye?"body":(!directionAllowed?"back":(MSWU.num(u,"shithp")>0?"shield":"eye"));
             }
          }
          if(hit)best=eyeAlong;
@@ -115,6 +116,14 @@ package
                if(dist<pointedEye) {pointed=u;pointedEye=dist;}
                continue;
             }
+            // Only the halo outside the body shrinks. Use the same normalized
+            // muzzle-to-eye direction as the actual ray, including turret pitch.
+            if(cfg.laserNonFront)
+            {
+               var a:Number=Math.atan2(e.y-wp.bulY,e.x-wp.bulX);
+               var halo:Number=front(u,Math.cos(a),Math.sin(a))?range:range*cfg.laserNonFrontRatio/100;
+               if(body>halo*halo)continue;
+            }
             if(pointed!=null || body>bestBody || (body==bestBody && dist>=bestEye))continue;
             if(reachable(w,wp,u,e,cfg)) {bestBody=body;bestEye=dist;result=u;}
          }
@@ -123,7 +132,7 @@ package
       }
       private static function reachable(w:*,wp:*,u:*,e:Object,cfg:*):Boolean
       {
-         var hit:Object=castRay(w,wp.bulX,wp.bulY,Math.atan2(e.y-wp.bulY,e.x-wp.bulX),cfg.laserEye,2000,w.gg);
+         var hit:Object=castRay(w,wp.bulX,wp.bulY,Math.atan2(e.y-wp.bulY,e.x-wp.bulX),cfg.laserEye,2000,w.gg,cfg.laserNonFront);
          return hit.unit===u && hit.eye;
       }
    }

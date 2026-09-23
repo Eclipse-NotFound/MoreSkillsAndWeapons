@@ -91,6 +91,27 @@ package
                m.laser.clear();
                var rear:Object=G["castRay"](w,ex.x-Math.cos(a)*150,ex.y-Math.sin(a)*150,a,m.cfg.laserEye,400,w.gg);
                check(rear.unit===u && !rear.eye,"rear sensor ray rejected "+id+" angle="+a);
+               var allowed:Object=G["castRay"](w,ex.x-Math.cos(a)*150,ex.y-Math.sin(a)*150,a,m.cfg.laserEye,400,w.gg,true);
+               check(allowed.unit===u && allowed.eye,"opt-in rear sensor ray accepted "+id+" angle="+a);
+               var sideAngle:Number=a+Math.PI/2;
+               allowed=G["castRay"](w,ex.x-Math.cos(sideAngle)*150,ex.y-Math.sin(sideAngle)*150,sideAngle,m.cfg.laserEye,400,w.gg,true);
+               check(allowed.unit===u && allowed.eye,"opt-in perpendicular sensor ray accepted "+id+" angle="+a);
+               m.cfg.laserNonFront=true;
+               w.gg.setPos(ex.x-Math.cos(a)*250,ex.y-Math.sin(a)*250+40);w.gg.storona=w.gg.X<u.X?1:-1;
+               w.celX=w.gg.celX=u.X;w.celY=w.gg.celY=(u.Y1+u.Y2)/2;
+               for(settle=0;settle<20;settle++){w.gg.setWeaponPos();wp.step();}
+               wp.hold=12;wp.t_attack=wp.t_reload=wp.t_auto=0;wp.is_shoot=false;wp.t_prep=20;
+               hp=u.hp;shots=Number(m.cfg.diag.laserShots||0);wp.attack();wp.step();
+               check(wp.hold==10 && Number(m.cfg.diag.laserShots)==shots+1 && m.laser.blind.remaining(u)==6 && u.hp==hp,"opt-in native rear body shot blinds "+id+" angle="+a+" actual="+m.cfg.diag.laserLastHit);
+               m.laser.clear();
+               wp.bulX=ex.x-Math.cos(a)*150;wp.bulY=ex.y-Math.sin(a)*150;
+               w.celX=w.gg.celX=u.X2+30;w.celY=w.gg.celY=(u.Y1+u.Y2)/2;
+               check(G["assist"](w,wp,m.cfg)===u,"turret rear halo accepts 30px regardless of storona "+id+" angle="+a);
+               w.celX=w.gg.celX=u.X2+30.01;
+               check(G["assist"](w,wp,m.cfg)==null,"turret rear halo rejects beyond 30px "+id+" angle="+a);
+               wp.bulX=ex.x+Math.cos(a)*150;wp.bulY=ex.y+Math.sin(a)*150;w.celX=w.gg.celX=u.X2+60;
+               check(G["assist"](w,wp,m.cfg)===u,"turret front halo retains 60px at actual barrel heading "+id+" angle="+a);
+               m.cfg.laserNonFront=false;
             }
             m.laser.clear();u.currentWeapon.rot=Math.PI;u.animate();ex=G["eye"](u);
             w.gg.setPos(ex.x-250,ex.y+40);w.gg.storona=1;
@@ -101,7 +122,9 @@ package
             check(m.laser.blind.remaining(u)==6 && u.hp==hp,"manual sensor shot blinds without direct damage "+id);
             m.laser.clear();u.shithp=50;
             var shield:Object=G["castRay"](w,ex.x-150,ex.y,0,m.cfg.laserEye,400,w.gg);
-            check(shield.unit===u && !shield.eye && shield.reason=="shield","active shield still blocks turret sensor "+id);u.shithp=0;
+            check(shield.unit===u && !shield.eye && shield.reason=="shield","active shield still blocks turret sensor "+id);
+            shield=G["castRay"](w,ex.x+150,ex.y,Math.PI,m.cfg.laserEye,400,w.gg,true);
+            check(shield.unit===u && !shield.eye && shield.reason=="shield","opt-in rear cannot bypass turret shield "+id);u.shithp=0;
             u.currentWeapon.rot=0;u.currentWeapon.forceRot=0.25;u.currentWeapon.findCel=true;
             var oldVision:Number=u.vision,oldFacing:int=u.storona,panicBefore:Number=Number(m.cfg.diag.laserPanicShots||0);
             m.laser.blind.apply(u,w);
@@ -133,6 +156,8 @@ package
                u.setNull(true);u.currentWeapon.rot=Math.PI;ex=G["eye"](u);
                var closed:Object=G["castRay"](w,ex.x-150,ex.y,0,m.cfg.laserEye,400,w.gg);
                check(!closed.eye && !m.laser.blind.apply(u,w),"retracted sensor cannot be blinded "+id+" frame="+u.vis.osn.currentFrame);
+               closed=G["castRay"](w,ex.x+150,ex.y,Math.PI,m.cfg.laserEye,400,w.gg,true);
+               check(!closed.eye,"opt-in rear cannot bypass retracted sensor "+id);
                m.laser.clear();u.setCel(w.gg);u.alarma();u.vis.osn.gotoAndStop(1);u.animate();
                check(m.laser.blind.apply(u,w),"deployed sensor becomes vulnerable again "+id);m.laser.clear();
             }

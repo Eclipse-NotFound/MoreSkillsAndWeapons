@@ -6,7 +6,7 @@ package
       public static const ID:String="mswdazzler";
       public static const NAME:String="非致命激光枪";
       public static const GIFT:String="msw_dazzler_granted_v1";
-      public static const VERSION:String="6-turret-sensors";
+      public static const VERSION:String="7-nonfront-assist";
       private var mod:*;
       public var blind:MSWBlindController;
       private var hud:MSWLaserHUD=new MSWLaserHUD();
@@ -122,7 +122,7 @@ package
             if(u!=null && MSWLaserGeometry.hostile(u,w)) {var e:Object=MSWLaserGeometry.eye(u);a=Math.atan2(e.y-wp.bulY,e.x-wp.bulX);}
          }
          else {u=MSWLaserGeometry.assist(w,wp,mod.cfg);if(u!=null) {e=MSWLaserGeometry.eye(u);a=Math.atan2(e.y-wp.bulY,e.x-wp.bulX);}}
-         var hit:Object=MSWLaserGeometry.castRay(w,wp.bulX,wp.bulY,a,mod.cfg.laserEye,2000,w.gg);
+         var hit:Object=MSWLaserGeometry.castRay(w,wp.bulX,wp.bulY,a,mod.cfg.laserEye,2000,w.gg,mod.cfg.laserNonFront);
          var applied:Boolean=hit.eye && MSWLaserGeometry.hostile(hit.unit,w) && blind.apply(hit.unit,w);
          var result:String=applied?"blind":(hit.eye?"ineligible":hit.reason);
          mod.cfg.diagSet("laserLastHit",result);

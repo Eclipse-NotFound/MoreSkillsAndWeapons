@@ -21,9 +21,7 @@ if ((Get-FileHash -LiteralPath (Join-Path $gameRoot 'pfe.swf')).Hash -ne (Get-Fi
 Copy-Item -LiteralPath $installed -Destination $testMod
 $manifest=Join-Path $gameRoot 'mods\loader-manifest.txt'
 if(Test-Path -LiteralPath $manifest){Copy-Item -LiteralPath $manifest -Destination (Join-Path $runtimeDir 'mods\loader-manifest.txt')}
-$settingsDir=Join-Path $runtimeDir 'mods\ModSettings\release'
-New-Item -ItemType Directory -Force $settingsDir | Out-Null
-Copy-Item -LiteralPath (Join-Path $gameRoot 'mods\ModSettings\release\ModSettingsMod.swf') -Destination $settingsDir
+& (Join-Path $PSScriptRoot 'copy-settings-host.ps1') -GameDirectory $gameRoot -RuntimeDirectory $runtimeDir | Out-Null
 $installedHash = (Get-FileHash -LiteralPath $installed).Hash
 if ((Get-FileHash -LiteralPath $testMod).Hash -ne $installedHash) { throw 'Production copy mismatch' }
 $testId = 'pfe-msw-install-' + [guid]::NewGuid().ToString('N')

@@ -153,3 +153,7 @@ v1.9.0-lock-exemption 在平滑弹道和激光4基础上增加五组31项。Pip�
 用户追加要求后，当前入口合并为一个「锁定豁免」，31项在其内部两页显示（18+13）；分类名保留在选项标签。F6共四个菜单，↑↓自动翻动长列表；恢复默认清除全部豁免，原配置键不变。
 
 候选及冻结源移至 `out/exemption-menu/`，版本标记 `1.9.1-exemption-menu`。更新后的 `test-exclusion-production.ps1` 验证312项，包括唯一入口、旧勾选跨页回显、内部分页和F6全部选项可达；截图为settings-page1.png、settings-page2.png、settings-f6.png。启动检查复用 `out/exclusion-production/runtime`，结果分别写入 `out/exemption-menu/startup` 和 `installed`；不要与使用同一运行目录的场景并发。上一节v1.9.0冻结产物为历史版本，不覆盖当前正式版。
+
+## 2026-09-24 非正面致盲与当前设置宿主（v1.12.0）
+
+候选/冻结源码在`out/laser-nonfront/release`；完整验证与安装/回滚见`../knowledge/experiments/laser-nonfront-20260924.md`。`test-laser-reload.ps1`现在同时验证15项设置及非正面辅助，`-LegacySwf`可指向v1.11.1验证真实同URL升级/回退；`test-turret-laser.ps1`补齐各方向与30/60边界。`copy-settings-host.ps1`按根1.02清单选择ModSettings或ModLoader，供读档、炮塔、激光机制及安装脚本复制实际启用的设置宿主；不要因旧文件还在而假定它仍被加载。
