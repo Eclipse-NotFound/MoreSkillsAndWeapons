@@ -1,7 +1,7 @@
-param([string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$HostSwf='', [string]$SettingsSwf='', [string]$SourcePath='../src', [switch]$Sandevistan)
+param([string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$HostSwf='', [string]$SettingsSwf='', [string]$SourcePath='../src', [switch]$Sandevistan, [string]$GameDirectory='')
 $ErrorActionPreference = 'Stop'
 & (Join-Path $PSScriptRoot 'build-smart-host.ps1') -AnimateRoot $AnimateRoot
-$gameRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
+$gameRoot = if($GameDirectory){[IO.Path]::GetFullPath($GameDirectory)}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))}
 $runtimeDir = Join-Path $PSScriptRoot 'out\laser\runtime'
 $outputDir = Join-Path $PSScriptRoot 'out\laser'
 $javaPath = Join-Path $AnimateRoot 'jre\bin\java.exe'
@@ -9,9 +9,9 @@ $compilerPath = Join-Path $AnimateRoot 'Common\Configuration\ActionScript 3.0\bi
 New-Item -ItemType Directory -Force $runtimeDir,$outputDir,(Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release') | Out-Null
 Push-Location $PSScriptRoot
 try {
-    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-target-player=11.1' ("-source-path+="+$SourcePath) '-includes=fe.unit.MSWBlindAccess,fe.inter.MSWLaserSats,fe.weapon.MSWPanicBlade,fe.weapon.MSWDazzlerWeapon' '-external-library-path+=out/SmartHost.swc' '-output=out/laser/MoreSkillsWeaponsMod.swf' (Join-Path $SourcePath 'MoreSkillsWeaponsMod.as')
+    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-target-player=11.1' ("-source-path+="+$SourcePath) '-includes=fe.unit.MSWBlindAccess,fe.inter.MSWLaserSats,fe.weapon.MSWPanicBlade,fe.weapon.MSWDazzlerWeapon,fe.weapon.MSWPointerWeapon' '-external-library-path+=out/SmartHost.swc' '-output=out/laser/MoreSkillsWeaponsMod.swf' (Join-Path $SourcePath 'MoreSkillsWeaponsMod.as')
     if ($LASTEXITCODE -ne 0) { throw 'Mod compilation failed' }
-    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-debug=true' '-target-player=11.1' ("-source-path+="+$SourcePath) '-includes=fe.unit.MSWBlindAccess,fe.inter.MSWLaserSats,fe.weapon.MSWPanicBlade,fe.weapon.MSWDazzlerWeapon' '-external-library-path+=out/SmartHost.swc' '-source-path+=smoke' '-output=out/laser/LaserSmokeMod.swf' 'smoke/LaserSmokeMod.as'
+    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-debug=true' '-target-player=11.1' ("-source-path+="+$SourcePath) '-includes=fe.unit.MSWBlindAccess,fe.inter.MSWLaserSats,fe.weapon.MSWPanicBlade,fe.weapon.MSWDazzlerWeapon,fe.weapon.MSWPointerWeapon' '-external-library-path+=out/SmartHost.swc' '-source-path+=smoke' '-output=out/laser/LaserSmokeMod.swf' 'smoke/LaserSmokeMod.as'
     if ($LASTEXITCODE -ne 0) { throw 'Smoke harness compilation failed' }
     Copy-Item -LiteralPath (Join-Path $outputDir 'LaserSmokeMod.swf') -Destination (Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf')
     Get-ChildItem -LiteralPath $gameRoot -File | Where-Object { $_.Name -eq 'pfe.swf' -or $_.Name -match '^(sound|sprite|texture).*\.swf$' -or $_.Extension -eq '.xml' } | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $runtimeDir }
@@ -19,8 +19,10 @@ try {
     if(Test-Path -LiteralPath $manifest){Copy-Item -LiteralPath $manifest -Destination (Join-Path $runtimeDir 'mods\loader-manifest.txt')}
     $settingsDir=Join-Path $runtimeDir 'mods\ModSettings\release'
     New-Item -ItemType Directory -Force $settingsDir | Out-Null
-    if(!$SettingsSwf){$SettingsSwf=Join-Path $gameRoot 'mods\ModSettings\release\ModSettingsMod.swf'}
-    Copy-Item -LiteralPath $SettingsSwf -Destination $settingsDir
+    if($SettingsSwf){Copy-Item -LiteralPath $SettingsSwf -Destination $settingsDir}
+    else {
+        & (Join-Path $PSScriptRoot 'copy-settings-host.ps1') -GameDirectory $gameRoot -RuntimeDirectory $runtimeDir | Out-Null
+    }
     if($HostSwf){Copy-Item -LiteralPath $HostSwf -Destination (Join-Path $runtimeDir 'pfe.swf')}
     if (-not (Test-Path -LiteralPath (Join-Path $runtimeDir 'Rooms'))) { Copy-Item -LiteralPath (Join-Path $gameRoot 'Rooms') -Destination $runtimeDir -Recurse }
 

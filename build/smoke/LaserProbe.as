@@ -181,7 +181,7 @@ package
          var object:*=w.loc.firstObj;while(object!=null){var following:*=object.nobj;if(MSWU.has(object,"owner") || getQualifiedClassName(object)=="fe.graph::Part")w.loc.remObj(object);object=following;}
          target=actor("raider");w.loc.units=[w.gg,target];m.laser.blind.apply(target,w);
          if(target.currentWeapon!=null)target.currentWeapon.damage=0;
-         ok(MSWSettingsHub.buildLaserItems(m).length==13,"thirteen laser settings provided");
+         ok(MSWSettingsHub.buildLaserItems(m).length==15,"fifteen laser settings provided");
          m.cfg.laserDuration=8;m.cfg.save();var cfg:MSWConfig=new MSWConfig();cfg.load();ok(cfg.laserDuration==8,"laser settings persist");m.cfg.laserDuration=6;
          ui();
          ok(m.cfg.diag.laserError==null,"all paused rule checks have no runtime errors");
@@ -261,7 +261,7 @@ package
          ok(born!=null && born.pobj is MSWLaserStep,"native panic weapon births receive a shot guard");
          ok(!(old.pobj is MSWLaserStep),"pre-blind in-flight shot is not retroactively changed");
          var hp:Number=victim.hp;old.step();ok(victim.hp==hp,"pre-blind shot retains original allied immunity");
-         state.remaining=0;stepBlind(owner,1);ok(m.laser.blind.remaining(owner)==0,"panic expires before its projectile lands");
+         state.sources.laser=0;stepBlind(owner,1);ok(m.laser.blind.remaining(owner)==0,"panic expires before its projectile lands");
          born.X=500;born.Y=290;born.dx=60;born.dy=0;born.vel=60;born.damage=40;born.precision=0;born.miss=0;born.probiv=0;born.pier=10000;
          var frac:int=owner.fraction;born.pobj.step();
          ok(victim.hp<hp && owner.fraction==frac,"panic projectile damages same-faction actor after recovery without faction mutation");
@@ -287,7 +287,7 @@ package
          w.loc.units=[w.gg,owner,victim];m.laser.blind.apply(owner,w);state=m.laser.blind.states[owner];state.next=999;state.angle=0;state.burst=3;
          stepBlind(owner,1);var blade:*=gun.b;hp=victim.hp;
          blade.X=victim.X;blade.Y=victim.Y-victim.scY/2;blade.dx=blade.dy=0;blade.damage=40;blade.precision=0;blade.miss=0;blade.pier=10000;blade.checkLine=false;blade.probiv=1;blade.parr=null;
-         state.remaining=0;stepBlind(owner,1);blade.run();
+         state.sources.laser=0;stepBlind(owner,1);blade.run();
          ok(victim.hp<hp,"panic blade retains allied contact after blindness expires");
          victim.neujaz=0;hp=victim.hp;blade.parr=null;gun.t_attack+=100;blade.run();
          ok(victim.hp==hp,"later ordinary blade swing restores allied immunity");

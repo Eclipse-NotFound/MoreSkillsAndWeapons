@@ -48,6 +48,8 @@ package
       public var laserBodyRadius:Number = 60;
       public var laserAssistFloor:Number = 50;
       public var laserAssistSpeed:Number = 10;
+      public var laserNonFront:Boolean = false;
+      public var laserNonFrontRatio:Number = 50;
       public var laserInterval:Number = 0.8;
       public var laserMagazine:Number = 6;
       public var laserReload:Number = 2;
@@ -59,7 +61,7 @@ package
       public var pointerEye:Number = 6;
       public var pointerRate:Number = 2;
       private static const POINTER_KEYS:Array=["pointerEnabled","pointerDebug","pointerDuration","pointerEye","pointerRate"];
-      private static const LASER_KEYS:Array=["laserEnabled","laserDebug","laserDuration","laserEye","laserRadius","laserAngle","laserSpeed","laserInterval","laserMagazine","laserReload","laserAmmo","laserAP","laserAssist","laserBodyRadius","laserAssistFloor","laserAssistSpeed"];
+      private static const LASER_KEYS:Array=["laserEnabled","laserDebug","laserDuration","laserEye","laserRadius","laserAngle","laserSpeed","laserInterval","laserMagazine","laserReload","laserAmmo","laserAP","laserAssist","laserBodyRadius","laserAssistFloor","laserAssistSpeed","laserNonFront","laserNonFrontRatio"];
 
       /** 可编程榴弹炮下坠速率 = weapon.grav（1.0 = 原版，0 = 无下坠） */
       public var dropRate:Number = 1.0;
@@ -273,6 +275,7 @@ package
          laserAngle=smartClamp(laserAngle,5,0,20,0.5);
          laserSpeed=smartClamp(laserSpeed,10,1,40,0.5);
          laserBodyRadius=smartClamp(laserBodyRadius,60,0,160,4);
+         laserNonFrontRatio=smartClamp(laserNonFrontRatio,50,0,100,5);
          laserAssistFloor=smartClamp(laserAssistFloor,50,10,100,5);
          laserAssistSpeed=smartClamp(laserAssistSpeed,10,1,40,0.5);
          laserInterval=smartClamp(laserInterval,0.8,0.1,3,0.1);

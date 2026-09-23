@@ -37,7 +37,7 @@ package
       private function click():void {w.ctr.keyAttack=true;wp.attack();}
       private function draw():void {m.pointer.prepare(w);w.gg.setWeaponPos();wp.step();m.pointer.frame(w);}
       private function aim(x:Number,y:Number):void
-      {w.celX=w.gg.celX=x;w.celY=w.gg.celY=y;for(var i:int=0;i<12;i++){w.gg.setWeaponPos();wp.step();}wp.getBulXY();}
+      {w.cam.celX=x*w.cam.scaleV+w.cam.vx;w.cam.celY=y*w.cam.scaleV+w.cam.vy;w.celX=w.gg.celX=x;w.celY=w.gg.celY=y;for(var i:int=0;i<12;i++){w.gg.setWeaponPos();wp.step();}wp.getBulXY();}
       private function key():void
       {host.stage.dispatchEvent(new KeyboardEvent(KeyboardEvent.KEY_DOWN,true,false,0,220));host.stage.dispatchEvent(new KeyboardEvent(KeyboardEvent.KEY_UP,true,false,0,220));}
       private function tick(e:Event):void
@@ -179,15 +179,15 @@ package
          m.cfg.laserEnabled=false;m.laser.frame(w);ok(b.remaining(target)==10,"disabling gun preserves pointer contribution");
          m.cfg.laserEnabled=true;b.apply(target,w,7,"laser");m.cfg.pointerEnabled=false;m.pointer.frame(w);
          ok(b.remaining(target)==7,"disabling pointer preserves gun contribution");m.cfg.pointerEnabled=true;b.clear();
-         eyeRules();settings();interruptions();
+         eyeRules();species();settings();interruptions();
          ok(m.cfg.diag.pointerError==null && m.cfg.diag.laserError==null,"production callbacks and shared controller have no errors");
       }
       private function eyeRules():void
       {
          var b:*=m.laser.blind,eye:Object=geom["eye"](target);var hp:Number=target.hp;
          aim(target.X,target.Y-15);click();draw();ok(b.remaining(target)==0,"aiming at body has no hidden eye assist");m.pointer.stop();
-         target.storona=1;target.animate();target.setVisPos();eye=geom["eye"](target);aim(eye.x,eye.y);click();draw();
-         ok(b.remaining(target)==0,"backside eye remains invalid");m.pointer.stop();target.storona=-1;target.animate();target.setVisPos();
+         m.cfg.laserNonFront=true;target.storona=1;target.animate();target.setVisPos();eye=geom["eye"](target);aim(eye.x,eye.y);click();draw();
+         ok(b.remaining(target)==0,"backside eye remains invalid even with original gun non-front enabled");m.cfg.laserNonFront=false;m.pointer.stop();target.storona=-1;target.animate();target.setVisPos();
          eye=geom["eye"](target);target.shithp=50;aim(eye.x,eye.y);click();draw();ok(b.remaining(target)==0,"actual shield blocks pointer");m.pointer.stop();target.shithp=0;
          var S:Class=domain.getDefinition("MSWPointerSweep") as Class,sweep:*=new S(),hits:int=0;
          var accept:Function=function(hit:Object):void {if(hit.eye && hit.unit===target)hits++;};
@@ -201,6 +201,32 @@ package
          ok(hits>0,"moving eye crossing a stationary beam is caught between samples");
          target.setPos(500,320);target.actions();target.animate();target.setVisPos();
          ok(target.hp==hp,"geometry-only sweep never deals direct damage");
+      }
+      private function species():void
+      {
+         var savedX:Number=w.gg.X,savedY:Number=w.gg.Y;
+         var ids:Array=["raider","slaver","zebra","ranger","merc","encl","alicorn","protect","gutsy","robot","eqd","sentinel","roller","spritebot","vortex","dron","msp","thunderhead","turret","landturret","wturret","armturret","cturret","hturret","hturret2","bossturret","zombie","hellhound","rat","ant","bloat","bloodwing","fish","necros","bossraider","bossnecr","bossalicorn","megadron","bossencl","ultra"];
+         for each(var id:String in ids)
+         {
+            m.pointer.stop();m.laser.blind.clear();
+            var u:*=w.loc.createUnit(id,650,380,true);w.loc.units=[w.gg,u];
+            u.fraction=2;u.hp=u.maxhp;u.sost=1;u.disabled=u.trigDis=u.npc=u.noAgro=false;
+            u.storona=-1;u.shithp=u.t_emerg=u.stun=0;u.isVis=true;u.setPos(650,380);u.actions();u.setVisPos();
+            if(id=="hturret" || id=="hturret2") {u.setCel(w.gg);u.alarma();u.vis.osn.gotoAndStop(1);}
+            if(getQualifiedClassName(u)=="fe.unit::UnitTurret") {u.currentWeapon.findCel=false;u.currentWeapon.rot=u.currentWeapon.forceRot=Math.PI;}
+            u.animate();var eye:Object=geom["eye"](u),hp:Number=u.hp;
+            // ThunderHead's visible sensor is far outside its body. Translate
+            // the native actor to keep that unchanged sensor inside this room.
+            if(id=="thunderhead")
+            {u.setPos(u.X+650-eye.x,u.Y+280-eye.y);u.setVisPos();eye=geom["eye"](u);}
+            w.gg.setPos(eye.x-250,eye.y+55);w.gg.storona=1;w.gg.setVisPos();aim(eye.x,eye.y);click();draw();
+            ok(m.laser.blind.remaining(u)==6 && u.hp==hp,"native pointer eye contact blinds without damage: "+id+" hit="+m.cfg.diag.pointerLastHit);
+            var vision:Number=m.laser.blind.states[u].vision;
+            m.pointer.stop();m.laser.blind.clearSource("pointer");
+            ok(u.vision==vision && m.laser.blind.remaining(u)==0,"pointer source cleanup restores actor: "+id);u.exterminate();
+         }
+         w.gg.setPos(savedX,savedY);w.gg.storona=1;w.gg.setVisPos();w.loc.units=[w.gg,target];
+         var e:Object=geom["eye"](target);aim(e.x,e.y);
       }
       private function settings():void
       {

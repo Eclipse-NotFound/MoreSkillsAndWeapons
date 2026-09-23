@@ -18,7 +18,7 @@ package
          }
          var page:Object,items:Object={},item:Object;
          for each(var p:Object in m.settings.api.getPages())if(p.modId=="msw-laser")page=p;
-         ok(page!=null && page.items.length==13,"registered laser page contains thirteen settings");
+         ok(page!=null && page.items.length==15,"registered laser page contains fifteen settings");
          for each(item in page.items)items[item.key]=item;
          ok(items.laserRadius==null && items.laserAngle==null && items.laserSpeed==null,"old angle controls leave the UI without losing stored keys");
          ok(items.laserAssist.def===true && items.laserBodyRadius.def==60 && items.laserAssistFloor.def==50 && items.laserAssistSpeed.def==10,"new UI defaults match fresh configuration");
@@ -40,7 +40,7 @@ package
          ok(c.laserBodyRadius==160 && c.laserAssistFloor==100 && c.laserAssistSpeed==40,"new controls enforce upper bounds");
          for each(item in page.items)item.set(item.def);page.onPageClose();
          // F6 retains the last selected page. Cycle a complete set to reset the row.
-         m.panel.toggleOverlay();for(var i:int=0;i<4;i++)m.panel.handleKey(9);
+         m.panel.toggleOverlay();for(var i:int=0;i<5;i++)m.panel.handleKey(9);
          for(i=0;i<3;i++)m.panel.handleKey(40);m.panel.handleKey(13);
          m.panel.handleKey(40);m.panel.handleKey(39);
          m.panel.handleKey(40);m.panel.handleKey(37);

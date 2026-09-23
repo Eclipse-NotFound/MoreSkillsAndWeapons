@@ -21,8 +21,8 @@ try {
     $hash=(Get-FileHash -LiteralPath $ProductionSwf).Hash
     if((Get-FileHash -LiteralPath (Join-Path $mswDir 'MoreSkillsWeaponsMod.swf')).Hash -ne $hash){throw 'Production copy mismatch'}
     if($LegacySwf){Copy-Item -LiteralPath $LegacySwf -Destination (Join-Path $mswDir 'MoreSkillsWeaponsMod.swf')}
-    Copy-Item -LiteralPath (Join-Path $gameRoot 'mods\ModSettings\release\ModSettingsMod.swf') -Destination $settingsDir
-    "ModSettings|ModSettingsMod|1|0|0`nLaserReloadSmoke|LaserReloadSmoke|1|0|0" | Set-Content -LiteralPath (Join-Path $runtime 'mods\loader-manifest.txt') -Encoding utf8
+    $settingsEntry=& (Join-Path $PSScriptRoot 'copy-settings-host.ps1') -GameDirectory $gameRoot -RuntimeDirectory $runtime
+    "$settingsEntry`nLaserReloadSmoke|LaserReloadSmoke|1|0|0" | Set-Content -LiteralPath (Join-Path $runtime 'mods\loader-manifest.txt') -Encoding utf8
     $testId='pfe-modsettings-reload-'+[guid]::NewGuid().ToString('N')
     $descriptor=Join-Path $runtime 'app_msw_shot_test.xml'
     @"

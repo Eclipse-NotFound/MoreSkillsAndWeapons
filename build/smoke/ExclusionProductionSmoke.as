@@ -82,8 +82,8 @@ package
                // The fixture's final automatic page switch occurs about 800 frames
                // after the world starts. Begin only after it relinquishes the UI.
                if(m.cfg.diag.frames<1100)return;
-               ok(m.cfg.diag.ver=="1.11.1-turret-blind","exact production version loaded");
-               ok(m.cfg.diag.smartMotionVersion=="1.4-adaptive-radius" && m.cfg.diag.laserRuntimeVersion=="6-turret-sensors","adaptive motion and current laser components preserved");
+               ok(m.cfg.diag.ver=="1.13.0-laser-pointer","exact production version loaded");
+               ok(m.cfg.diag.smartMotionVersion=="1.4-adaptive-radius" && m.cfg.diag.laserRuntimeVersion=="7-nonfront-assist","adaptive motion and current laser components preserved");
                var exemptionPages:int=0;
                for each(var registered:Object in m.settings.getPages())if(String(registered.modId).indexOf("msw-exempt")==0){exemptionPages++;ok(registered.modId=="msw-exempt" && registered.items.length==31,"one registered menu contains all 31 options");}
                ok(exemptionPages==1,"only one exemption entry alongside other mods");
@@ -114,7 +114,8 @@ package
                   if(i==30){m.panel.update(w);var overlay:*=host.getChildByName("MSWF6Panel");ok(overlay!=null && overlay.text.indexOf("发报机")>=0 && overlay.text.indexOf("血翼")<0 && overlay.y+overlay.height<=host.stage.stageHeight && overlay.x+overlay.width<=host.stage.stageWidth,"F6 scrolls final option within screen");screenshot("settings-f6.png");}
                   m.panel.handleKey(40);
                }
-               m.panel.handleKey(9);m.panel.update(w);ok(host.getChildByName("MSWF6Panel").text.indexOf("MoreSkills&Weapons")==0,"F6 cycles four menus back to main");
+               m.panel.handleKey(9);m.panel.update(w);ok(host.getChildByName("MSWF6Panel").text.indexOf("激光笔")>=0,"F6 reaches pointer after exclusions");
+               m.panel.handleKey(9);m.panel.update(w);ok(host.getChildByName("MSWF6Panel").text.indexOf("MoreSkills&Weapons")==0,"F6 cycles five menus back to main");
                m.panel.handleKey(33);m.panel.handleKey(39);ok(!m.cfg.smartExclusions.bloodwing,"F6 wraps backwards to single exemption menu");m.panel.toggleOverlay();
                m.cfg.smartExclusions={};matrix();
                w.onPause=true;w.godMode=false;w.catPause=false;w.gg.ggControl=true;

@@ -59,7 +59,7 @@ package
             for each(var t:Number in times)
             {
                var sample:Object=MSWLaserGeometry.castRay(w,previous.x+(x-previous.x)*t,previous.y+(y-previous.y)*t,
-                  previous.a+turn*t,r,2000,w.gg,between(now,t));
+                  previous.a+turn*t,r,2000,w.gg,false,between(now,t));
                contact(sample);
             }
          }

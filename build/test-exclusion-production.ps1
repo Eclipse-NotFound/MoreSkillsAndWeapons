@@ -1,8 +1,8 @@
-param([string]$ProductionSwf='', [string]$AnimateRoot='D:\Program Files\Adobe Animate 2024', [switch]$Nodebug, [string]$GameDirectory='')
+param([string]$ProductionSwf='', [string]$AnimateRoot='D:\Program Files\Adobe Animate 2024', [switch]$Nodebug, [string]$GameDirectory='', [string]$OutputDirectory='out\exclusion-production')
 $ErrorActionPreference='Stop'
 $gameRoot=if($GameDirectory){[IO.Path]::GetFullPath($GameDirectory)}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))}
 if(!$ProductionSwf){$ProductionSwf=Join-Path $PSScriptRoot '..\release\MoreSkillsWeaponsMod.swf'}
-$output=Join-Path $PSScriptRoot 'out\exclusion-production'
+$output=Join-Path $PSScriptRoot $OutputDirectory
 $runtime=Join-Path $output 'runtime'
 $mswDir=Join-Path $runtime 'mods\MoreSkills&Weapons\release'
 $probeDir=Join-Path $runtime 'mods\ExclusionProductionSmoke\release'
@@ -17,8 +17,8 @@ try {
     Copy-Item -LiteralPath $ProductionSwf -Destination (Join-Path $mswDir 'MoreSkillsWeaponsMod.swf')
     $hash=(Get-FileHash -LiteralPath $ProductionSwf).Hash
     if((Get-FileHash -LiteralPath (Join-Path $mswDir 'MoreSkillsWeaponsMod.swf')).Hash -ne $hash){throw 'Production copy mismatch'}
-    Copy-Item -LiteralPath (Join-Path $gameRoot 'mods\ModSettings\release\ModSettingsMod.swf') -Destination $settingsDir
-    "ModSettings|ModSettingsMod|1|0|0`nExclusionProductionSmoke|ExclusionProductionSmoke|1|0|0" | Set-Content -LiteralPath (Join-Path $runtime 'mods\loader-manifest.txt') -Encoding utf8
+    $settingsEntry=& (Join-Path $PSScriptRoot 'copy-settings-host.ps1') -GameDirectory $gameRoot -RuntimeDirectory $runtime
+    "$settingsEntry`nExclusionProductionSmoke|ExclusionProductionSmoke|1|0|0" | Set-Content -LiteralPath (Join-Path $runtime 'mods\loader-manifest.txt') -Encoding utf8
     $testId='pfe-msw-exclusion-'+[guid]::NewGuid().ToString('N')
     $descriptor=Join-Path $runtime 'app_msw_exclusion_test.xml'
     @"

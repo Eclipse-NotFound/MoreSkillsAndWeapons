@@ -41,7 +41,9 @@ package
       private function legacyLoaded(e:Event):void
       {
          legacyConfig=legacyLoader.contentLoaderInfo.applicationDomain.getDefinition("MSWConfig") as Class;
-         var old:*=new legacyConfig();old.load();old.laserRadius=116;old.laserAngle=13;old.laserSpeed=18;old.laserDuration=8;old.save();
+         var old:*=new legacyConfig();old.load();old.laserRadius=116;old.laserAngle=13;old.laserSpeed=18;old.laserDuration=8;
+         if("laserAssistSpeed" in old)old.laserAssistSpeed=18;
+         old.save();
          var F:Class=getDefinitionByName("flash.filesystem.File") as Class,S:Class=getDefinitionByName("flash.filesystem.FileStream") as Class,fs:*=new S();
          fs.open(F["applicationStorageDirectory"].resolvePath("legacy-config-ready.txt"),"write");fs.writeUTFBytes("ready");fs.close();
          timer.addEventListener("timer",waitProduction);timer.start();
@@ -116,7 +118,9 @@ package
             for each(var page:Object in m.settings.api.getPages())if(page.modId=="msw-laser")
                for each(var item:Object in page.items)if(item.key=="laserDebug")setting=item;
             ok(setting!=null && setting.def===false && setting.get()===true,"ModSettings shares the diagnostic switch and default");
+            ok(!m.cfg.laserNonFront && m.cfg.laserNonFrontRatio==50,"new or upgraded configuration adds disabled direction switch and 50 percent ratio");
             LaserBodyAssistChecks.settings(domain,w,m,legacyConfig,ok,savePNG);
+            LaserNonFrontChecks.settings(domain,w,m,legacyConfig,ok,savePNG);
             m.cfg.laserDebug=true;
             // This visual eye is measured from the native raider sprite, not
             // copied from the production target resolver under test.
@@ -191,6 +195,7 @@ package
                ok(m.laser.blind.remaining(target)==6,"native aim assist hits displayed eye after move/turn "+i);
             }
             LaserBodyAssistChecks.combat(domain,w,m,wp,target,ok,savePNG);
+            LaserNonFrontChecks.combat(domain,w,m,wp,target,ok,savePNG);
             // Arm the gun, then let the real World/Location loop shoot and
             // inspect the complete stage at EXIT_FRAME, before it is displayed.
             m.laser.clear();target.storona=-1;target.dx=target.dy=0;target.setPos(500,320);target.actions();target.animate();target.setVisPos();

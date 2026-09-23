@@ -82,7 +82,7 @@ package
             m=cls("MoreSkillsWeaponsMod")["testInstance"]();w=cls("fe.World")["w"];
             if(m==null || w==null || w.gg==null || w.loc==null || !w.loc.active || m.cfg.diag.frames<600)return;
             timer.stop();if(w.verror.visible)throw new Error(w.verror.txt.text);
-            ok(m.cfg.diag.ver=="1.11.1-turret-blind","exact production adaptive version loaded");
+            ok(m.cfg.diag.ver=="1.12.0-nonfront-laser","exact production adaptive version loaded");
             ok(!m.cfg.smartAdaptiveRadius && m.cfg.smartMinTurnRadius==10,"adaptive mode defaults off with ten percent minimum");
             if(w.pip.active)w.pip.onoff();w.onPause=true;w.godMode=false;w.catPause=false;w.gg.ggControl=true;
             for(var x:int=100;x<1600;x+=20)for(var y:int=40;y<780;y+=20){var tile:*=w.loc.getAbsTile(x,y);if(tile!=null){tile.phis=0;tile.water=0;}}
