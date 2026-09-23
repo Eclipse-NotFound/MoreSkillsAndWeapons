@@ -30,6 +30,7 @@
 
 ## 4. 正在进行与卡点
 
+- 新增锁定豁免需求，本轮先完成敌人类别调查：现用SWF的148个unit定义与1.02参考一致，图鉴3大类/14分组/104条不等于敌人数。已按豁免用途列32个物种/型号候选及首领、机关边界；尚未决定最终粒度/豁免项，也未实现。见knowledge/discoveries/smart-lock-exemption-catalog-20260923.md。
 - 多重锁定开发、实测与安装已完成。新需求为可开关的「平滑弹道」，grilling已答Q1=B命中优先可紧急急转、Q2=B偏短路线圆滑拐角、Q3=A全部智能追踪/绕障、Q4=A开关加平滑程度滑块。整体确认稿见design/smart-smooth-mode.md；等待用户确认后才实施，当前源码与正式版未改。
 - 激光开火最终采用 MSWDazzlerWeapon 的原生 shoot 回调，已移除轮询射击计数/激光头节点方案。固定扣弹，电池回收专长不会改变“每匣次数”。原生保存 id，恢复后重新接成子类。
 - 同包 internal 访问已实测；旧“只能 public”的公共记录新增了范围补充。四个适配类必须显式 includes 并在场景就绪后解析，避免早期 loader 死等。
@@ -54,6 +55,7 @@
 
 ## 7. 深入了解
 
+- knowledge/discoveries/smart-lock-exemption-catalog-20260923.md：锁定豁免的类别/中文名/变种/实体ID清单，当前SWF核对、伙伴/机关/首领及共用行为类边界；本轮只读调查。
 - design/smart-smooth-mode.md：平滑弹道Q1–Q4、待整体确认的范围、静态核查与验收方向。
 - design/smart-multi-lock.md、knowledge/experiments/smart-multi-lock-20260923.md：用户A/A、逐目标锁定/分弹、回放顺序、79/30/51及设置/联测证据、最终安装和回滚。
 - knowledge/experiments/laser-visual-eyes-20260923.md：可见眼睛/框外传感器红绿对照、视觉样本、原版光束、生产场景与安装回滚；shared-knowledge/entities/discoveries/perception-eye-vs-rendered-eye.md：感知点与显示眼位区别。
