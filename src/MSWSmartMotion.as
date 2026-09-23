@@ -26,7 +26,7 @@ package
          var smooth:Boolean=s.smooth==true && Number(s.smoothing)>0;
          for(var i:int=0;i<count && !b.babah && b.in_chain;i++)
          {
-            while(path.length>1 && MSWSmartRoute.clear(b.loc,b.X,b.Y,path[1].x,path[1].y)) path.shift();
+            while(path.length>1 && MSWSmartRoute.clear(b.loc,b.X,b.Y,path[1].x,path[1].y,2,b)) path.shift();
             var p:Object=path[0];
             if(smooth) MSWSmartSmooth.steer(b,s,path,maxTurn/count,1/count,radiusScale,i%4==0);
             else MSWSmartRoute.steer(b,p.x,p.y,maxTurn/count,b.loc,1/count,radiusScale);

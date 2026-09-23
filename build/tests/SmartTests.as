@@ -82,6 +82,7 @@ package
             MSWSmartRoute.steer(tight,500,300,2,empty,0.1,0.5);
             near(tight.rot,soft.rot*2,"half radius doubles unsaturated pursuit curvature");
             near(tight.vel,soft.vel,"radius adjustment preserves speed");
+            SmartGlassChecks.run(ok);
             finish("PASS "+n+" assertions",0);
          }
          catch(e:*) { finish("FAIL "+e+"\n"+e.getStackTrace(),1); }

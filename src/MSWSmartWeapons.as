@@ -76,6 +76,7 @@ package
          try
          {
             mod.cfg.diagSet("smartMotionVersion","1.3-smooth-mode");
+            mod.cfg.diagSet("smartGlassVersion",MSWSmartGlass.VERSION);
             afterProjectiles(); motion.prune();
             var now:int=getTimer(); var dt:Number=lastTime==0?0:Math.min(0.1,(now-lastTime)/1000); lastTime=now;
             if(w.loc!==lastLoc || w.gg!==lastPlayer)
@@ -234,15 +235,17 @@ package
          var dt:Number=Math.min(1/30,s.remaining); s.remaining=Math.max(0,s.remaining-dt);
          if(s.remaining<0.000000001) s.remaining=0;
          var tx:Number=(s.target.X1+s.target.X2)/2, ty:Number=(s.target.Y1+s.target.Y2)/2;
-         if(MSWSmartRoute.clear(w.loc,b.X,b.Y,tx,ty)) s.route=[{x:tx,y:ty}];
+         var policy:String=MSWSmartGlass.routeKey(b)+":"+w.loc.destroyOn;
+         if(s.routePolicy!==policy){s.route=[];s.routeAge=0;s.routePolicy=policy;}
+         if(MSWSmartRoute.clear(w.loc,b.X,b.Y,tx,ty,2,b)) s.route=[{x:tx,y:ty}];
          else if(s.routeAge<=0 || MSWSmartRoute.distance(tx,ty,s.goalX,s.goalY)>32)
          {
-            var key:String=int(b.X/24)+","+int(b.Y/24)+":"+int(tx/24)+","+int(ty/24);
+            var key:String=int(b.X/24)+","+int(b.Y/24)+":"+int(tx/24)+","+int(ty/24)+":"+policy;
             var resolved:Boolean=true;
             if(routeCache[key]!=null) s.route=routeCache[key].concat();
             else if(searches<4)
             {
-               searches++; s.route=MSWSmartRoute.find(w.loc,b.X,b.Y,tx,ty);
+               searches++; s.route=MSWSmartRoute.find(w.loc,b.X,b.Y,tx,ty,b);
                routeCache[key]=s.route.concat(); mod.cfg.diagAdd("smartRoutes");
             }
             else resolved=false;
@@ -253,7 +256,7 @@ package
          s.routeAge--;
          var path:Array=s.route;
          if(path.length==0) { motion.remove(b); return; }
-         while(path.length>1 && MSWSmartRoute.clear(w.loc,b.X,b.Y,path[1].x,path[1].y)) path.shift();
+         while(path.length>1 && MSWSmartRoute.clear(w.loc,b.X,b.Y,path[1].x,path[1].y,2,b)) path.shift();
          motion.advance(b,s,path,s.turn*s.strength*dt*Math.PI/180);
          mod.cfg.diagAdd("smartSteps");
       }
@@ -295,7 +298,7 @@ package
          if(Math.max(a.x,b.x)<0 || Math.max(a.y,b.y)<0 || Math.min(a.x,b.x)>st.stageWidth || Math.min(a.y,b.y)>st.stageHeight) return false;
          var x:Number=(u.X1+u.X2)/2;
          var gx:Number=(w.gg.X1+w.gg.X2)/2, gy:Number=w.gg.Y1+(w.gg.Y2-w.gg.Y1)*0.3;
-         return w.loc.isLine(gx,gy,x,(u.Y1+u.Y2)/2) || w.loc.isLine(gx,gy,x,u.Y1+3) || w.loc.isLine(gx,gy,x,u.Y2-3);
+         return MSWSmartGlass.visible(w.loc,gx,gy,x,(u.Y1+u.Y2)/2) || MSWSmartGlass.visible(w.loc,gx,gy,x,u.Y1+3) || MSWSmartGlass.visible(w.loc,gx,gy,x,u.Y2-3);
       }
       private function hide():void { hud.visible=false; }
       private function draw(w:*):void

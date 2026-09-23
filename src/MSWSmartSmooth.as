@@ -28,7 +28,7 @@ package
             var required:Number=error/limit;
             urgent=distance/speed<required+tau*0.35 || Number(s.remaining)*30<required+tau*0.35;
          }
-         var blocked:Boolean=!MSWSmartRoute.clear(b.loc,b.X,b.Y,b.X+Math.cos(heading+turn)*length,b.Y+Math.sin(heading+turn)*length,0.5);
+         var blocked:Boolean=!MSWSmartRoute.clear(b.loc,b.X,b.Y,b.X+Math.cos(heading+turn)*length,b.Y+Math.sin(heading+turn)*length,0.5,b);
          if(!blocked && forecast)blocked=arcDistance(b,turn/length,horizon)<horizon;
          if(blocked)
          {
@@ -70,7 +70,7 @@ package
             {
                var f:Number=travel*j/(4*distance);
                var x:Number=from.x+(next.x-from.x)*f,y:Number=from.y+(next.y-from.y)*f;
-               if(!MSWSmartRoute.clear(b.loc,b.X,b.Y,x,y,2))return result;
+               if(!MSWSmartRoute.clear(b.loc,b.X,b.Y,x,y,2,b))return result;
                result={x:x,y:y};
             }
             left-=travel;from=next;
@@ -86,7 +86,7 @@ package
          {
             a+=curvature*step;
             var nx:Number=x+Math.cos(a)*step,ny:Number=y+Math.sin(a)*step;
-            if(!MSWSmartRoute.clear(b.loc,x,y,nx,ny,0.5))return i*step;
+            if(!MSWSmartRoute.clear(b.loc,x,y,nx,ny,0.5,b))return i*step;
             x=nx;y=ny;
          }
          return length;

@@ -3,7 +3,7 @@ package
    /** Bounded local routing. Physical collision still belongs to the original Bullet. */
    public class MSWSmartRoute
    {
-      public static function clear(loc:*, x:Number,y:Number, tx:Number,ty:Number, margin:Number=2):Boolean
+      public static function clear(loc:*, x:Number,y:Number, tx:Number,ty:Number, margin:Number=2,shot:*=null):Boolean
       {
          var n:int=Math.ceil(Math.max(Math.abs(tx-x),Math.abs(ty-y))/8);
          if(n>600) return false;
@@ -11,24 +11,24 @@ package
          for(var i:int=0;i<=n;i++)
          {
             var px:Number=x+(tx-x)*i/n, py:Number=y+(ty-y)*i/n;
-            if(blocked(loc,px,py,margin)) return false;
+            if(blocked(loc,px,py,margin,shot)) return false;
          }
          return true;
       }
-      private static function blocked(loc:*,x:Number,y:Number,m:Number):Boolean
+      private static function blocked(loc:*,x:Number,y:Number,m:Number,shot:*):Boolean
       {
          for(var i:int=0;i<5;i++)
          {
             var px:Number=x+(i==1?-m:i==2?m:0), py:Number=y+(i==3?-m:i==4?m:0);
             var t:*=loc.getAbsTile(px,py);
             if(t==null) return true;
-            if(t.phis==1 && px>=t.phX1 && px<=t.phX2 && py>=t.phY1 && py<=t.phY2) return true;
+            if(t.phis==1 && px>=t.phX1 && px<=t.phX2 && py>=t.phY1 && py<=t.phY2 && !MSWSmartGlass.breakable(loc,t,shot)) return true;
          }
          return false;
       }
-      public static function find(loc:*,sx:Number,sy:Number,tx:Number,ty:Number):Array
+      public static function find(loc:*,sx:Number,sy:Number,tx:Number,ty:Number,shot:*=null):Array
       {
-         if(clear(loc,sx,sy,tx,ty)) return [{x:tx,y:ty}];
+         if(clear(loc,sx,sy,tx,ty,2,shot)) return [{x:tx,y:ty}];
          // Search at most 180 nodes, within 240 pixels of the bullet. A node can
          // connect directly to the distant goal, so only the nearby obstruction is routed.
          var open:Array=[{x:sx,y:sy,g:0,h:distance(sx,sy,tx,ty),p:null,ix:0,iy:0}];
@@ -41,7 +41,7 @@ package
             var a:Object=open.splice(bi,1)[0]; var key:String=a.ix+","+a.iy;
             if(visited[key]) continue;
             visited[key]=true;
-            if(clear(loc,a.x,a.y,tx,ty))
+            if(clear(loc,a.x,a.y,tx,ty,2,shot))
             {
                var route:Array=[{x:tx,y:ty}];
                while(a.p!=null) { route.unshift({x:a.x,y:a.y}); a=a.p; }
@@ -57,7 +57,7 @@ package
                var nx:Number=sx+ix*24, ny:Number=sy+iy*24;
                var g:Number=a.g+(dx!=0 && dy!=0?33.9411:24);
                if(key in best && best[key]<=g) continue;
-               if(!clear(loc,a.x,a.y,nx,ny)) continue;
+               if(!clear(loc,a.x,a.y,nx,ny,2,shot)) continue;
                best[key]=g;
                open.push({x:nx,y:ny,g:g,h:distance(nx,ny,tx,ty),p:a,ix:ix,iy:iy});
             }
@@ -81,7 +81,7 @@ package
          for each(var d:Number in choices)
          {
             var a:Number=old+d;
-            if(!clear(loc,b.X,b.Y,b.X+Math.cos(a)*speed*fraction,b.Y+Math.sin(a)*speed*fraction,0.5)) continue;
+            if(!clear(loc,b.X,b.Y,b.X+Math.cos(a)*speed*fraction,b.Y+Math.sin(a)*speed*fraction,0.5,b)) continue;
             var cost:Number=Math.abs(angle(turn-d));
             if(cost<score) { score=cost; selected=d; }
             if(cost==0) break;
