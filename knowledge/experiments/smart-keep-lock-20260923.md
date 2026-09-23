@@ -25,4 +25,6 @@ date-updated: 2026-09-23
 
 ## 部署状态
 
-候选 `build/out/keep-lock/MoreSkillsWeaponsMod.swf` 为 39991 字节，SHA256 `909CEF05D810A8F0C0093B34DD0999DC0CE6847E24E0402C1818BFCF435C3744`。它基于已提交的 v1.6.1 智能参数更新与激光生产修复，不包含其他未提交功能。正式 release 仍是 39842 字节、SHA256 `573709F879ED6A538D49110A73836053123DC859F47376D2C63D221090E5B089`；发布门禁停在「本轮安装授权」之前，未创建回滚备份或替换正式文件。
+用户本轮明确选择安装后，候选 `build/out/keep-lock/MoreSkillsWeaponsMod.swf` 已同字节替换正式 `release/MoreSkillsWeaponsMod.swf`。新版本 39991 字节，SHA256 `909CEF05D810A8F0C0093B34DD0999DC0CE6847E24E0402C1818BFCF435C3744`。它基于已提交的 v1.6.1 智能参数更新与激光生产修复，不包含其他未提交功能。
+
+替换前原正式版已备份到 `release/MoreSkillsWeaponsMod.before-v1.6.2-keep-lock-20260923.swf`，39842 字节，SHA256 `573709F879ED6A538D49110A73836053123DC859F47376D2C63D221090E5B089`。若需回滚，将该备份复制回正式 SWF 并重启游戏即可；这会撤销本次开关，但保留 v1.6.1 激光修复。安装后的相同字节再次独立启动到 900 帧，ModSettings-connected、tabOn=1、版本与 HUD/激光标记正确，无 `lastErr`、`smartError` 或 `laserError`；证据 `build/out/keep-lock-installed/install-smoke.json`。根游戏、清单、ModSettings 与真实存档未改；用户游戏进程未关闭，重启后生效。

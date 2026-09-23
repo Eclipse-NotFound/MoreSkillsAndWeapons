@@ -1,5 +1,11 @@
 # MoreSkills&Weapons —— 开发日志
 
+## 2026-09-23 v1.6.2 视野外保持锁定正式安装
+
+- 用户明确选择安装。先核对根游戏、加载清单、ModSettings、原正式版及候选的指纹；备份原 v1.6.1 激光热修复到 release/MoreSkillsWeaponsMod.before-v1.6.2-keep-lock-20260923.swf（39842 字节、SHA256 573709F879ED6A538D49110A73836053123DC859F47376D2C63D221090E5B089），再以已验候选同字节替换正式 SWF。
+- 正式版 39991 字节、SHA256 909CEF05D810A8F0C0093B34DD0999DC0CE6847E24E0402C1818BFCF435C3744；安装后独立游戏副本再次启动到 900 帧，ModSettings-connected、tabOn=1，无 lastErr/smartError/laserError。生产候选真实激光开火回归此前已通过；证据见 knowledge/experiments/smart-keep-lock-20260923.md。
+- 未改根游戏、清单、其他模组或真实存档，也未关闭用户游戏。重启游戏后生效；若仅回退本次开关，用上述备份覆盖正式 SWF 并重启，可保留激光修复。
+
 ## 2026-09-23 v1.6.2 视野外保持锁定开关完成，候选待安装
 
 - 用户要求在智能武器设置中增加开关：默认关闭保留旧的渐进脱锁；开启后，已完成的锁定在离屏或墙体遮挡时保持当前强度。新目标仍要目视取得，目标失效等原清除条件不变。Pip/F6 均可调，旧配置补默认；设计及边界见 design/smart-weapons.md。

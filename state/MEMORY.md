@@ -1,6 +1,6 @@
 # MoreSkills&Weapons —— 开发记忆入口
 
-> 协议见工作区 GOVERNANCE.md §8；本模组参数见 ../AGENT_SCOPE.md。最近实现候选：2026-09-23，v1.6.2-smart-keep-lock；最近正式安装：v1.6.1-smart-tuning + 激光热修复（2-cast-ray）。
+> 协议见工作区 GOVERNANCE.md §8；本模组参数见 ../AGENT_SCOPE.md。最近正式安装：2026-09-23，v1.6.2-smart-keep-lock（保留 v1.6.1 智能参数与激光热修复）。
 
 ## 1. 这个模组是什么
 
@@ -18,10 +18,9 @@
 
 ## 3. 当前状态
 
-- **正式已安装 v1.6.1-smart-tuning + 激光热修复**。release/MoreSkillsWeaponsMod.swf 与 build/out/laser-fix/MoreSkillsWeaponsMod-final.swf 同字节，39842 字节，SHA256 `573709F879ED6A538D49110A73836053123DC859F47376D2C63D221090E5B089`。核心版本不变，新增激光标记 `laserRuntimeVersion=2-cast-ray`；HUD `2-adjustable-size`，运动 `1.2-radius`。
-- **v1.6.2-smart-keep-lock 源码与生产候选已完成，尚未正式安装**。候选 build/out/keep-lock/MoreSkillsWeaponsMod.swf 为 39991 字节，SHA256 `909CEF05D810A8F0C0093B34DD0999DC0CE6847E24E0402C1818BFCF435C3744`。新增智能页第 13 项「视野外保持锁定」，默认关闭；开启后已有锁定离屏、被墙遮挡时不脱锁。
-- 本候选 58 项智能规则、真实游戏离屏/墙遮挡/恢复及 13 项设置、30 定义生产链接、同字节 900 帧启动及生产激光真实开火回归通过。证据 knowledge/experiments/smart-keep-lock-20260923.md。正式 release 尚未替换，用户当前游戏仍运行上条的 v1.6.1 激光热修复。
-- 智能页新增“转弯半径倍率”10–200%、步长 10、默认 50%；“锁定菱形大小”12–80 屏幕 px、步长 2、默认 24。共 12 项设置。半径同时影响追踪曲率和转角上限，开火时固定并在跳弹/回放中继承；HUD 即时读取大小。
+- **正式已安装 v1.6.2-smart-keep-lock**。release/MoreSkillsWeaponsMod.swf 与已验证候选同字节，39991 字节，SHA256 `909CEF05D810A8F0C0093B34DD0999DC0CE6847E24E0402C1818BFCF435C3744`。新增智能页第 13 项「视野外保持锁定」，默认关闭；开启后已有锁定离屏、被墙遮挡时不脱锁。HUD 标记 `2-adjustable-size`、运动 `1.2-radius`、激光 `2-cast-ray` 保留。
+- 本版 58 项智能规则、真实游戏离屏/墙遮挡/恢复及 13 项设置、30 定义生产链接、同字节 900 帧启动及生产激光真实开火回归通过；安装后相同字节再达 900 帧，设置入口正常，无模块错误。证据 knowledge/experiments/smart-keep-lock-20260923.md。上版 v1.6.1 激光热修复备份为 release/MoreSkillsWeaponsMod.before-v1.6.2-keep-lock-20260923.swf，SHA256 `573709F879ED6A538D49110A73836053123DC859F47376D2C63D221090E5B089`。
+- 智能页保留“转弯半径倍率”10–200%、步长 10、默认 50%；“锁定菱形大小”12–80 屏幕 px、步长 2、默认 24，加上本次开关共 13 项设置。半径同时影响追踪曲率和转角上限，开火时固定并在跳弹/回放中继承；HUD 即时读取大小。
 - 本轮 53 条智能规则、30 项像素、14 项真实游戏 HUD、完整智能设置/锁定/绕障/跳弹、四档原生半径对照及实际时停回放通过。安装前后同字节启动均达 900 帧，ModSettings-connected、tabOn=1，无 lastErr/smartError/laserError；证据 build/out/smart-tuning-installed/install-smoke.json。
 - 激光真实故障已修复：发布编译误删自定义 trace 调用，assist 校验栈下溢，同时中断光束/致盲；已改名 castRay，正常发布优化保留。原 debug 机制测试及生产启动检查漏掉真实开火，不能证明旧正式版可用；历史记录已补更正。
 - 普通激光回归 244 条 PASS；36 类原生敌人接管/恢复，24 个有武器的测试单位另验证真实攻击；覆盖身体/眼部/背面/遮挡/护盾、隐形不辅助、六次点射与装填、SATS 17 AP、存档 AMF 与读档武器接续、爆炸/刀棍/中立友伤、生命周期。Sandevistan 实际慢步及一次录制一次回放也通过。
@@ -32,7 +31,7 @@
 
 ## 4. 正在进行与卡点
 
-- 智能参数与激光修复均已安装，重启后生效；本轮视野外保持锁定已完成源码、测试和生产候选，发布门禁停在「本轮安装授权」之前。当前正式版仍只有 12 项智能设置，不要把候选误认为已安装。
+- 智能参数、激光修复和视野外保持锁定均已安装，用户重启后生效。真实游戏进程未关闭；正式版已有 13 项智能设置。源码、生产候选与正式文件已核对同字节。
 - 激光开火最终采用 MSWDazzlerWeapon 的原生 shoot 回调，已移除轮询射击计数/激光头节点方案。固定扣弹，电池回收专长不会改变“每匣次数”。原生保存 id，恢复后重新接成子类。
 - 同包 internal 访问已实测；旧“只能 public”的公共记录新增了范围补充。四个适配类必须显式 includes 并在场景就绪后解析，避免早期 loader 死等。
 
@@ -46,7 +45,7 @@
 
 ## 6. 下一步
 
-- 用户明确授权本次安装后，先核对正式版 SHA256 仍为 `573709F879ED6A538D49110A73836053123DC859F47376D2C63D221090E5B089`，备份到独立 `before-v1.6.2-keep-lock-20260923.swf`，再将已验候选替换正式版并用同字节独立启动检查。安装后用户须重启；当前未关闭用户游戏。仅回退此前激光修复可用 release/MoreSkillsWeaponsMod.before-v1.6.1-laser-fix-20260923.swf，但它会恢复旧激光故障。
+- 用户重启游戏后生效；当前未关闭真实游戏进程。仅回退本轮开关，将 release/MoreSkillsWeaponsMod.before-v1.6.2-keep-lock-20260923.swf（39842 字节、SHA256 `573709F879ED6A538D49110A73836053123DC859F47376D2C63D221090E5B089`）复制回正式 SWF 并重启，可保留 v1.6.1 激光修复。更早的 before-v1.6.1-laser-fix 会恢复旧激光故障，不要混用。
 - 后续发布保留 castRay 修复并用 test-laser-production.ps1 验证准确的生产 SWF；只通过 debug 测试或启动冒烟不够。build/out/smart-tuning 是未含激光修复的旧候选，不能覆盖当前 release。
 - 不要部署 build/out/laser/LaserSmokeMod.swf、smoke/SandevistanMod.as 的错误捕获器或任何测试副本。
 - 若另开新任务，优先读本文件及激光实验记录；Q1–Q25 不再询问。普通功能已完成，不自行建立提醒/待办。
@@ -56,7 +55,7 @@
 
 - knowledge/experiments/laser-release-fix-20260923.md：真实复现、编译单变量对照、两类差异校验及安装记录；shared-knowledge/knowledge-validation/discoveries/as3-custom-trace-release-stripping.md：编译陷阱。
 - knowledge/experiments/smart-tuning-20260923.md：当前两项参数、原生半径对照、控件/回放/像素检查、通用清单适配、部署与回滚。
-- knowledge/experiments/smart-keep-lock-20260923.md：本轮视野外保持锁定语义、真实游戏验证、未部署候选和生产激光回归。
+- knowledge/experiments/smart-keep-lock-20260923.md：本轮视野外保持锁定语义、真实游戏验证、生产激光回归与部署回滚。
 
 - design/nonlethal-laser.md：用户 25 项选择、边界及当前状态；knowledge/experiments/nonlethal-laser-20260920.md：实现、验证、失败修复和证据路径。
 - build/README.md：编译、外部宿主声明、test-laser.ps1 及 -Sandevistan、生产候选同字节检查命令。build.ps1 只写 out 并检查链接表；不自动部署。
