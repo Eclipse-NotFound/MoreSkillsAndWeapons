@@ -147,7 +147,7 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.9.0-lock-exemption");
+         cfg.diagSet("ver", "1.9.1-exemption-menu");
          cfg.diagSet("smartHudVersion", MSWSmartHUD.VERSION);
          settings.registerPage("msw", "MoreSkills&Weapons",
             MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");

@@ -30,8 +30,7 @@ package
       /** Keep F6 limited to this mod's pages, independent of test/legacy registrations. */
       private function localPages():Array
       {
-         var ids:Array=["msw","msw-smart","msw-laser"],result:Array=[];
-         for each(var group:Array in MSWSmartExclusions.GROUPS) ids.push("msw-exempt-"+group[0]);
+         var ids:Array=["msw","msw-smart","msw-laser","msw-exempt"],result:Array=[];
          for each(var id:String in ids)
             for each(var page:Object in mod.settings.getPages())
                if(page.modId==id) {result.push(page);break;}
@@ -197,6 +196,7 @@ package
                      }
                   }
                   ovTf["visible"] = true;
+                  ovTf.width = Math.min(800, main.stage.stageWidth - 48);
                   ovTf["x"] = 24;
                   ovTf["y"] = 64;
                }
@@ -218,6 +218,7 @@ package
       private function makeOverlayTf():TextField
       {
          var tf:TextField = new TextField();
+         tf.name = "MSWF6Panel";
          var fmt:TextFormat = new TextFormat();
          fmt.font = "SimHei";
          fmt.size = 15;
@@ -229,7 +230,7 @@ package
          tf.border = true;
          tf.borderColor = 0x666666;
          tf.multiline = true;
-         tf.wordWrap = false;
+         tf.wordWrap = true;
          tf.selectable = false;
          tf.mouseEnabled = false;
          tf.autoSize = TextFieldAutoSize.LEFT;
@@ -242,9 +243,11 @@ package
          var c:* = mod.cfg;
          var s:String = "";
          var pages:Array=localPages();
-         s += (pages.length>0?pages[pageIndex%pages.length].displayName:MSWWeapon.WEAPON_NAME) + " 模组设置 [Tab 切页]\n";
+         s += (pages.length>0?pages[pageIndex%pages.length].displayName:MSWWeapon.WEAPON_NAME) + " 模组设置 [Tab 切菜单]\n";
          s += "--------------------------------\n";
-         for(var i:int = 0; i < items.length; i++)
+         var start:int=int(sel/18)*18,end:int=Math.min(start+18,items.length);
+         if(items.length>18) s += "选项 " + (start+1) + "–" + end + "/" + items.length + "（↑↓ 翻动）\n";
+         for(var i:int = start; i < end; i++)
          {
             var it:Object = items[i];
             var value:* = it["get"]();

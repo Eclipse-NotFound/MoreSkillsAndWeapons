@@ -19,7 +19,7 @@ package
       private var host:*,loader:Loader=new Loader(),domain:ApplicationDomain,timer:Timer=new Timer(50);
       private var m:*,w:*,gun:*,rat:*,mole:*,raider:*,flying:*,hud:*;
       private var ticks:int=0,phase:int=0,since:int=0,count:int=0,page:int=0;
-      private var log:String="",rows:Array=[],groups:Array=["bio","nests","small","mines","devices"],sizes:Array=[9,3,5,6,8];
+      private var log:String="",rows:Array=[],allRows:Array=[],sizes:Array=[18,13];
       public function ExclusionProductionSmoke() {}
       public static function init(main:*):void {probe=new ExclusionProductionSmoke();probe.start(main);}
       private function cls(n:String):Class {return domain.getDefinition(n) as Class;}
@@ -82,26 +82,40 @@ package
                // The fixture's final automatic page switch occurs about 800 frames
                // after the world starts. Begin only after it relinquishes the UI.
                if(m.cfg.diag.frames<1100)return;
-               ok(m.cfg.diag.ver=="1.9.0-lock-exemption","exact production version loaded");
+               ok(m.cfg.diag.ver=="1.9.1-exemption-menu","exact production version loaded");
                ok(m.cfg.diag.smartMotionVersion=="1.3-smooth-mode" && m.cfg.diag.laserRuntimeVersion=="4-reload-debug","installed smooth and laser fixes preserved");
+               var exemptionPages:int=0;
+               for each(var registered:Object in m.settings.getPages())if(String(registered.modId).indexOf("msw-exempt")==0){exemptionPages++;ok(registered.modId=="msw-exempt" && registered.items.length==31,"one registered menu contains all 31 options");}
+               ok(exemptionPages==1,"only one exemption entry alongside other mods");
+               // Same stored keys as v1.9.0, spanning both internal pages.
+               m.cfg.smartExclusions={rat:true,mine:true,transmitter:true};m.cfg.save();
                if(!w.pip.active)w.pip.onoff(5);if(!m.panel.tabActive())m.panel.tabToggle(w);
-               if(!m.settings.api.selectPage("msw-exempt-bio"))return;next(1);return;
+               if(!m.settings.api.selectPage("msw-exempt"))return;next(1);return;
             }
             if(phase==1 && elapsed>200) {
-               rows=[];collect(host);ok(rows.length==sizes[page],"visible real controls "+groups[page]+" count="+rows.length);
+               rows=[];collect(host);ok(rows.length==sizes[page],"internal page "+page+" count="+rows.length);
                for each(r in rows) {
-                  item=r.settingsItem;ok(!item.get(),"unchecked default "+item.key);
+                  item=r.settingsItem;var previous:Boolean=item.key=="smartExclude_rat" || item.key=="smartExclude_mine" || item.key=="smartExclude_transmitter";
+                  ok(item.get()==previous && r.settingsSc.selected==previous,"existing choice preserved "+item.key);
                   r.settingsSc.selected=true;r.settingsSc.dispatchEvent(new Event(Event.CHANGE));ok(item.get(),"actual checkbox "+item.key);
                   var saved:*=new (cls("MSWConfig"))();saved.load();ok(saved.smartExclusions[item.key.substr(13)]===true,"persistent UI choice "+item.key);
                }
-               screenshot("settings-"+groups[page]+".png");
+               allRows=allRows.concat(rows);screenshot("settings-page"+(page+1)+".png");
+               if(page==0){r=named(host,"SettingsNextItems");ok(r!=null && r.mouseEnabled,"internal next page enabled");r.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));page=1;next(1);return;}
+               ok(allRows.length==31,"all options reached through internal paging");
+               r=named(host,"SettingsPreviousItems");ok(r!=null && r.mouseEnabled,"internal previous page enabled");r.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));
+               rows=[];collect(host);ok(rows.length==18 && rows[0].settingsItem.key=="smartExclude_bloodwing" && rows[0].settingsSc.selected,"return to first internal page keeps choices");
                r=named(host,"SettingsReset");ok(r!=null,"page reset exists");r.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));
-               for each(r in rows)ok(!r.settingsItem.get(),"page default restored "+r.settingsItem.key);
-               page++;if(page<groups.length){ok(m.settings.api.selectPage("msw-exempt-"+groups[page]),"select registered page "+groups[page]);next(1);return;}
+               for each(r in allRows)ok(!r.settingsItem.get(),"all-group default restored "+r.settingsItem.key);
                w.pip.onoff();m.panel.toggleOverlay();
                for(i=0;i<3;i++)m.panel.handleKey(9);
-               for(i=0;i<5;i++){m.panel.handleKey(39);ok(m.cfg.smartExclusions[["bloodwing","necros","spritebot","hmine","trigcans"][i]],"F6 reaches group "+groups[i]);m.panel.handleKey(9);}
-               m.panel.handleKey(33);m.panel.handleKey(39);ok(!m.cfg.smartExclusions.trigcans,"F6 wraps backwards to final group");m.panel.toggleOverlay();
+               for(i=0;i<31;i++){
+                  m.panel.handleKey(39);ok(allRows[i].settingsItem.get(),"F6 reaches option "+i);
+                  if(i==30){m.panel.update(w);var overlay:*=host.getChildByName("MSWF6Panel");ok(overlay!=null && overlay.text.indexOf("发报机")>=0 && overlay.text.indexOf("血翼")<0 && overlay.y+overlay.height<=host.stage.stageHeight && overlay.x+overlay.width<=host.stage.stageWidth,"F6 scrolls final option within screen");screenshot("settings-f6.png");}
+                  m.panel.handleKey(40);
+               }
+               m.panel.handleKey(9);m.panel.update(w);ok(host.getChildByName("MSWF6Panel").text.indexOf("MoreSkills&Weapons")==0,"F6 cycles four menus back to main");
+               m.panel.handleKey(33);m.panel.handleKey(39);ok(!m.cfg.smartExclusions.bloodwing,"F6 wraps backwards to single exemption menu");m.panel.toggleOverlay();
                m.cfg.smartExclusions={};matrix();
                w.onPause=true;w.godMode=false;w.catPause=false;w.gg.ggControl=true;
                for(var x:int=100;x<1200;x+=20)for(var y:int=40;y<650;y+=20){tile=w.loc.getAbsTile(x,y);tile.phis=0;tile.water=0;}

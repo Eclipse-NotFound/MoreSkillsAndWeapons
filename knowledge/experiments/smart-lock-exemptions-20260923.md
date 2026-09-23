@@ -36,7 +36,7 @@ date-updated: 2026-09-23
 - 回放时显示帧不扫描子弹，扫描由物理回调执行；最初探针只调用frame导致未产生快照，补为真实物理前后入口验证。
 - 本轮在独立git工作树冻结源码，先合入激光提交ea922ac，再合入平滑提交3fb7622。版本标记冲突统一为1.9.0，保留全部平滑字段与最新多锁探针。主目录与冻结源逐文件归一换行比较一致；合并后重编译并重跑最终字节，早期候选未部署。
 
-## 安装状态
+## v1.9.0 安装记录
 
 正式候选 `build/out/lock-exemption-work/build/out/MoreSkillsWeaponsMod.swf`，47050字节，SHA256 `15D7E3A56393D252656ADD2B1631F780CDA4EE6EB752A9AD3D12F286F5B48707`。核心1.9.0-lock-exemption、运动1.3-smooth-mode、HUD3-multi-lock、激光4-reload-debug；链接35个生产定义，宿主原类外置，无Smoke/Probe。实现提交0fc83b3；正式文件由该源码构建，构建后没有再改生产源码。
 
@@ -56,3 +56,20 @@ date-updated: 2026-09-23
 本轮未改根pfe.swf（B7824465...）、loader-manifest（4953B682...）、ModSettings（5BD830A6...）或其他模组/真实存档；不关闭用户游戏。用户须自行重启加载新版本。
 
 原有时停预演+跳弹+智能绕障复杂组合的未通过边界保留；本轮回放豁免是物理握手模拟，不声称新跑完整Sandevistan联测，也未覆盖全部长期战斗、DLC、联机或剧情阵营变化。
+
+## v1.9.1 合并为单菜单
+
+用户追加要求：所有豁免放在同一个菜单，不能五组分别与斯安维斯坦等模组并列。改为只注册 `msw-exempt / 锁定豁免`；31项按类别顺序显示分类前缀，复用ModSettings内部18行分页（18+13）。仅最小范围只读查阅其分页接口，没有修改ModSettings。
+
+F6从八个菜单改为四个，豁免共用一个菜单；↑↓选中跨过第18项时自动翻动，文本框限制屏幕内宽度并自动换行。配置键/数据完全保留，旧五页的勾选直接回显。统一菜单的「恢复默认」清除全部豁免，说明文字已明确，不影响其他智能设置。锁定、弹道与伤害代码均未改。
+
+候选 `build/out/exemption-menu/MoreSkillsWeaponsMod.swf`，47213字节，SHA256 `A56E3B46D22CBC5CECCC086AA86C5E58917EC0FA5FFF4D3178DAABF02A49F659`；冻结源位于同目录src，安装前与主src归一换行逐文件一致。35个生产定义，组件仍是运动1.3-smooth-mode / HUD3-multi-lock / 激光4-reload-debug。
+
+- `build/out/exclusion-tests/results.txt`：1123条PASS，更新为单菜单/分类标签、统一恢复默认保留其他模式。
+- `build/out/exclusion-production/results.txt`：312项PASS，唯一入口、旧鼠/地雷/发报机勾选跨两页保留、实际内部分页来回、31项保存、跨页恢复默认、F6全部31项可达/菜单循环/末项不出屏，以及既有豁免实战与回放顺序；settings-page1/page2/f6.png已目视检查。
+- 同一生产字节：`build/out/multi-lock-production/results.txt` 52项PASS；`build/out/laser-reload/results.txt` 39行PASS，含真实读档与未暂停舞台光束（4帧、峰值174像素）。本轮仅菜单改动，没有重复整个平滑物理套件或实际Sandevistan全程测试。
+- `build/out/exemption-menu/startup/install-smoke.json`及`installed/install-smoke.json`：安装前后同一SHA256、均900帧、ModSettings-connected、tabOn=1，版本和组件标记正常，无三类模块错误。已安装完成。
+
+备份 `release/MoreSkillsWeaponsMod.before-v1.9.1-exemption-menu-20260923.swf` 为v1.9.0，47050字节、SHA256 `15D7E3A56393D252656ADD2B1631F780CDA4EE6EB752A9AD3D12F286F5B48707`。复制回正式文件并重启可恢复五个独立菜单，保留豁免功能及选择。用户游戏和真实配置未操作；所有验收用唯一AIR ID。
+
+环境记录：本轮普通沙箱Shell连简单读取也无输出，已通过对应执行session中断本轮三个挂起命令；提权通道可正常完成编译/读取/隔离测试。未停止用户游戏，不将无输出推断为游戏或源码故障。

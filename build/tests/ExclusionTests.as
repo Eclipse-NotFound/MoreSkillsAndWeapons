@@ -14,10 +14,11 @@ package
             var legacy:SharedObject=SharedObject.getLocal("MSWConfig");legacy.clear();legacy.data.smartEnabled=true;legacy.data.smartMultiLock=true;legacy.flush();
             c.load();ok(c.smartEnabled && c.smartMultiLock && !MSWSmartExclusions.excludes({id:"rat"},c.smartExclusions),"old config preserves modes and excludes nothing");
             MSWSmartExclusions.register(mod);var pages:Array=hub.getPages(),sizes:Array=[9,3,5,6,8],labels:Array=["生物","云团与巢穴","小型机械","普通地雷","机关与装置"];
-            ok(pages.length==5,"five exclusion groups");var items:Object={},keys:int=0;
-            for(var p:int=0;p<pages.length;p++) {
-               ok(pages[p].displayName=="锁定豁免 · "+labels[p] && pages[p].items.length==sizes[p],"group label and row count "+labels[p]);
-               for each(var it:Object in pages[p].items){ok(!it.get() && it.def===false,"default permits "+it.label);items[it.key]=it;keys++;}
+            ok(pages.length==1 && pages[0].modId=="msw-exempt" && pages[0].displayName=="锁定豁免","single exemption menu");var items:Object={},keys:int=0;
+            for(var p:int=0;p<labels.length;p++) {
+               var groupItems:Array=MSWSmartExclusions.items(mod,MSWSmartExclusions.GROUPS[p][0]);
+               ok(groupItems.length==sizes[p],"group row count "+labels[p]);
+               for each(var it:Object in groupItems){ok(!it.get() && it.def===false && pages[0].items[keys].label==labels[p]+" · "+it.label,"grouped default permits "+it.label);items[it.key]=it;keys++;}
             }
             ok(keys==31,"exactly 31 separate options");
             var cases:Array=[
@@ -42,8 +43,8 @@ package
                ok(!MSWSmartExclusions.excludes({id:id},c.smartExclusions),"scope does not expand to "+id);
             ok(!MSWSmartExclusions.excludes(null,c.smartExclusions) && !MSWSmartExclusions.excludes({},c.smartExclusions),"missing targets and IDs are harmless");
             pages[0].items[3].set(false);ok(!c.smartExclusions.rat && c.smartExclusions.molerat,"same AI class species stay independent");
-            for each(it in pages[3].items)it.set(it.def);
-            ok(!c.smartExclusions.mine && !c.smartExclusions.balemine && c.smartExclusions.msp && c.smartExclusions.trigplate,"reset one page preserves other groups");
+            for each(it in pages[0].items)it.set(it.def);
+            ok(!c.smartExclusions.mine && !c.smartExclusions.balemine && !c.smartExclusions.msp && !c.smartExclusions.trigplate && c.smartEnabled && c.smartMultiLock,"single menu reset clears all groups and preserves smart modes");
             c.smartExclusions={rat:true,mine:"true",ant:1,raider:true};c.save();fresh=new MSWConfig();fresh.load();
             ok(fresh.smartExclusions.rat===true && !fresh.smartExclusions.mine && !fresh.smartExclusions.ant && !fresh.smartExclusions.hasOwnProperty("raider"),"stored data keeps only supported boolean selections");
             var a:Object={},b:Object={},lock:MSWSmartLock=new MSWSmartLock();lock.advance(a,false,0.6,c);lock.advance(b,true,0.2,c);lock.clearCandidate();

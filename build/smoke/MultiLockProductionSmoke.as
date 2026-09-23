@@ -72,7 +72,7 @@ package
             if(phase==0)
             {
                if(m.cfg.diag.frames<600)return;
-               ok(m.cfg.diag.ver=="1.9.0-lock-exemption","exact production version loaded");
+               ok(m.cfg.diag.ver=="1.9.1-exemption-menu","exact production version loaded");
                ok(!m.cfg.smartSmooth,"smooth mode defaults off before multi-lock test");
                m.cfg.smartSmooth=true;m.cfg.smartSmoothing=50;
                ok(!m.cfg.smartMultiLock,"new mode defaults off");

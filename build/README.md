@@ -133,3 +133,9 @@ v1.9.0-lock-exemption 在平滑弹道和激光4基础上增加五组31项。Pip�
 - 上述两个新脚本及生产多锁、平滑、激光读档脚本可加 `-GameDirectory <实际游戏根>`，供嵌套的独立工作树使用。输出都在各脚本所在build/out内，不共享实际存档。
 
 本轮冻结源码、产物与结果位于 `out/lock-exemption-work/`（独立git工作树）。正式候选是其 `build/out/MoreSkillsWeaponsMod.swf`。旧平滑/激光候选不含豁免，不能覆盖新正式版。启动测试 `ExpectedVersion` 改为 `1.9.0-lock-exemption`，HUD仍为 `3-multi-lock`；完整同字节验收与回滚见 knowledge/experiments/smart-lock-exemptions-20260923.md。
+
+## 2026-09-23 锁定豁免单菜单（v1.9.1）
+
+用户追加要求后，当前入口合并为一个「锁定豁免」，31项在其内部两页显示（18+13）；分类名保留在选项标签。F6共四个菜单，↑↓自动翻动长列表；恢复默认清除全部豁免，原配置键不变。
+
+候选及冻结源移至 `out/exemption-menu/`，版本标记 `1.9.1-exemption-menu`。更新后的 `test-exclusion-production.ps1` 验证312项，包括唯一入口、旧勾选跨页回显、内部分页和F6全部选项可达；截图为settings-page1.png、settings-page2.png、settings-f6.png。启动检查复用 `out/exclusion-production/runtime`，结果分别写入 `out/exemption-menu/startup` 和 `installed`；不要与使用同一运行目录的场景并发。上一节v1.9.0冻结产物为历史版本，不覆盖当前正式版。

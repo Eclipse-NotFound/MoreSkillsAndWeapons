@@ -34,7 +34,7 @@ try {
         $result=Join-Path $env:APPDATA "$testId\Local Store\production-exclusion.txt"
         if(!(Test-Path -LiteralPath $result)){throw 'No production-shot result'}
         Copy-Item -LiteralPath $result -Destination (Join-Path $output 'results.txt')
-        foreach ($name in @('heartbeat.txt','settings-bio.png','settings-nests.png','settings-small.png','settings-mines.png','settings-devices.png')) {
+        foreach ($name in @('heartbeat.txt','settings-page1.png','settings-page2.png','settings-f6.png')) {
             $artifact=Join-Path $env:APPDATA "$testId\Local Store\$name"
             if(Test-Path -LiteralPath $artifact){Copy-Item -LiteralPath $artifact -Destination $output}
         }

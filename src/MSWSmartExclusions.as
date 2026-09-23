@@ -86,9 +86,15 @@ package
       }
       public static function register(mod:*):void
       {
+         var combined:Array=[];
          for each(var group:Array in GROUPS)
-            mod.settings.registerPage("msw-exempt-"+group[0],"锁定豁免 · "+group[1],items(mod,group[0]),null,
-               "勾选＝不锁定；默认均不豁免。适用于单目标与多重锁定，不改变普通子弹的碰撞和伤害。");
+            for each(var option:Object in items(mod,group[0]))
+            {
+               option.label=group[1]+" · "+option.label;
+               combined.push(option);
+            }
+         mod.settings.registerPage("msw-exempt","锁定豁免",combined,null,
+            "勾选＝不锁定；用右侧上页/下页查看全部分类。单/多锁共用。恢复默认会清除全部豁免，不改变普通子弹的碰撞和伤害。");
       }
    }
 }
