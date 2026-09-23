@@ -28,6 +28,17 @@ package
          p=matrix.transformPoint(p);
          return {x:p.x,y:p.y};
       }
+      public static function available(u:*):Boolean
+      {
+         if(getQualifiedClassName(u)!="fe.unit::UnitTurret")return true;
+         // Hidden mounts retain their light child even with the casing closed.
+         // Only the fully deployed sprite exposes a hittable sensor.
+         if(u.vis==null || u.vis.osn==null || u.vis.osn.currentFrame!=1)return false;
+         var light:*=u.vis.osn.light;
+         if(light==null || !light.visible)return false;
+         var bounds:*=light.getBounds(light);
+         return bounds.width>0 && bounds.height>0;
+      }
       public static function point(u:*):Object
       {
          var type:String=getQualifiedClassName(u).split("::").pop();

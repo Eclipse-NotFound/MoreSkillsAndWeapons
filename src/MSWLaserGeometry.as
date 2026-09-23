@@ -17,7 +17,19 @@ package
       }
       public static function radius(u:*,r:Number):Number
       {return Math.max(3,Math.min(10,r*Math.sqrt(Math.max(1,u.scX*u.scY)/2400)));}
-      public static function front(u:*,dx:Number):Boolean {return dx*u.storona< -0.000001;}
+      public static function turret(u:*):Boolean {return getQualifiedClassName(u)=="fe.unit::UnitTurret";}
+      public static function front(u:*,dx:Number,dy:Number=0):Boolean
+      {
+         // Turret barrels rotate in two dimensions; storona is only a cached
+         // left/right AI flag and cannot define a sensor's current front.
+         if(turret(u))
+         {
+            if(u.currentWeapon==null)return false;
+            var a:Number=u.currentWeapon.rot;
+            return dx*Math.cos(a)+dy*Math.sin(a)< -0.000001;
+         }
+         return dx*u.storona< -0.000001;
+      }
       public static function eye(u:*):Object
       {return MSWLaserEyes.point(u);}
       public static function angle(a:Number):Number {while(a>Math.PI)a-=2*Math.PI;while(a< -Math.PI)a+=2*Math.PI;return a;}
@@ -69,14 +81,14 @@ package
             if(u===owner || !live(u,w.loc))continue;
             var e:Object=eye(u),along:Number=(e.x-x)*dx+(e.y-y)*dy,r:Number=radius(u,eyeRadius);
             var cross:Number=Math.abs((e.x-x)*dy-(e.y-y)*dx);
-            var throughEye:Boolean=along>=0 && along<=end && cross<=r;
+            var throughEye:Boolean=MSWLaserEyes.available(u) && along>=0 && along<=end && cross<=r;
             var eyeEntry:Number=throughEye?Math.max(0,along-Math.sqrt(Math.max(0,r*r-cross*cross))):Infinity;
             var d:Number=Math.min(rect(x,y,dx,dy,u,end),eyeEntry);
             if(d<best)
             {
                first=u;best=d;eyeAlong=along;
-               hit=throughEye && front(u,dx) && MSWU.num(u,"shithp")<=0;
-               reason=!throughEye?"body":(!front(u,dx)?"back":(MSWU.num(u,"shithp")>0?"shield":"eye"));
+               hit=throughEye && front(u,dx,dy) && MSWU.num(u,"shithp")<=0;
+               reason=!throughEye?"body":(!front(u,dx,dy)?"back":(MSWU.num(u,"shithp")>0?"shield":"eye"));
             }
          }
          if(hit)best=eyeAlong;

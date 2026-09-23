@@ -12,7 +12,7 @@ package
       public function MSWBlindController(m:*) {mod=m;}
       public function apply(u:*,w:*):Boolean
       {
-         if(!MSWLaserGeometry.hostile(u,w))return false;
+         if(!MSWLaserGeometry.hostile(u,w) || !MSWLaserEyes.available(u))return false;
          if(access==null)access=MSWU.cls("fe.unit.MSWBlindAccess");
          if(access==null)throw new Error("Laser host access missing from build");
          var s:Object=states[u];
@@ -20,7 +20,7 @@ package
          // Never resume an actor a script had already disabled.
          if(MSWU.has(u,"controlOn") && !u.controlOn)return false;
          s={unit:u,remaining:mod.cfg.laserDuration*30,x:u.X,y:u.Y,next:0,burst:0,dir:1,meleeWait:0,
-            vision:u.vision,hearing:MSWU.num(u,"hearing"),wp:u.currentWeapon,find:null,force:0};
+            vision:u.vision,hearing:MSWU.num(u,"hearing"),wp:u.currentWeapon,find:null,force:0,turret:MSWLaserGeometry.turret(u)};
          states[u]=s;
          if(s.wp!=null) {s.find=s.wp.findCel;s.force=s.wp.forceRot;}
          if(s.wp!=null && s.wp.tip==1)
@@ -93,6 +93,7 @@ package
             if(u.inter!=null)u.inter.step();
             u.getRasst2();if(u.radioactiv)u.ggModum();
             u.forces();
+            if(s.turret)u.walk=0;
             var wp:*=u.currentWeapon;
             if(u.stun<=0 && u.t_throw<=0 && !u.levit)
             {
@@ -103,10 +104,12 @@ package
                   s.dir=Math.random()<0.5?-1:1;
                   if(u.X>s.x+100)s.dir=-1;if(u.X<s.x-100)s.dir=1;
                   s.angle=Math.random()*Math.PI*2;
+                  if(s.turret)s.angle=MSWLaserGeometry.angle(s.angle);
                }
-               access["facing"](u,Math.cos(s.angle)<0?-1:1);
+               // A turret rotates its barrel, not its mounting or armour.
+               if(!s.turret)access["facing"](u,Math.cos(s.angle)<0?-1:1);
                u.setCel(null,u.X+Math.cos(s.angle)*700,u.Y-u.scY/2+Math.sin(s.angle)*700);
-               if(!u.fixed)
+               if(!u.fixed && !s.turret)
                {
                   u.walk=s.dir;
                   u.dx+=s.dir*Math.max(0.2,MSWU.num(u,"accel",0.5));
@@ -132,12 +135,16 @@ package
                for(var i:int=0;i<div;i++)u.run(div);
             }
             u.checkWater();u.actions();u.setVisPos();
-            if(u.hpbar!=null)u.setHpbarPos();u.animate();
+            if(u.hpbar!=null)u.setHpbarPos();
+            if(!s.turret)u.animate();
             u.onCursor=u.isVis && u.X1<w.celX && u.X2>w.celX && u.Y1<w.celY && u.Y2>w.celY?u.prior:0;
             // Mark births around the child weapon steps; old in-flight shots
             // keep their original semantics. Do not change the shooter's faction.
             var before:Dictionary=chainSet(loc);
             for each(var child:* in u.childObjs)if(child!=null)child.step();
+            // Native Weapon.step constrains fixed mount firing arcs. Draw the
+            // resulting barrel angle, rather than the unclamped requested one.
+            if(s.turret)u.animate();
             var b:*=loc.firstObj;
             while(b!=null)
             {
