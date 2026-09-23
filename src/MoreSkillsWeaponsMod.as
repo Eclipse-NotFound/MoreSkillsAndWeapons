@@ -147,7 +147,7 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.6.2-smart-keep-lock");
+         cfg.diagSet("ver", "1.7.0-multi-lock");
          cfg.diagSet("smartHudVersion", MSWSmartHUD.VERSION);
          settings.registerPage("msw", "MoreSkills&Weapons",
             MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");

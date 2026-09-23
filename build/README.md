@@ -39,7 +39,7 @@ v1.5.1 起真实游戏 UI 测试需要正式安装 ModSettings 及其 loader。`
 
 伤害诊断：`./test-damage.ps1` 在隔离游戏副本中调用原版 Bullet.step/run 和 Unit.udarBullet，验证十次连续反弹的实际扣血、护甲/穿甲、精确墙面碰撞及轻机枪基础精度下的距离命中率。世界暂停后手动推进子弹，并非自然实战录像；命中率统计是随机样本。结果在 `out/damage/results.txt`，`out/damage/DamageSmokeMod.swf` 是测试探针，禁止部署到正式 release。
 
-智能武器：`test-smart-unit.ps1` 验证锁定状态机、参数保存和寻路/转弯数学；`test-smart.ps1` 验证原版首步、绕实体箱体命中、跳弹继承、霰弹特殊弹药、64 发局部寻路、实际帧锁定/遮挡/恢复/暂停，以及 13 项设置与 F6（含视野外保持锁定）。`test-smart-sandy.ps1` 只读复制已安装 Sandevistan 到隔离副本，用独立配置验证真实时停/回放和重建弹丸匹配，绝不修改其正式配置。
+智能武器：`test-smart-unit.ps1` 验证锁定状态机、参数保存和寻路/转弯数学；`test-smart.ps1` 验证原版首步、绕实体箱体命中、跳弹继承、霰弹特殊弹药、64 发局部寻路、实际帧锁定/遮挡/恢复/暂停，以及 14 项设置与 F6（含多重锁定和视野外保持锁定）。`test-smart-sandy.ps1` 只读复制已安装 Sandevistan 到隔离副本，用独立配置验证真实时停/回放和重建弹丸匹配，绝不修改其正式配置。
 
 非致命激光枪：`test-laser.ps1` 验证眼部几何、原生半自动/装填/SATS、赠枪与存档接续、36 类敌人接管/恢复及实际攻击、恐慌子弹/爆炸/近战误伤、11 项配置与 HUD。`-Sandevistan` 只读复制已安装时停模组，追加冻结/慢步/开火/回放检查。输出在 `out/laser`；`LaserSmokeMod`、测试专用的 `smoke/SandevistanMod.as` 错误捕获器和任何测试副本都不能安装。
 
@@ -93,3 +93,11 @@ pfe.swf 的 MainFE 已追加本模组 loader 并部署到游戏目录：
 ```
 
 安装后省略 ProductionSwf，输出改为 out/smart-tuning-installed，核对实际 release 同字节。旧命令里的 ExpectedVersion 属历史版本，不用于当前产物。
+
+## 2026-09-23 多重锁定
+
+智能规则增至 79 条，包含独立获取/脱锁、轮换与 256 目标无固定上限。`test-multi-lock-production.ps1 -ProductionSwf <生产SWF> -Nodebug` 原样加载生产文件，验证 51 项多目标行为：目视排除、三目标实际伤害、9 发均分、真实霰弹分散、独立遮挡/保持、死亡、模式切换及菱形。输出在 out/multi-lock-production。
+
+`test-smart-sandy.ps1 -MultiLock` 使用单独 out/sandy-multi 副本，三次实际开火分别记录 30/40/50% 半径与不同目标。回放前改为 200% 并关闭多重模式，按每帧出生顺序核对原快照。开始前等待自动 Pip 初始化结束；超时也保留心跳，宿主异常会转为失败报告。原单目标测试入口保留。
+
+当前候选为 out/multi-lock/MoreSkillsWeaponsMod.swf，包含已安装的激光组件 3-visual-eyes，版本 1.7.0-multi-lock、HUD 3-multi-lock。安装前后用 test-installed.ps1 指定这些标记与独立 OutputDirectory。激光生产回归新增 OutputDirectory / ProbeSourcePath 参数，默认行为不变，供并发任务固定各自产物和探针；候选不能套用较新版本探针的视觉断言。

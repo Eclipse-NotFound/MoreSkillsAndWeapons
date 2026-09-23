@@ -1,19 +1,21 @@
-param([string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$SourcePath='../src')
+param([string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$SourcePath='../src', [switch]$MultiLock)
 $ErrorActionPreference = 'Stop'
 & (Join-Path $PSScriptRoot 'build-smart-host.ps1') -AnimateRoot $AnimateRoot
 $gameRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
 $runtimeDir = Join-Path $PSScriptRoot 'test-sandy-runtime'
 $outputDir = Join-Path $PSScriptRoot 'out\sandy-smart'
+$probeName='SandySmartSmokeMod'
+if($MultiLock){$runtimeDir=Join-Path $PSScriptRoot 'out\sandy-multi\runtime';$outputDir=Join-Path $PSScriptRoot 'out\sandy-multi';$probeName='MultiSandySmartSmokeMod'}
 $javaPath = Join-Path $AnimateRoot 'jre\bin\java.exe'
 $compilerPath = Join-Path $AnimateRoot 'Common\Configuration\ActionScript 3.0\bin\mxmlc.jar'
 New-Item -ItemType Directory -Force $runtimeDir,$outputDir,(Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release') | Out-Null
 Push-Location $PSScriptRoot
 try {
-    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-target-player=11.1' ("-source-path+="+$SourcePath) '-includes=fe.unit.MSWBlindAccess,fe.inter.MSWLaserSats,fe.weapon.MSWPanicBlade,fe.weapon.MSWDazzlerWeapon' '-external-library-path+=out/SmartHost.swc' '-output=out/sandy-smart/Production.swf' (Join-Path $SourcePath 'MoreSkillsWeaponsMod.as')
+    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-target-player=11.1' ("-source-path+="+$SourcePath) '-includes=fe.unit.MSWBlindAccess,fe.inter.MSWLaserSats,fe.weapon.MSWPanicBlade,fe.weapon.MSWDazzlerWeapon' '-external-library-path+=out/SmartHost.swc' ("-output="+(Join-Path $outputDir 'Production.swf')) (Join-Path $SourcePath 'MoreSkillsWeaponsMod.as')
     if ($LASTEXITCODE -ne 0) { throw 'Mod compilation failed' }
-    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-debug=true' '-target-player=11.1' ("-source-path+="+$SourcePath) '-includes=fe.unit.MSWBlindAccess,fe.inter.MSWLaserSats,fe.weapon.MSWPanicBlade,fe.weapon.MSWDazzlerWeapon' '-external-library-path+=out/SmartHost.swc' '-source-path+=smoke' '-output=out/sandy-smart/SandySmartSmokeMod.swf' 'smoke/SandySmartSmokeMod.as'
+    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-debug=true' '-target-player=11.1' ("-source-path+="+$SourcePath) '-includes=fe.unit.MSWBlindAccess,fe.inter.MSWLaserSats,fe.weapon.MSWPanicBlade,fe.weapon.MSWDazzlerWeapon' '-external-library-path+=out/SmartHost.swc' '-source-path+=smoke' ("-output="+(Join-Path $outputDir ($probeName+'.swf'))) ('smoke/'+$probeName+'.as')
     if ($LASTEXITCODE -ne 0) { throw 'Smoke harness compilation failed' }
-    Copy-Item -LiteralPath (Join-Path $outputDir 'SandySmartSmokeMod.swf') -Destination (Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf')
+    Copy-Item -LiteralPath (Join-Path $outputDir ($probeName+'.swf')) -Destination (Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release\MoreSkillsWeaponsMod.swf')
     Get-ChildItem -LiteralPath $gameRoot -File | Where-Object { $_.Name -eq 'pfe.swf' -or $_.Name -match '^(sound|sprite|texture).*\.swf$' -or $_.Extension -eq '.xml' } | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $runtimeDir }
     $manifest=Join-Path $gameRoot 'mods\loader-manifest.txt'
     if(Test-Path -LiteralPath $manifest){Copy-Item -LiteralPath $manifest -Destination (Join-Path $runtimeDir 'mods\loader-manifest.txt')}
@@ -25,6 +27,7 @@ try {
     Copy-Item -LiteralPath (Join-Path $gameRoot 'mods\Sandevistan\release\SandevistanMod.swf') -Destination $sandyDir
     "hotkey=220`nduration=240`ncooldown=0`nreplayspeed=3`nslowfactor=5`ndiaglog=1`ndebugtest=0`nesandyenabled=0" | Set-Content -LiteralPath (Join-Path $sandyDir 'config.txt') -Encoding utf8
     $testId = 'pfe-msw-sandy-smart-' + [guid]::NewGuid().ToString('N')
+    $testId | Set-Content -LiteralPath (Join-Path $outputDir 'test-id.txt') -Encoding utf8
     $descriptor = Join-Path $runtimeDir 'app_msw_smart_test.xml'
     @"
 <application xmlns="http://ns.adobe.com/air/application/30.0">
@@ -56,6 +59,10 @@ try {
     }
     finally {
         if (-not $proc.HasExited) { Stop-Process -Id $proc.Id }
+        foreach($name in @('results.txt','heartbeat.txt')) {
+            $saved=Join-Path $storageDir $name
+            if(Test-Path -LiteralPath $saved){Copy-Item -LiteralPath $saved -Destination $outputDir}
+        }
         Remove-Item -LiteralPath $descriptor
     }
 }

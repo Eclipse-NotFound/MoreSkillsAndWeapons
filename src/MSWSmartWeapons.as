@@ -10,6 +10,8 @@ package
    {
       private var mod:*;
       public var lock:MSWSmartLock=new MSWSmartLock();
+      public var multiLock:MSWSmartMultiLock=new MSWSmartMultiLock();
+      private var multiMode:Boolean=false;
       private var lastLoc:*;
       private var lastPlayer:*;
       private var hook:*;
@@ -78,15 +80,27 @@ package
             if(w.loc!==lastLoc || w.gg!==lastPlayer)
             {
                detach(); lastLoc=w.loc; lastPlayer=w.gg;
-               states=new Dictionary(true); observed=new Dictionary(true); lock.clear();
+               states=new Dictionary(true); observed=new Dictionary(true); clearLocks();
                recording=false;replaying=false;history=[];
             }
-            if(!mod.cfg.smartEnabled || !alivePlayer(w)) { lock.clear(); stopGuidance(); detach(); hide(); return; }
+            syncMode();
+            if(!mod.cfg.smartEnabled || !alivePlayer(w)) { clearLocks(); stopGuidance(); detach(); hide(); return; }
             prepare(w);
             if(!replaying) attach(w);
-            if(w.sats!=null && w.sats.active) lock.clear();
+            if(w.sats!=null && w.sats.active) clearLocks();
             if(!active(w)) { hide(); return; }
-            if(!weaponAllowed(w.gg.currentWeapon)) lock.clear();
+            if(!weaponAllowed(w.gg.currentWeapon)) clearLocks();
+            else if(multiMode)
+            {
+               var allowed:Array=[],seen:Array=[];
+               for each(var unit:* in w.loc.units)
+               {
+                  if(!targetAllowed(unit,w)) continue;
+                  allowed.push(unit);
+                  if(visible(unit,w)) seen.push(unit);
+               }
+               multiLock.advance(allowed,seen,dt,mod.cfg);
+            }
             else
             {
                if(lock.target!=null && !targetAllowed(lock.target,w)) lock.clear();
@@ -106,6 +120,13 @@ package
             draw(w);
          }
          catch(e:*) { mod.cfg.diagSet("smartError","frame:"+e); }
+      }
+      private function clearLocks():void
+      { lock.clear();multiLock.clear(); }
+      private function syncMode():void
+      {
+         if(multiMode==mod.cfg.smartMultiLock) return;
+         multiMode=mod.cfg.smartMultiLock;clearLocks();
       }
       private function attach(w:*):void
       {
@@ -170,6 +191,8 @@ package
       }
       private function scan(w:*,advance:Boolean):void
       {
+         syncMode();
+         var valid:Function=function(u:*):Boolean { return targetAllowed(u,w); };
          var b:*=w.loc.firstObj; var guard:int=0;
          while(b!=null && guard++<12000)
          {
@@ -180,10 +203,12 @@ package
                   observed[b]=true;
                   var shot:Object=null;
                   if(eligible(b,w) && replaying) shot=replayShot(b);
-                  else if(eligible(b,w) && lock.target!=null && lock.strength>0 && targetAllowed(lock.target,w) && active(w))
+                  else if(eligible(b,w) && active(w))
                   {
-                     shot={target:lock.target,strength:lock.strength,turn:mod.cfg.smartTurn,turnRadius:mod.cfg.smartTurnRadius,
-                        remaining:mod.cfg.smartLife,route:[],routeAge:0,goalX:0,goalY:0};
+                     var selected:MSWSmartLock=multiMode?multiLock.pick(valid):lock;
+                     if(selected!=null && selected.target!=null && selected.strength>0 && valid(selected.target))
+                        shot={target:selected.target,strength:selected.strength,turn:mod.cfg.smartTurn,turnRadius:mod.cfg.smartTurnRadius,
+                           remaining:mod.cfg.smartLife,route:[],routeAge:0,goalX:0,goalY:0};
                   }
                   if(shot!=null) { states[b]=shot;b.precision=0;b.miss=0;mod.cfg.diagAdd("smartShots"); }
                   if(recording && eligible(b,w))
@@ -238,12 +263,15 @@ package
       public function snapshot(b:*):Object { return states[b]; }
       private function replayShot(b:*):Object
       {
-         var id:String=MSWU.str(b.weap,"id");var best:Object=null;var distance:Number=97;
+         var id:String=MSWU.str(b.weap,"id");var best:Object=null;
          for each(var record:Object in history)
          {
             if(record.used || record.id!=id) continue;
-            var d:Number=MSWSmartRoute.distance(record.x,record.y,b.begx,b.begy);
-            if(d<distance) {distance=d;best=record;if(d<1)break;}
+            // Sandevistan replays fire events in recording order, but the
+            // reconstructed muzzle can shift with pose. Nearest-only matching
+            // can steal a later shot's target; position is a tolerance gate.
+            if(MSWSmartRoute.distance(record.x,record.y,b.begx,b.begy)<97)
+            {best=record;break;}
          }
          if(best==null) { mod.cfg.diagAdd("smartReplayUnmatched");return null; }
          best.used=true;
@@ -267,7 +295,8 @@ package
       private function hide():void { hud.visible=false; }
       private function draw(w:*):void
       {
-         hud.render(w,lock,mod.cfg.smartHudSize);
+         if(multiMode) hud.renderMany(w,multiLock.locks,mod.cfg.smartHudSize);
+         else hud.render(w,lock,mod.cfg.smartHudSize);
       }
    }
 }

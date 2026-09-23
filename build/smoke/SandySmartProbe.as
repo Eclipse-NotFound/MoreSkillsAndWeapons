@@ -2,6 +2,7 @@ package
 {
    import flash.events.Event;
    import flash.events.KeyboardEvent;
+   import flash.events.UncaughtErrorEvent;
    import flash.utils.Timer;
    import flash.utils.Dictionary;
    import flash.utils.getQualifiedClassName;
@@ -13,7 +14,9 @@ package
       private var frozen:int=0,budgetChecks:int=0,replaySteps:int=0;
       private var preExisting:*,preBudget:Number,heldChecks:int=0;
       private var slowCurves:int=0,replayCurves:int=0,maxKink:Number=0;
-      public function SandySmartProbe(){timer.addEventListener("timer",tick);timer.start();}
+      private var multi:Boolean=false,targetList:Array=[],recordTargets:Array=[],replayTargets:Array=[];
+      private var errorHooked:Boolean=false;
+      public function SandySmartProbe(multiMode:Boolean=false){multi=multiMode;timer.addEventListener("timer",tick);timer.start();}
       private function ok(v:Boolean,s:String):void{if(!v)throw new Error(s);log+="PASS "+s+"\n";}
       private function key():void{w.main.stage.dispatchEvent(new KeyboardEvent(KeyboardEvent.KEY_DOWN,true,false,0,220));w.main.stage.dispatchEvent(new KeyboardEvent(KeyboardEvent.KEY_UP,true,false,0,220));}
       private function tick(e:Event):void
@@ -23,11 +26,20 @@ package
             t++;if(t%60==0)write("heartbeat.txt","t="+t+" phase="+phase+" frozen="+frozen+" replay="+replaySteps+"\n"+log);
             if(t>1100)throw new Error("timeout "+phase);
             m=MoreSkillsWeaponsMod.testInstance();w=MSWU.world();if(m==null || w==null || w.gg==null || w.loc==null || !w.loc.active)return;
+            if(!errorHooked)
+            {
+               errorHooked=true;
+               w.main.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR,function(error:UncaughtErrorEvent):void {
+                  error.preventDefault();finish("FAIL uncaught host error: "+error.error+"\n"+(error.error is Error?Error(error.error).getStackTrace():""),1);
+               });
+               w.main.addEventListener(Event.ENTER_FRAME,observeReplay,false,-10000);
+            }
             if(w.verror.visible)throw new Error("game: "+w.verror.txt.text);
             if(m.cfg.diag.smartError!=null)throw new Error(m.cfg.diag.smartError);
             if(phase==0)
             {
-               if(t<160)return;
+               // Wait for the test-only automatic Pip opening to finish first.
+               if(t<160 || m.cfg.diag.frames<600)return;
                var pages:Array=MSWU.has(m.settings,"api") && m.settings.api!=null ? m.settings.api.getPages() : m.settings.getPages();
                var found:Boolean=false;for each(var page:Object in pages)if(page.modId=="sandevistan")found=true;
                if(!found)return;
@@ -42,7 +54,20 @@ package
                target.isVis=true;target.blood=0;target.showNumbs=false;target.opt=null;target.X=800;target.Y=320;target.X1=785;target.X2=815;target.Y1=260;target.Y2=320;
                w.loc.units.push(target);
                m.cfg.smartEnabled=true;m.cfg.smartTurnRadius=30;m.cfg.smartLife=2;m.cfg.ricochet=false;m.cfg.smartHold=3;m.cfg.smartDecay=5;
-               m.smart.frame(w);m.smart.lock.target=target;m.smart.lock.strength=1;
+               targetList=[target];
+               if(multi)
+               {
+                  for(var targetIndex:int=0;targetIndex<2;targetIndex++)
+                  {
+                     var other:*=new U();other.loc=w.loc;other.fraction=2;other.sost=1;other.hp=other.maxhp=1000000;
+                     other.isVis=true;other.blood=0;other.showNumbs=false;other.opt=null;other.X=750-targetIndex*70;other.Y=220-targetIndex*80;
+                     other.X1=other.X-15;other.X2=other.X+15;other.Y1=other.Y-60;other.Y2=other.Y;
+                     w.loc.units.push(other);targetList.push(other);
+                  }
+               }
+               m.cfg.smartMultiLock=multi;m.cfg.smartKeepOutOfSight=multi;m.smart.frame(w);
+               if(multi)m.smart.multiLock.advance(targetList,targetList,m.cfg.smartAcquire,m.cfg);
+               else {m.smart.lock.target=target;m.smart.lock.strength=1;}
                var B:Class=MSWU.cls("fe.weapon.Bullet");preExisting=new B(w.gg,250,240,null,true);preExisting.weap=weapon;preExisting.damage=20;preExisting.dx=2;preExisting.vel=2;
                m.smart.frame(w);ok(m.smart.snapshot(preExisting)!=null,"pre-stop smart bullet has its own budget");
                key();ok(w.onPause && !w.godMode,"real hotkey enters controllable time stop");phase=1;since=t;return;
@@ -52,7 +77,7 @@ package
             {
                if(getQualifiedClassName(b)=="fe.weapon::Bullet" && b.owner===w.gg && (s=m.smart.snapshot(b))!=null)
                {
-                  if(s.turnRadius!=30)throw new Error("recorded/replayed shot lost radius snapshot");
+                  if((!multi || b===preExisting) && s.turnRadius!=30)throw new Error("recorded/replayed shot lost radius snapshot");
                   if(s.motionPath!=null && s.motionPath.length>2)
                   {
                      var pts:Array=s.motionPath;var firstAngle:Number=Math.atan2(pts[1].y-pts[0].y,pts[1].x-pts[0].x);
@@ -67,6 +92,7 @@ package
                   }
                   if(phase==1)
                   {
+                     if(multi && initial[b]==null && b!==preExisting)recordTargets.push({unit:s.target,radius:s.turnRadius,x:b.begx,y:b.begy});
                      if(initial[b]!=null && !b.babah)
                      {
                         var prev:Object=initial[b];
@@ -76,19 +102,29 @@ package
                      initial[b]={liv:b.liv,remaining:s.remaining};
                   }
                   else if(w.onPause && w.godMode && initial[b]==null)
-                  {if(replayed[b]==null)log+="REPLAY born x="+b.X+" y="+b.Y+" dx="+b.dx+" dy="+b.dy+" damage="+b.damage+" target="+target.X+","+target.Y+"\n";replayed[b]=true;if(s.remaining<2 && b.precision==0 && b.miss==0)replaySteps++;}
+                  {observeReplay();if(s.remaining<2 && b.precision==0 && b.miss==0)replaySteps++;}
                }
                b=b.nobj;
             }
             if(phase==1)
             {
                w.celX=800;w.celY=280;w.gg.celX=800;w.gg.celY=280;
-               if(t-since==6 || t-since==16 || t-since==26){weapon.t_auto=0;weapon.t_attack=0;weapon.t_reload=0;ok(weapon.attack(),"actual pistol attack accepted");}
+               if(t-since==6 || t-since==16 || t-since==26)
+               {
+                  if(multi)
+                  {
+                     m.cfg.smartTurnRadius=30+int((t-since-6)/10)*10;
+                     log+="RECORD mode="+m.cfg.smartMultiLock+" locks="+m.smart.multiLock.locks.length+" weapon="+w.gg.currentWeapon.id+" active="+MSWU.inGameplay(w)+" control="+w.gg.ggControl+"\n";
+                     for each(var watched:* in targetList)log+="TARGET x="+watched.X+" allowed="+m.smart.targetAllowed(watched,w)+" listed="+w.loc.units.indexOf(watched)+" lock="+(m.smart.multiLock.stateFor(watched)==null?"missing":m.smart.multiLock.stateFor(watched).strength)+"\n";
+                  }
+                  weapon.t_auto=0;weapon.t_attack=0;weapon.t_reload=0;ok(weapon.attack(),"actual pistol attack accepted");
+               }
                if(t-since>=40)
                {
                   ok(frozen>0 && budgetChecks>0,"real time-stop frozen frames and slow physics budget agree");
                   preBudget=m.smart.snapshot(preExisting).remaining;
                   m.cfg.smartTurnRadius=200; // Replay must use the recorded 30%, not current settings.
+                  if(multi){m.cfg.smartMultiLock=false;m.smart.multiLock.clear();}
                   key();ok(w.onPause && w.godMode,"real hotkey starts Sandevistan replay");phase=2;since=t;
                }
             }
@@ -101,6 +137,18 @@ package
                ok(!(m.cfg.diag.smartReplayUnmatched>0),"no recreated shot loses its recording match");
                ok(replaySteps>0,"actual replay steps curve recreated accurate bullets");
                ok(m.cfg.smartTurnRadius==200,"replay retained recorded 30% radius after settings changed to 200%");
+               if(multi)
+               {
+                  ok(recordTargets.length==3 && recordTargets[0].unit!==recordTargets[1].unit && recordTargets[1].unit!==recordTargets[2].unit && recordTargets[0].unit!==recordTargets[2].unit,"time-stop recording distributes three real shots over three targets");
+                  var match:Boolean=replayTargets.length==recordTargets.length;
+                  for(var ri:int=0;ri<recordTargets.length;ri++)
+                  {
+                     var record:Object=recordTargets[ri],replay:Object=ri<replayTargets.length?replayTargets[ri]:null;
+                     log+="SNAPSHOT shot="+ri+" muzzle="+record.x+","+record.y+" target="+record.unit.X+","+record.unit.Y+" radius="+record.radius+" replay="+(replay==null?"missing":replay.unit.X+","+replay.unit.Y+" radius="+replay.radius)+"\n";
+                     if(replay==null || replay.unit!==record.unit || replay.radius!=record.radius)match=false;
+                  }
+                  ok(match,"replay restores each recorded target after multi mode and current locks are cleared");
+               }
                ok(heldChecks>0,"pre-existing bullet replay budget verified");
                ok(target.hp<target.maxhp,"replayed smart bullets settle real target damage");
                ok(!w.godMode,"Sandevistan restores normal world state");
@@ -109,6 +157,25 @@ package
             }
          }
          catch(err:*){finish("FAIL "+err+"\n"+err.getStackTrace()+"\ndiag="+(m==null?"":JSON.stringify(m.cfg.diag)),1);}
+      }
+      private function observeReplay(e:Event=null):void
+      {
+         if(m==null || w==null || phase!=2 || !w.onPause || !w.godMode)return;
+         var b:*=w.loc.firstObj;
+         while(b!=null)
+         {
+            if(getQualifiedClassName(b)=="fe.weapon::Bullet" && b.owner===w.gg && initial[b]==null && replayed[b]==null)
+            {
+               var s:Object=m.smart.snapshot(b);
+               if(s!=null)
+               {
+                  replayed[b]=true;
+                  log+="REPLAY birth muzzle="+b.begx+","+b.begy+" target="+s.target.X+","+s.target.Y+" radius="+s.turnRadius+"\n";
+                  if(multi)replayTargets.push({unit:s.target,radius:s.turnRadius,x:b.begx,y:b.begy});
+               }
+            }
+            b=b.nobj;
+         }
       }
       private function write(name:String,s:String):void{var F:Class=MSWU.cls("flash.filesystem.File"),S:Class=MSWU.cls("flash.filesystem.FileStream");var f:*=new S();f.open(F["applicationStorageDirectory"].resolvePath(name),"write");f.writeUTFBytes(s);f.close();}
       private function finish(s:String,code:int):void{write("results.txt",log+s+"\n");timer.stop();MSWU.cls("flash.desktop.NativeApplication")["nativeApplication"].exit(code);}

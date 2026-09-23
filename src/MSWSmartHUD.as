@@ -9,7 +9,7 @@ package
    /** Screen-sized lock markers. Lock state owns timing, visibility and expiry. */
    public class MSWSmartHUD extends Sprite
    {
-      public static const VERSION:String="2-adjustable-size";
+      public static const VERSION:String="3-multi-lock";
       private static const RED:uint=0xFF4040;
       private static const BLUE:uint=0x40A8FF;
 
@@ -21,14 +21,21 @@ package
       }
 
       public function render(w:*,lock:MSWSmartLock,size:Number=24):void
+      { renderMany(w,[lock],size); }
+
+      public function renderMany(w:*,locks:Array,size:Number=24):void
       {
          if(parent!==w.main) w.main.addChild(this);
          graphics.clear();
-         visible=lock.target!=null || lock.candidate!=null;
+         visible=false;
          var radius:Number=(isFinite(size)?Math.max(12,Math.min(80,size)):24)/2;
-         if(lock.target!=null) marker(w,lock.target,lock.strength,radius);
-         if(lock.candidate!=null && lock.candidate!==lock.target)
-            marker(w,lock.candidate,lock.progress,radius);
+         for each(var lock:MSWSmartLock in locks)
+         {
+            if(lock.target!=null || lock.candidate!=null) visible=true;
+            if(lock.target!=null) marker(w,lock.target,lock.strength,radius);
+            if(lock.candidate!=null && lock.candidate!==lock.target)
+               marker(w,lock.candidate,lock.progress,radius);
+         }
       }
 
       private function marker(w:*,u:*,progress:Number,radius:Number):void

@@ -11,6 +11,7 @@ package
       private function near(a:Number,b:Number,s:String):void { ok(Math.abs(a-b)<0.00001,s+" got "+a); }
       public function SmartTests()
       {
+         trace("SmartTests: start");
          try
          {
             var c:MSWConfig=new MSWConfig(), l:MSWSmartLock=new MSWSmartLock();
@@ -50,11 +51,12 @@ package
             near(c.smartTurnRadius,200,"radius upper bound");near(c.smartHudSize,12,"HUD lower bound");
             var legacy:SharedObject=SharedObject.getLocal("MSWConfig");legacy.clear();legacy.data.smartTurn=1440;legacy.data.smartEnabled=true;legacy.flush();
             var migrated:MSWConfig=new MSWConfig();migrated.load();
-            ok(migrated.smartTurn==1440 && migrated.smartEnabled && migrated.smartTurnRadius==50 && migrated.smartHudSize==24 && !migrated.smartKeepOutOfSight,"old config preserves choices and adds new defaults");
-            var items:Array=MSWSettingsHub.buildSmartItems({cfg:c});ok(items.length==13,"all thirteen adjustable settings available");
+            ok(migrated.smartTurn==1440 && migrated.smartEnabled && migrated.smartTurnRadius==50 && migrated.smartHudSize==24 && !migrated.smartKeepOutOfSight && !migrated.smartMultiLock,"old config preserves choices and adds new defaults");
+            var items:Array=MSWSettingsHub.buildSmartItems({cfg:c});ok(items.length==14,"all fourteen adjustable settings available");
             for each(var item:Object in items) { item["set"](item.def); near(Number(item["get"]()),Number(item.def),"default "+item.key); }
-            var fresh:MSWConfig=new MSWConfig(); c.smartEnabled=true;c.smartKeepOutOfSight=true;c.smartGrace=0.25;c.smartTurnRadius=30;c.smartHudSize=18;c.save();fresh.load();
-            ok(fresh.smartEnabled && fresh.smartKeepOutOfSight && fresh.smartGrace==0.25 && fresh.smartTurnRadius==30 && fresh.smartHudSize==18,"all smart settings persist");
+            var fresh:MSWConfig=new MSWConfig(); c.smartEnabled=true;c.smartMultiLock=true;c.smartKeepOutOfSight=true;c.smartGrace=0.25;c.smartTurnRadius=30;c.smartHudSize=18;c.save();fresh.load();
+            ok(fresh.smartEnabled && fresh.smartMultiLock && fresh.smartKeepOutOfSight && fresh.smartGrace==0.25 && fresh.smartTurnRadius==30 && fresh.smartHudSize==18,"all smart settings persist");
+            multiTests();
             var wall:Object={phis:1,phX1:90,phX2:130,phY1:40,phY2:120};
             var loc:Object={getAbsTile:function(x:Number,y:Number):* {return x>=90 && x<=130 && y>=40 && y<=120?wall:{phis:0};}};
             ok(!MSWSmartRoute.clear(loc,0,80,210,80),"wall blocks direct shot");
@@ -78,8 +80,53 @@ package
          }
          catch(e:*) { finish("FAIL "+e+"\n"+e.getStackTrace(),1); }
       }
+      private function multiTests():void
+      {
+         var cfg:MSWConfig=new MSWConfig(),multi:MSWSmartMultiLock=new MSWSmartMultiLock();
+         var a:Object={},b:Object={},c:Object={},d:Object={};
+         var all:Array=[a,b,c];
+         multi.advance(all,[a,b,b],0.3,cfg);
+         ok(multi.locks.length==2 && multi.stateFor(c)==null,"only visible targets start; repeated units do not duplicate");
+         near(multi.stateFor(a).progress,0.5,"first target acquires in parallel");
+         near(multi.stateFor(b).progress,0.5,"second target acquires in parallel");
+         ok(multi.pick()==null,"unfinished locks receive no projectile");
+         multi.advance(all,all,0.3,cfg);
+         ok(multi.stateFor(a).target===a && multi.stateFor(b).target===b,"two visible targets finish together");
+         near(multi.stateFor(c).progress,0.5,"later arrival has its own clock");
+         ok(multi.pick().target===a && multi.pick().target===b && multi.pick().target===a,"rotation skips unfinished candidate");
+         multi.clear();multi.advance(all,all,0.6,cfg);
+         var order:Boolean=true;
+         for(var i:int=0;i<9;i++) if(multi.pick().target!==all[i%3])order=false;
+         ok(order,"consecutive bullets and pellets rotate evenly over all locks");
+         ok(multi.pick().target===a,"rotation continues after a volley");
+         multi.advance([b,c],[b,c],0,cfg);
+         ok(multi.stateFor(a)==null && multi.pick().target===b,"removing previous target does not skip the next target");
+         ok(multi.pick(function(u:*):Boolean{return u!==c;}).target===b,"death between frames is skipped before assignment");
+         ok(multi.pick(function(u:*):Boolean{return false;})==null,"no valid target ends selection finitely");
+         multi.clear();multi.advance(all,all,0.6,cfg);
+         multi.advance(all,[a,c],cfg.smartHold+cfg.smartDecay/2,cfg);
+         near(multi.stateFor(b).strength,0.5,"occluded target decays independently");
+         near(multi.stateFor(a).strength,1,"visible target stays fully locked");
+         cfg.smartKeepOutOfSight=true;
+         multi.advance(all,[a,c],20,cfg);
+         near(multi.stateFor(b).strength,0.5,"hold switch preserves each unseen lock's current strength");
+         multi.advance([a,b,c,d],[a,c,d],0.3,cfg);
+         multi.advance([a,b,c,d],[a,c],cfg.smartGrace+cfg.smartRetreat+0.1,cfg);
+         ok(multi.stateFor(d)==null,"hold switch never preserves an unfinished new target");
+         cfg.smartKeepOutOfSight=false;
+         multi.advance(all,[a,c],cfg.smartHold+cfg.smartDecay,cfg);
+         ok(multi.stateFor(b)==null && multi.locks.length==2,"expired lock removed without touching other targets");
+         multi.advance([a,c],[],cfg.smartHold+cfg.smartDecay,cfg);
+         ok(multi.locks.length==0 && multi.pick()==null,"all expired targets release references");
+         all=[];for(i=0;i<256;i++)all.push({});
+         multi.advance(all,all,0.6,cfg);order=true;
+         for(i=0;i<all.length;i++)if(multi.pick().target!==all[i])order=false;
+         ok(multi.locks.length==256 && order,"all visible targets retained without an artificial target cap");
+         multi.clear();ok(multi.locks.length==0 && multi.pick()==null,"mode or world reset clears all locks and rotation");
+      }
       private function finish(s:String,code:int):void
       {
+         trace(s);
          var F:Class=getDefinitionByName("flash.filesystem.File") as Class, S:Class=getDefinitionByName("flash.filesystem.FileStream") as Class;
          var f:*=new S();f.open(F["applicationStorageDirectory"].resolvePath("results.txt"),"write");f.writeUTFBytes(report+s+"\n");f.close();
          getDefinitionByName("flash.desktop.NativeApplication")["nativeApplication"].exit(code);

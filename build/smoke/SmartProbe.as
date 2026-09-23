@@ -43,7 +43,7 @@ package
             }
             if(phase==1 && t-since>10)
             {
-               rows=[];collect(w.main);ok(rows.length==13,"real smart settings page shows 13 controls");
+               rows=[];collect(w.main);ok(rows.length==14,"real smart settings page shows 14 controls");
                ok(rows[0].settingsItem.key=="smartEnabled" && !m.cfg.smartEnabled,"default off in real UI");
                var sliders:int=0;var stored:MSWConfig;
                for each(var r:* in rows)
@@ -57,7 +57,7 @@ package
                   if(r.settingsItem.key=="smartTurnRadius") {r.settingsSc.scrollPosition=2;r.settingsSc.dispatchEvent(new Event("scroll"));}
                   if(r.settingsItem.key=="smartHudSize") {r.settingsSc.scrollPosition=3;r.settingsSc.dispatchEvent(new Event("scroll"));}
                }
-               rows[3].settingsSc.scrollPosition=5;rows[3].settingsSc.dispatchEvent(new Event("scroll"));
+               rows[4].settingsSc.scrollPosition=5;rows[4].settingsSc.dispatchEvent(new Event("scroll"));
                m.panel.tabToggle(w);stored=new MSWConfig();stored.load();
                ok(stored.smartGrace==0.25,"changed decimal slider persists on page close");
                ok(stored.smartTurnRadius==30 && stored.smartHudSize==18,"radius and HUD sliders persist on page close");m.panel.tabToggle(w);
@@ -65,22 +65,26 @@ package
                rows=[];collect(w.main);
                rows[0].settingsSc.selected=true;rows[0].settingsSc.dispatchEvent(new Event(Event.CHANGE));
                ok(m.cfg.smartEnabled,"real checkbox enables smart guns");
-               rows[6].settingsSc.selected=true;rows[6].settingsSc.dispatchEvent(new Event(Event.CHANGE));
+               rows[1].settingsSc.selected=true;rows[1].settingsSc.dispatchEvent(new Event(Event.CHANGE));
+               ok(m.cfg.smartMultiLock,"real multi-lock switch enables multi-target mode");
+               rows[7].settingsSc.selected=true;rows[7].settingsSc.dispatchEvent(new Event(Event.CHANGE));
                ok(m.cfg.smartKeepOutOfSight,"real out-of-sight switch enables indefinite hold");
                stored=new MSWConfig();stored.load();ok(stored.smartEnabled,"checkbox saves immediately");
                ok(stored.smartKeepOutOfSight,"out-of-sight switch saves immediately");
+               ok(stored.smartMultiLock,"multi-lock switch saves immediately");
                var reset:*=find(w.main,"恢复默认");ok(reset!=null,"smart reset button exists");reset.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));
-               ok(!m.cfg.smartEnabled && !m.cfg.smartKeepOutOfSight && m.cfg.smartLife==2 && m.cfg.smartTurn==1080 && m.cfg.smartTurnRadius==50 && m.cfg.smartHudSize==24,"reset restores smart defaults including radius and HUD");
+               ok(!m.cfg.smartEnabled && !m.cfg.smartMultiLock && !m.cfg.smartKeepOutOfSight && m.cfg.smartLife==2 && m.cfg.smartTurn==1080 && m.cfg.smartTurnRadius==50 && m.cfg.smartHudSize==24,"reset restores smart defaults including modes, radius and HUD");
                screenshot();w.pip.onoff();w.onPause=true;w.godMode=false;w.catPause=false;w.gg.ggControl=true;
                m.panel.toggleOverlay();m.panel.handleKey(9);m.panel.handleKey(39);
                ok(m.cfg.smartEnabled,"F6 Tab smart page toggles master");
+               m.panel.handleKey(40);m.panel.handleKey(39);ok(m.cfg.smartMultiLock,"F6 toggles multi-lock mode");
                m.panel.handleKey(40);m.panel.handleKey(39);ok(m.cfg.smartRadius==52,"F6 smart page adjusts numeric setting");
                for(var nav:int=0;nav<5;nav++)m.panel.handleKey(40);
                m.panel.handleKey(39);ok(m.cfg.smartKeepOutOfSight,"F6 can toggle out-of-sight hold");
                for(nav=0;nav<4;nav++)m.panel.handleKey(40);
                m.panel.handleKey(39);ok(m.cfg.smartTurnRadius==60,"F6 adjusts turn radius");
                m.panel.handleKey(40);m.panel.handleKey(40);m.panel.handleKey(39);
-               ok(m.cfg.smartHudSize==26,"F6 adjusts diamond size");m.cfg.smartTurnRadius=50;m.cfg.smartHudSize=24;m.cfg.smartKeepOutOfSight=false;
+               ok(m.cfg.smartHudSize==26,"F6 adjusts diamond size");m.cfg.smartTurnRadius=50;m.cfg.smartHudSize=24;m.cfg.smartKeepOutOfSight=false;m.cfg.smartMultiLock=false;
                m.panel.handleKey(9);m.panel.toggleOverlay();m.cfg.smartRadius=48;
                m.cfg.smartEnabled=true;m.cfg.ricochet=false;m.cfg.clamp();
                var W:Class=MSWU.cls("fe.weapon.Weapon");weapon=W["create"](w.gg,"p9mm");w.gg.currentWeapon=weapon;
