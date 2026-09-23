@@ -66,3 +66,23 @@ adaptive-traces.json、adaptive-box.json保存真实位置，adaptive-recovery.j
 - build/out/adaptive-work/build/out/adaptive-laser-candidate：48150字节、SHA256 `06D29C89468B67A67D80F3A7F5D9620D250915A91C6E286F32166B8A345F21B1`；准确生产字节激光读档/身体辅助124行PASS，未暂停舞台光束9帧/476像素。结果在adaptive-laser-reload。
 - 最终预测取样实现的实际Sandevistan联测再次通过（sandy-adaptive）：普通倍率30/40/50%、最低倍率10/20/30%和逐发目标保留，预存弹预算、真实扣血、正常世界恢复均通过。该入口另行编译，Production.swf哈希 `2FDBDCB6EAD44A3C8A692E66F157AFFB95AE4E430BAD3A0A524C502A1BFBE096`，不称为上述候选的同字节测试。
 - 原独立候选4399EAA…安装前900帧及设置连接通过；尚未部署。主目录另有透窗路线和设置聚合接入正在修改，待保留同期修改并完成组合验证。
+
+## 最终组合候选与发布前复验
+
+合入透窗1cac284/c9aca71与菜单接入2013903，自适应源码正式提交e46c905。预测私有对象复制destroy/tipDecal/explRadius，全部地形查询沿用弹药能力；不修改玻璃HP或真实子弹。普通玻璃选定破窗路线后不因自适应误绕，原生撞窗仍会停弹。删除MSWSmartSmooth，替换玻璃测试中的旧字段。
+
+最终候选build/out/adaptive-work/build/out/adaptive-release/MoreSkillsWeaponsMod.swf：48980字节、SHA256 `F8DD73DD47E2E14A90097698317884E42EB3A0EBC163B91ADA12B6F8A1700F10`。核心1.11.0-adaptive-radius、运动1.4-adaptive-radius、玻璃1-windows、HUD3-multi-lock、激光5-body-assist；36个生产定义，宿主外部链接，无探针。冻结src同目录，提交deca6f2对应的生产源码与主目录2013903一致。
+
+- 131条组合规则通过（102条自适应及29条玻璃规则），其中预测不得伤窗/挪动子弹、大半径保持均有断言。
+- 本候选准确字节24项自适应、39项原生玻璃、52项多锁全部通过。实际恢复序列152.5→162.5→172.5→182.5→192.5→200，每次增加之间保留物理步；固定200%会错过而自适应81.25–111.25%真实命中。
+- 64弹同进程交替压力：关闭15/12/13ms，开启42/43/78ms；与其他隔离用例同时运行，不作为干净基准或日常FPS承诺。
+- 当前ModSettings（5BD830A…）沿用兼容分支。新菜单接口已保留；新版ModSettings聚合界面本身由对应任务验证，不冒充本轮已测试所有未来依赖组合。
+- 先前安装尝试在写文件前被源代码基线守卫拦住（发现2013903），旧release保持132BC390…；误续的安装后探针只报旧版本标记不匹配。已改为逐步检查后继续，未发生新SWF安装失败或回滚。
+
+## 安装完成
+
+最终F8DD73DD…准确字节额外完成312项豁免和124行PASS激光（未暂停光束7帧/476像素），安装前后各900帧、ModSettings-connected、tabOn=1，无lastErr/smartError/laserError；分别见adaptive-release-{preinstall,installed}、adaptive-release-laser及exclusion-production。正式release已替换为该48980字节候选，安装后再次核对同一SHA256。
+
+备份release/MoreSkillsWeaponsMod.before-v1.11.0-adaptive-radius-20260923.swf：47483字节，SHA256 `132BC390598296BD6237B3991D762F587CF66466EBB907334EA7CF972277F3CE`。恢复该文件为正式文件名并重启将回到v1.10身体辅助+旧平滑，撤销本次自适应/透窗；旧配置参数保留。备份创建前确认不存在，部署前确认旧release和源代码未变。
+
+安装时根pfe.swf仍为B7824465…，ModSettings为5BD830A…；同期清单已由别的任务更新为SHA256 `74FC714289CFADE26407B084476CE7DE0B7D158A2B1869D9DDB9AEEFEF4863BD`，已读取确认MSW/ModSettings对实际1.02仍启用，application.xml仍指向pfe.swf。本任务未修改这些文件。没有独立changelog文件，版本记录由本实验、MEMORY和journal承接。
