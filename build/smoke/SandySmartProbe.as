@@ -14,9 +14,9 @@ package
       private var frozen:int=0,budgetChecks:int=0,replaySteps:int=0;
       private var preExisting:*,preBudget:Number,heldChecks:int=0;
       private var slowCurves:int=0,replayCurves:int=0,maxKink:Number=0;
-      private var multi:Boolean=false,targetList:Array=[],recordTargets:Array=[],replayTargets:Array=[];
+      private var multi:Boolean=false,smooth:Boolean=false,targetList:Array=[],recordTargets:Array=[],replayTargets:Array=[];
       private var errorHooked:Boolean=false;
-      public function SandySmartProbe(multiMode:Boolean=false){multi=multiMode;timer.addEventListener("timer",tick);timer.start();}
+      public function SandySmartProbe(multiMode:Boolean=false,smoothMode:Boolean=false){multi=multiMode;smooth=smoothMode;timer.addEventListener("timer",tick);timer.start();}
       private function ok(v:Boolean,s:String):void{if(!v)throw new Error(s);log+="PASS "+s+"\n";}
       private function key():void{w.main.stage.dispatchEvent(new KeyboardEvent(KeyboardEvent.KEY_DOWN,true,false,0,220));w.main.stage.dispatchEvent(new KeyboardEvent(KeyboardEvent.KEY_UP,true,false,0,220));}
       private function tick(e:Event):void
@@ -54,6 +54,7 @@ package
                target.isVis=true;target.blood=0;target.showNumbs=false;target.opt=null;target.X=800;target.Y=320;target.X1=785;target.X2=815;target.Y1=260;target.Y2=320;
                w.loc.units.push(target);
                m.cfg.smartEnabled=true;m.cfg.smartTurnRadius=30;m.cfg.smartLife=2;m.cfg.ricochet=false;m.cfg.smartHold=3;m.cfg.smartDecay=5;
+               m.cfg.smartSmooth=smooth;m.cfg.smartSmoothing=50;
                targetList=[target];
                if(multi)
                {
@@ -92,7 +93,7 @@ package
                   }
                   if(phase==1)
                   {
-                     if(multi && initial[b]==null && b!==preExisting)recordTargets.push({unit:s.target,radius:s.turnRadius,x:b.begx,y:b.begy});
+                     if(multi && initial[b]==null && b!==preExisting)recordTargets.push({unit:s.target,radius:s.turnRadius,smooth:s.smooth,smoothing:s.smoothing,x:b.begx,y:b.begy});
                      if(initial[b]!=null && !b.babah)
                      {
                         var prev:Object=initial[b];
@@ -114,6 +115,7 @@ package
                   if(multi)
                   {
                      m.cfg.smartTurnRadius=30+int((t-since-6)/10)*10;
+                     if(smooth)m.cfg.smartSmoothing=25+int((t-since-6)/10)*25;
                      log+="RECORD mode="+m.cfg.smartMultiLock+" locks="+m.smart.multiLock.locks.length+" weapon="+w.gg.currentWeapon.id+" active="+MSWU.inGameplay(w)+" control="+w.gg.ggControl+"\n";
                      for each(var watched:* in targetList)log+="TARGET x="+watched.X+" allowed="+m.smart.targetAllowed(watched,w)+" listed="+w.loc.units.indexOf(watched)+" lock="+(m.smart.multiLock.stateFor(watched)==null?"missing":m.smart.multiLock.stateFor(watched).strength)+"\n";
                   }
@@ -124,6 +126,7 @@ package
                   ok(frozen>0 && budgetChecks>0,"real time-stop frozen frames and slow physics budget agree");
                   preBudget=m.smart.snapshot(preExisting).remaining;
                   m.cfg.smartTurnRadius=200; // Replay must use the recorded 30%, not current settings.
+                  if(smooth){m.cfg.smartSmooth=false;m.cfg.smartSmoothing=0;}
                   if(multi){m.cfg.smartMultiLock=false;m.smart.multiLock.clear();}
                   key();ok(w.onPause && w.godMode,"real hotkey starts Sandevistan replay");phase=2;since=t;
                }
@@ -146,8 +149,11 @@ package
                      var record:Object=recordTargets[ri],replay:Object=ri<replayTargets.length?replayTargets[ri]:null;
                      log+="SNAPSHOT shot="+ri+" muzzle="+record.x+","+record.y+" target="+record.unit.X+","+record.unit.Y+" radius="+record.radius+" replay="+(replay==null?"missing":replay.unit.X+","+replay.unit.Y+" radius="+replay.radius)+"\n";
                      if(replay==null || replay.unit!==record.unit || replay.radius!=record.radius)match=false;
+                     if(smooth && (replay==null || !replay.smooth || replay.smoothing!=record.smoothing || record.smoothing!=25+ri*25))match=false;
+                     if(smooth)log+="SMOOTH snapshot="+record.smooth+","+record.smoothing+" replay="+(replay==null?"missing":replay.smooth+","+replay.smoothing)+"\n";
                   }
                   ok(match,"replay restores each recorded target after multi mode and current locks are cleared");
+                  if(smooth)ok(match && !m.cfg.smartSmooth && m.cfg.smartSmoothing==0,"real replay retains per-shot smooth mode and 25/50/75 amounts after settings are disabled");
                }
                ok(heldChecks>0,"pre-existing bullet replay budget verified");
                ok(target.hp<target.maxhp,"replayed smart bullets settle real target damage");
@@ -171,7 +177,7 @@ package
                {
                   replayed[b]=true;
                   log+="REPLAY birth muzzle="+b.begx+","+b.begy+" target="+s.target.X+","+s.target.Y+" radius="+s.turnRadius+"\n";
-                  if(multi)replayTargets.push({unit:s.target,radius:s.turnRadius,x:b.begx,y:b.begy});
+                  if(multi)replayTargets.push({unit:s.target,radius:s.turnRadius,smooth:s.smooth,smoothing:s.smoothing,x:b.begx,y:b.begy});
                }
             }
             b=b.nobj;

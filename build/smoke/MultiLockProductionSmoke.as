@@ -72,7 +72,9 @@ package
             if(phase==0)
             {
                if(m.cfg.diag.frames<600)return;
-               ok(m.cfg.diag.ver=="1.7.0-multi-lock","exact production version loaded");
+               ok(m.cfg.diag.ver=="1.8.0-smooth-mode","exact production version loaded");
+               ok(!m.cfg.smartSmooth,"smooth mode defaults off before multi-lock test");
+               m.cfg.smartSmooth=true;m.cfg.smartSmoothing=50;
                ok(!m.cfg.smartMultiLock,"new mode defaults off");
                if(w.pip.active)w.pip.onoff();w.onPause=true;w.godMode=false;w.catPause=false;w.gg.ggControl=true;
                for(var x:int=100;x<1300;x+=20)for(var y:int=40;y<760;y+=20){tile=w.loc.getAbsTile(x,y);tile.phis=0;tile.water=0;}

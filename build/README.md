@@ -39,7 +39,7 @@ v1.5.1 起真实游戏 UI 测试需要正式安装 ModSettings 及其 loader。`
 
 伤害诊断：`./test-damage.ps1` 在隔离游戏副本中调用原版 Bullet.step/run 和 Unit.udarBullet，验证十次连续反弹的实际扣血、护甲/穿甲、精确墙面碰撞及轻机枪基础精度下的距离命中率。世界暂停后手动推进子弹，并非自然实战录像；命中率统计是随机样本。结果在 `out/damage/results.txt`，`out/damage/DamageSmokeMod.swf` 是测试探针，禁止部署到正式 release。
 
-智能武器：`test-smart-unit.ps1` 验证锁定状态机、参数保存和寻路/转弯数学；`test-smart.ps1` 验证原版首步、绕实体箱体命中、跳弹继承、霰弹特殊弹药、64 发局部寻路、实际帧锁定/遮挡/恢复/暂停，以及 14 项设置与 F6（含多重锁定和视野外保持锁定）。`test-smart-sandy.ps1` 只读复制已安装 Sandevistan 到隔离副本，用独立配置验证真实时停/回放和重建弹丸匹配，绝不修改其正式配置。
+智能武器：`test-smart-unit.ps1` 验证锁定状态机、参数保存和寻路/转弯数学；`test-smart.ps1` 验证原版首步、绕实体箱体命中、跳弹继承、霰弹特殊弹药、64 发局部寻路、实际帧锁定/遮挡/恢复/暂停，以及 16 项设置与 F6（含多重锁定、视野外保持和平滑弹道）。`test-smart-sandy.ps1` 只读复制已安装 Sandevistan 到隔离副本，用独立配置验证真实时停/回放和重建弹丸匹配，绝不修改其正式配置。
 
 非致命激光枪：`test-laser.ps1` 验证眼部几何、原生半自动/装填/SATS、赠枪与存档接续、36 类敌人接管/恢复及实际攻击、恐慌子弹/爆炸/近战误伤、11 项配置与 HUD。`-Sandevistan` 只读复制已安装时停模组，追加冻结/慢步/开火/回放检查。输出在 `out/laser`；`LaserSmokeMod`、测试专用的 `smoke/SandevistanMod.as` 错误捕获器和任何测试副本都不能安装。
 
@@ -102,4 +102,24 @@ pfe.swf 的 MainFE 已追加本模组 loader 并部署到游戏目录：
 
 `test-smart-sandy.ps1 -MultiLock` 使用单独 out/sandy-multi 副本，三次实际开火分别记录 30/40/50% 半径与不同目标。回放前改为 200% 并关闭多重模式，按每帧出生顺序核对原快照。开始前等待自动 Pip 初始化结束；超时也保留心跳，宿主异常会转为失败报告。原单目标测试入口保留。
 
-当前候选为 out/multi-lock/MoreSkillsWeaponsMod.swf，包含已安装的激光组件 3-visual-eyes，版本 1.7.0-multi-lock、HUD 3-multi-lock。安装前后用 test-installed.ps1 指定这些标记与独立 OutputDirectory。激光生产回归新增 OutputDirectory / ProbeSourcePath 参数，默认行为不变，供并发任务固定各自产物和探针；候选不能套用较新版本探针的视觉断言。
+该轮历史候选为 out/multi-lock/MoreSkillsWeaponsMod.swf，包含激光组件 3-visual-eyes，版本 1.7.0-multi-lock、HUD 3-multi-lock，不能覆盖后续正式版。安装前后用 test-installed.ps1 指定相应标记与独立 OutputDirectory。激光生产回归新增 OutputDirectory / ProbeSourcePath 参数，默认行为不变，供并发任务固定各自产物和探针；候选不能套用较新版本探针的视觉断言。
+
+## 2026-09-23 可调平滑弹道
+
+当前生产版为 v1.8.0-smooth-mode，HUD 3-multi-lock、智能运动1.3-smooth-mode、激光4-reload-debug。冻结源码及同字节候选位于 out/smooth-mode-final，保留已安装的激光读档引用修复与命中调试设置；早期 out/smooth-mode 候选缺少该修复，不可部署。
+
+`build.ps1 -SourcePath <源码目录> -OutputDirectory <产物目录>` 可从固定源码构建，路径相对 build；链接报告与生产文件写入指定目录。默认仍读 ../src、输出 out。`test-smart.ps1 -SourcePath <源码目录>` 的 Production.swf 改写入 out/smart，不覆盖最终候选。
+
+- `test-smart-unit.ps1`：95条规则，增加旧配置默认/保存/数值边界、转向速率连续变化、程度响应和紧急转向上限；真实设置驱动等待自动Pip初始化完成后才进入后续锁定场景。
+- `test-smooth-mode-production.ps1 -ProductionSwf <准确生产SWF> -Nodebug`：独立加载正式文件，22项原生物理断言，覆盖移动目标、绕箱、窄通道、真实碰撞/跳弹、预算与64弹批量；输出 out/smooth-mode-production。关闭和0%逐点一致，50/100%均验证实际伤害。
+- `test-multi-lock-production.ps1 -ProductionSwf <准确生产SWF> -Nodebug`：当前探针先检查平滑默认关，再启用50%运行52项多目标回归。
+- `test-smart-sandy.ps1 -SmoothMode -SourcePath <源码目录>`：使用独立 out/sandy-smooth，真实时停录制三发不同目标、30/40/50%半径及25/50/75%程度；回放前关闭两种模式并改变设置，检查逐发原快照及伤害。
+- `tools/plot-smooth-mode.py <结果目录>`：需Pillow，从测试输出的真实坐标生成 trajectory-comparison.png；不重新模拟弹道。性能采样与取图分开，不能从该压力场景推算日常FPS。
+
+最终候选准确字节另跑 `test-laser-reload.ps1 -ProductionSwf <准确生产SWF> -Nodebug` 保证保留最新读档、失明和完整舞台光束。安装前检查命令（build目录；须先由平滑生产测试准备对应隔离资源）：
+
+```powershell
+./test-installed.ps1 -ProductionSwf (Join-Path $PWD 'out\smooth-mode-final\MoreSkillsWeaponsMod.swf') -ExpectedVersion '1.8.0-smooth-mode' -ExpectedHudVersion '3-multi-lock' -RuntimeDirectory 'out\smooth-mode-production\runtime' -OutputDirectory 'out\smooth-mode-final-startup'
+```
+
+安装后省略 ProductionSwf，并改 OutputDirectory 为 out/smooth-mode-installed。不要与使用同一 RuntimeDirectory 的场景并行运行。指纹、备份和覆盖范围见 knowledge/experiments/smart-smooth-mode-20260923.md。

@@ -1,12 +1,13 @@
-param([string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024')
+param([string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$SourcePath='../src', [string]$OutputDirectory='out')
 $ErrorActionPreference='Stop'
 & (Join-Path $PSScriptRoot 'build-smart-host.ps1') -AnimateRoot $AnimateRoot
 Push-Location $PSScriptRoot
 try {
-    & (Join-Path $AnimateRoot 'jre\bin\java.exe') '-Dfile.encoding=UTF-8' -jar (Join-Path $AnimateRoot 'Common\Configuration\ActionScript 3.0\bin\mxmlc.jar') '-target-player=11.1' '-source-path+=../src' '-includes=fe.unit.MSWBlindAccess,fe.inter.MSWLaserSats,fe.weapon.MSWPanicBlade,fe.weapon.MSWDazzlerWeapon' '-external-library-path+=out/SmartHost.swc' '-link-report=out/link-report.xml' '-output=out/MoreSkillsWeaponsMod.swf' '../src/MoreSkillsWeaponsMod.as'
+    New-Item -ItemType Directory -Force $OutputDirectory | Out-Null
+    & (Join-Path $AnimateRoot 'jre\bin\java.exe') '-Dfile.encoding=UTF-8' -jar (Join-Path $AnimateRoot 'Common\Configuration\ActionScript 3.0\bin\mxmlc.jar') '-target-player=11.1' ("-source-path+="+$SourcePath) '-includes=fe.unit.MSWBlindAccess,fe.inter.MSWLaserSats,fe.weapon.MSWPanicBlade,fe.weapon.MSWDazzlerWeapon' '-external-library-path+=out/SmartHost.swc' ("-link-report="+(Join-Path $OutputDirectory 'link-report.xml')) ("-output="+(Join-Path $OutputDirectory 'MoreSkillsWeaponsMod.swf')) (Join-Path $SourcePath 'MoreSkillsWeaponsMod.as')
     if ($LASTEXITCODE -ne 0) { throw 'Production compilation failed' }
     # mxmlc leaves '&' in source paths unescaped (this repository contains one).
-    $reportText=Get-Content -LiteralPath 'out/link-report.xml' -Raw
+    $reportText=Get-Content -LiteralPath (Join-Path $OutputDirectory 'link-report.xml') -Raw
     [xml]$report=$reportText -replace '&(?!amp;|lt;|gt;|quot;|apos;)','&amp;'
     $definitions=@($report.report.scripts.script.def | ForEach-Object {$_.id})
     foreach($required in @('MoreSkillsWeaponsMod','fe.unit:MSWBlindAccess','fe.inter:MSWLaserSats','fe.weapon:MSWPanicBlade','fe.weapon:MSWDazzlerWeapon')) {

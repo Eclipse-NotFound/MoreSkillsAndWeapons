@@ -73,18 +73,7 @@ package
          var speed:Number=Math.sqrt(b.dx*b.dx+b.dy*b.dy);
          if(!(speed>0) || !isFinite(speed)) return;
          var old:Number=Math.atan2(b.dy,b.dx);
-         var desired:Number=angle(Math.atan2(ty-b.Y,tx-b.X)-old);
-         // Pursuit curvature eases into the target bearing over travelled
-         // distance, instead of snapping onto a ray as soon as the turn fits.
-         var requested:Number=desired;
-         if(fraction<1 && Math.abs(desired)<Math.PI/2)
-         {
-            requested=2*speed*fraction*Math.sin(desired)/(Math.max(speed*fraction,distance(b.X,b.Y,tx,ty))*radiusScale);
-            // Radius changes pursuit curvature as well as the angular ceiling.
-            // Stop at the target bearing instead of oversteering across it.
-            if(radiusScale<1) requested=Math.max(-Math.abs(desired),Math.min(Math.abs(desired),requested));
-         }
-         var turn:Number=Math.max(-maxTurn,Math.min(maxTurn,requested));
+         var turn:Number=pursuit(b,tx,ty,maxTurn,fraction,radiusScale);
          // Preserve momentum and angular limit. If the preferred arc hits terrain,
          // try other legal headings for this step; never teleport around an obstacle.
          var choices:Array=[turn,-maxTurn,maxTurn,0,-maxTurn/2,maxTurn/2];
@@ -97,7 +86,28 @@ package
             if(cost<score) { score=cost; selected=d; }
             if(cost==0) break;
          }
-         a=old+selected;
+         applyTurn(b,selected,speed);
+      }
+      public static function pursuit(b:*,tx:Number,ty:Number,maxTurn:Number,fraction:Number=1,radiusScale:Number=1):Number
+      {
+         var speed:Number=Math.sqrt(b.dx*b.dx+b.dy*b.dy);
+         var old:Number=Math.atan2(b.dy,b.dx);
+         var desired:Number=angle(Math.atan2(ty-b.Y,tx-b.X)-old);
+         // Pursuit curvature eases into the target bearing over travelled
+         // distance, instead of snapping onto a ray as soon as the turn fits.
+         var requested:Number=desired;
+         if(fraction<1 && Math.abs(desired)<Math.PI/2)
+         {
+            requested=2*speed*fraction*Math.sin(desired)/(Math.max(speed*fraction,distance(b.X,b.Y,tx,ty))*radiusScale);
+            // Radius changes pursuit curvature as well as the angular ceiling.
+            // Stop at the target bearing instead of oversteering across it.
+            if(radiusScale<1) requested=Math.max(-Math.abs(desired),Math.min(Math.abs(desired),requested));
+         }
+         return Math.max(-maxTurn,Math.min(maxTurn,requested));
+      }
+      public static function applyTurn(b:*,turn:Number,speed:Number):void
+      {
+         var a:Number=Math.atan2(b.dy,b.dx)+turn;
          b.dx=Math.cos(a)*speed; b.dy=Math.sin(a)*speed; b.vel=speed;
          b.rot=a; b.vRot=true; b.knockx=b.dx/speed; b.knocky=b.dy/speed;
       }

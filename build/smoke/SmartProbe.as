@@ -30,7 +30,9 @@ package
             if(m.cfg.diag.smartError!=null)throw new Error(m.cfg.diag.smartError);
             if(phase==0)
             {
-               if(t<160)return;
+               // Wait for the test driver's one-time automatic Pip opening;
+               // elapsed wall time alone races its frame-based startup.
+               if(t<160 || m.cfg.diag.auto!="pip-opt-open")return;
                if(!w.pip.active)w.pip.onoff(5);
                if(!m.panel.tabActive())m.panel.tabToggle(w);
                if(MSWU.has(m.settings,"api") && m.settings.api!=null)
@@ -43,7 +45,7 @@ package
             }
             if(phase==1 && t-since>10)
             {
-               rows=[];collect(w.main);ok(rows.length==14,"real smart settings page shows 14 controls");
+               rows=[];collect(w.main);ok(rows.length==16,"real smart settings page shows 16 controls");
                ok(rows[0].settingsItem.key=="smartEnabled" && !m.cfg.smartEnabled,"default off in real UI");
                var sliders:int=0;var stored:MSWConfig;
                for each(var r:* in rows)
@@ -51,15 +53,17 @@ package
                   if(r.settingsItem.kind=="slider") { sliders++;r.settingsSc.scrollPosition=(r.settingsItem.def-r.settingsItem.min)/r.settingsItem.step;r.settingsSc.dispatchEvent(new Event("scroll")); }
                   if(r.settingsSc!=null && "drawNow" in r.settingsSc)r.settingsSc.drawNow();
                }
-               ok(sliders==11 && m.cfg.smartGrace==0.15,"all eleven sliders and 0.15 precision");
+               ok(sliders==12 && m.cfg.smartGrace==0.15,"all twelve sliders and 0.15 precision");
                for each(r in rows)
                {
                   if(r.settingsItem.key=="smartTurnRadius") {r.settingsSc.scrollPosition=2;r.settingsSc.dispatchEvent(new Event("scroll"));}
                   if(r.settingsItem.key=="smartHudSize") {r.settingsSc.scrollPosition=3;r.settingsSc.dispatchEvent(new Event("scroll"));}
+                  if(r.settingsItem.key=="smartSmoothing") {r.settingsSc.scrollPosition=15;r.settingsSc.dispatchEvent(new Event("scroll"));}
                }
                rows[4].settingsSc.scrollPosition=5;rows[4].settingsSc.dispatchEvent(new Event("scroll"));
                m.panel.tabToggle(w);stored=new MSWConfig();stored.load();
                ok(stored.smartGrace==0.25,"changed decimal slider persists on page close");
+               ok(stored.smartSmoothing==75,"smooth amount persists on page close");
                ok(stored.smartTurnRadius==30 && stored.smartHudSize==18,"radius and HUD sliders persist on page close");m.panel.tabToggle(w);
                if(MSWU.has(m.settings,"api") && m.settings.api!=null)m.settings.api.selectPage("msw-smart");
                rows=[];collect(w.main);
@@ -72,8 +76,11 @@ package
                stored=new MSWConfig();stored.load();ok(stored.smartEnabled,"checkbox saves immediately");
                ok(stored.smartKeepOutOfSight,"out-of-sight switch saves immediately");
                ok(stored.smartMultiLock,"multi-lock switch saves immediately");
+               rows[12].settingsSc.selected=true;rows[12].settingsSc.dispatchEvent(new Event(Event.CHANGE));
+               stored=new MSWConfig();stored.load();ok(stored.smartSmooth,"real smooth-mode checkbox saves immediately");
                var reset:*=find(w.main,"恢复默认");ok(reset!=null,"smart reset button exists");reset.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));
                ok(!m.cfg.smartEnabled && !m.cfg.smartMultiLock && !m.cfg.smartKeepOutOfSight && m.cfg.smartLife==2 && m.cfg.smartTurn==1080 && m.cfg.smartTurnRadius==50 && m.cfg.smartHudSize==24,"reset restores smart defaults including modes, radius and HUD");
+               ok(!m.cfg.smartSmooth && m.cfg.smartSmoothing==50,"reset restores disabled smooth mode and default amount");
                screenshot();w.pip.onoff();w.onPause=true;w.godMode=false;w.catPause=false;w.gg.ggControl=true;
                m.panel.toggleOverlay();m.panel.handleKey(9);m.panel.handleKey(39);
                ok(m.cfg.smartEnabled,"F6 Tab smart page toggles master");
@@ -83,8 +90,11 @@ package
                m.panel.handleKey(39);ok(m.cfg.smartKeepOutOfSight,"F6 can toggle out-of-sight hold");
                for(nav=0;nav<4;nav++)m.panel.handleKey(40);
                m.panel.handleKey(39);ok(m.cfg.smartTurnRadius==60,"F6 adjusts turn radius");
+               m.panel.handleKey(40);m.panel.handleKey(39);ok(m.cfg.smartSmooth,"F6 toggles smooth mode");
+               m.panel.handleKey(40);m.panel.handleKey(39);ok(m.cfg.smartSmoothing==55,"F6 adjusts smooth amount");
                m.panel.handleKey(40);m.panel.handleKey(40);m.panel.handleKey(39);
                ok(m.cfg.smartHudSize==26,"F6 adjusts diamond size");m.cfg.smartTurnRadius=50;m.cfg.smartHudSize=24;m.cfg.smartKeepOutOfSight=false;m.cfg.smartMultiLock=false;
+               m.cfg.smartSmooth=false;m.cfg.smartSmoothing=50;
                m.panel.handleKey(9);m.panel.toggleOverlay();m.cfg.smartRadius=48;
                m.cfg.smartEnabled=true;m.cfg.ricochet=false;m.cfg.clamp();
                var W:Class=MSWU.cls("fe.weapon.Weapon");weapon=W["create"](w.gg,"p9mm");w.gg.currentWeapon=weapon;

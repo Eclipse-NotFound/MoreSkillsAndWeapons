@@ -23,11 +23,13 @@ package
          var count:int=Math.min(256,Math.max(1,Math.ceil(speed/6),Math.ceil(maxTurn/(Math.PI/60))));
          var points:Array=[{x:b.X,y:b.Y}];
          s.motionPath=points;
+         var smooth:Boolean=s.smooth==true && Number(s.smoothing)>0;
          for(var i:int=0;i<count && !b.babah && b.in_chain;i++)
          {
             while(path.length>1 && MSWSmartRoute.clear(b.loc,b.X,b.Y,path[1].x,path[1].y)) path.shift();
             var p:Object=path[0];
-            MSWSmartRoute.steer(b,p.x,p.y,maxTurn/count,b.loc,1/count,radiusScale);
+            if(smooth) MSWSmartSmooth.steer(b,s,path,maxTurn/count,1/count,radiusScale,i%4==0);
+            else MSWSmartRoute.steer(b,p.x,p.y,maxTurn/count,b.loc,1/count,radiusScale);
             b.run(count);
             points.push({x:b.X,y:b.Y});
          }

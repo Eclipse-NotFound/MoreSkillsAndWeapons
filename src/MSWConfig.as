@@ -30,6 +30,8 @@ package
       public var smartRecover:Number = 0.4;
       public var smartTurn:Number = 1080;
       public var smartTurnRadius:Number = 50;
+      public var smartSmooth:Boolean = false;
+      public var smartSmoothing:Number = 50;
       public var smartLife:Number = 2;
       public var smartHudSize:Number = 24;
 
@@ -116,6 +118,8 @@ package
             if(so.data.smartRecover != undefined) smartRecover = so.data.smartRecover;
             if(so.data.smartTurn != undefined) smartTurn = so.data.smartTurn;
             if(so.data.smartTurnRadius != undefined) smartTurnRadius = so.data.smartTurnRadius;
+            if(so.data.smartSmooth != undefined) smartSmooth = so.data.smartSmooth == true;
+            if(so.data.smartSmoothing != undefined) smartSmoothing = so.data.smartSmoothing;
             if(so.data.smartLife != undefined) smartLife = so.data.smartLife;
             if(so.data.smartHudSize != undefined) smartHudSize = so.data.smartHudSize;
             if(so.data.ricochetCount != undefined) ricochetCount = so.data.ricochetCount;
@@ -209,6 +213,8 @@ package
             so.data.smartRecover = smartRecover;
             so.data.smartTurn = smartTurn;
             so.data.smartTurnRadius = smartTurnRadius;
+            so.data.smartSmooth = smartSmooth;
+            so.data.smartSmoothing = smartSmoothing;
             so.data.smartLife = smartLife;
             so.data.smartHudSize = smartHudSize;
             so.data.ricochetCount = ricochetCount;
@@ -259,6 +265,7 @@ package
          smartRecover = smartClamp(smartRecover,0.4,0.1,3,0.1);
          smartTurn = smartClamp(smartTurn,1080,90,2880,90);
          smartTurnRadius = smartClamp(smartTurnRadius,50,10,200,10);
+         smartSmoothing = smartClamp(smartSmoothing,50,0,100,5);
          smartLife = smartClamp(smartLife,2,0.1,5,0.1);
          smartHudSize = smartClamp(smartHudSize,24,12,80,2);
          ricochetCount = Math.max(0, Math.min(20, ricochetCount));
