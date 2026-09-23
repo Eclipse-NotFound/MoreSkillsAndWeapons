@@ -106,7 +106,7 @@ pfe.swf 的 MainFE 已追加本模组 loader 并部署到游戏目录：
 
 ## 2026-09-23 可调平滑弹道
 
-当前生产版为 v1.8.0-smooth-mode，HUD 3-multi-lock、智能运动1.3-smooth-mode、激光4-reload-debug。冻结源码及同字节候选位于 out/smooth-mode-final，保留已安装的激光读档引用修复与命中调试设置；早期 out/smooth-mode 候选缺少该修复，不可部署。
+该轮生产版为 v1.8.0-smooth-mode，HUD 3-multi-lock、智能运动1.3-smooth-mode、激光4-reload-debug。冻结源码及同字节候选位于 out/smooth-mode-final，保留当时已安装的激光读档引用修复与命中调试设置；此产物现已被下节豁免版取代，不可覆盖当前正式版。
 
 `build.ps1 -SourcePath <源码目录> -OutputDirectory <产物目录>` 可从固定源码构建，路径相对 build；链接报告与生产文件写入指定目录。默认仍读 ../src、输出 out。`test-smart.ps1 -SourcePath <源码目录>` 的 Production.swf 改写入 out/smart，不覆盖最终候选。
 
@@ -123,3 +123,13 @@ pfe.swf 的 MainFE 已追加本模组 loader 并部署到游戏目录：
 ```
 
 安装后省略 ProductionSwf，并改 OutputDirectory 为 out/smooth-mode-installed。不要与使用同一 RuntimeDirectory 的场景并行运行。指纹、备份和覆盖范围见 knowledge/experiments/smart-smooth-mode-20260923.md。
+
+## 2026-09-23 锁定豁免
+
+v1.9.0-lock-exemption 在平滑弹道和激光4基础上增加五组31项。Pip各组独立成页；F6共八页，Tab/PageDown向后、PageUp向前。具体范围见 design/smart-lock-exemptions.md。
+
+- `test-exclusion-unit.ps1`：1123条精确ID/变种、互不误伤、配置清洗和分组默认检查。
+- `test-exclusion-production.ps1 -ProductionSwf <生产SWF> -Nodebug`：31个真实复选框保存/恢复默认、F6循环、31类原生单位匹配、单/多锁及在途弹、时停回放入口的顺序豁免，共289项；生成五页设置截图。回放部分为握手模拟，不替代完整Sandevistan联测。
+- 上述两个新脚本及生产多锁、平滑、激光读档脚本可加 `-GameDirectory <实际游戏根>`，供嵌套的独立工作树使用。输出都在各脚本所在build/out内，不共享实际存档。
+
+本轮冻结源码、产物与结果位于 `out/lock-exemption-work/`（独立git工作树）。正式候选是其 `build/out/MoreSkillsWeaponsMod.swf`。旧平滑/激光候选不含豁免，不能覆盖新正式版。启动测试 `ExpectedVersion` 改为 `1.9.0-lock-exemption`，HUD仍为 `3-multi-lock`；完整同字节验收与回滚见 knowledge/experiments/smart-lock-exemptions-20260923.md。

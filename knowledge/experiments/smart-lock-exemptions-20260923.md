@@ -7,7 +7,7 @@ verified: true
 discovered-by: MoreSkills&Weapons
 evidence:
   - kind: runtime-experiment
-    summary: "1123条分类规则断言；准确生产SWF的真实设置、31类原生单位、单/多锁与在途弹行为验证"
+    summary: "1123条规则、289项准确生产豁免、52项平滑多锁、22项平滑物理、39行激光读档回归；安装前后启动检查"
 date-updated: 2026-09-23
 ---
 
@@ -34,8 +34,25 @@ date-updated: 2026-09-23
 - 原测试夹具会在游戏启动后自动切Pip页。等600帧仍会与31项UI验收重叠，导致“普通地雷控件数”失败；改为等1100帧后完整UI验收通过，未改玩法来迁就测试。
 - 测试自动注册Mock页，不能假定全局第4页就是本模组第一豁免页；按注册ID找页，F6也固定本模组顺序。
 - 回放时显示帧不扫描子弹，扫描由物理回调执行；最初探针只调用frame导致未产生快照，补为真实物理前后入口验证。
-- 本轮在独立git工作树冻结源码，避免编入同期未完成的激光/平滑代码；部署前必须合入最新已安装两项改动，并重新验证最终候选。
+- 本轮在独立git工作树冻结源码，先合入激光提交ea922ac，再合入平滑提交3fb7622。版本标记冲突统一为1.9.0，保留全部平滑字段与最新多锁探针。主目录与冻结源逐文件归一换行比较一致；合并后重编译并重跑最终字节，早期候选未部署。
 
 ## 安装状态
 
-最终组合构建与安装验收进行中；此段完成后补指纹、回归证据与回滚路径。原有时停预演+跳弹+智能绕障复杂组合的未通过边界保留；不声称验证了全部长期战斗、DLC、联机或剧情阵营变化。
+正式候选 `build/out/lock-exemption-work/build/out/MoreSkillsWeaponsMod.swf`，47050字节，SHA256 `15D7E3A56393D252656ADD2B1631F780CDA4EE6EB752A9AD3D12F286F5B48707`。核心1.9.0-lock-exemption、运动1.3-smooth-mode、HUD3-multi-lock、激光4-reload-debug；链接35个生产定义，宿主原类外置，无Smoke/Probe。实现提交0fc83b3；正式文件由该源码构建，构建后没有再改生产源码。
+
+以下路径均位于上述工作树的 `build/out/`，场景回归全部针对该同一候选：
+
+| 验证 | 结果文件 |
+|---|---|
+| 分类与配置 | exclusion-tests/results.txt：1123条PASS，在最终合并配置上重跑 |
+| 豁免与设置 | exclusion-production/results.txt：289项PASS，包含最新组件标记和开启平滑时的豁免；五页settings-*.png已检查 |
+| 多目标实战 | multi-lock-production/results.txt：52项PASS，平滑开启，三目标真实伤害、均分和霰弹、独立脱锁/保持/死亡与模式切换 |
+| 平滑物理 | smooth-mode-production/results.txt：22项PASS，关闭/0%一致、追踪/绕障命中、碰撞/跳弹继承、预算与批量计龄；并发验收的耗时不作为性能比较结论 |
+| 激光读档 | laser-reload/results.txt：39行PASS，真实comLoad后开火、调试、失明与未暂停完整舞台光束（7帧、峰值174像素） |
+| 安装前启动 | startup/install-smoke.json：相同SHA256、900帧、ModSettings-connected、tabOn=1，版本/组件正确，无lastErr/smartError/laserError |
+
+已安装。`installed/install-smoke.json`：从正式release复制同字节再次启动，900帧、ModSettings-connected、tabOn=1，核心与组件标记正确，无lastErr/smartError/laserError。替换前核对原正式F18097A6...，备份为 `release/MoreSkillsWeaponsMod.before-v1.9.0-lock-exemption-20260923.swf`（45014字节，完整SHA256 `F18097A6681993E1B894B2B25B31781DBD2B9407FED8F6F6F45CFDB9A7AB7C05`）。回滚时仅将此备份复制回正式文件并重启，可保留平滑、多锁与激光4，仅撤回豁免。
+
+本轮未改根pfe.swf（B7824465...）、loader-manifest（4953B682...）、ModSettings（5BD830A6...）或其他模组/真实存档；不关闭用户游戏。用户须自行重启加载新版本。
+
+原有时停预演+跳弹+智能绕障复杂组合的未通过边界保留；本轮回放豁免是物理握手模拟，不声称新跑完整Sandevistan联测，也未覆盖全部长期战斗、DLC、联机或剧情阵营变化。
