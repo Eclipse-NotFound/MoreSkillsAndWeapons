@@ -147,7 +147,7 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.8.0-smooth-mode");
+         cfg.diagSet("ver", "1.9.0-lock-exemption");
          cfg.diagSet("smartHudVersion", MSWSmartHUD.VERSION);
          settings.registerPage("msw", "MoreSkills&Weapons",
             MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");
@@ -155,6 +155,7 @@ package
             "实弹枪与霰弹枪：准星停留锁定，弯曲追踪与局部绕障；时长可调。");
          settings.registerPage("msw-laser", "非致命激光枪", MSWSettingsHub.buildLaserItems(this), mswPageClose,
             "正面命中眼部使敌人失明并恐慌；直接伤害为零，恐慌误伤仍可能致命。");
+         MSWSmartExclusions.register(this);
          weapon.injectXml();
          laser.injectXml();
          stage_.addEventListener(Event.ENTER_FRAME, onFrame, false, 0, true);

@@ -20,6 +20,7 @@ package
 
       public var smartEnabled:Boolean = false;
       public var smartMultiLock:Boolean = false;
+      public var smartExclusions:Object = {};
       public var smartKeepOutOfSight:Boolean = false;
       public var smartRadius:Number = 48;
       public var smartAcquire:Number = 0.6;
@@ -108,6 +109,7 @@ package
             if(so.data.ricochet != undefined) ricochet = so.data.ricochet;
             if(so.data.smartEnabled != undefined) smartEnabled = so.data.smartEnabled;
             if(so.data.smartMultiLock != undefined) smartMultiLock = so.data.smartMultiLock == true;
+            smartExclusions = MSWSmartExclusions.copy(so.data.smartExclusions);
             if(so.data.smartKeepOutOfSight != undefined) smartKeepOutOfSight = so.data.smartKeepOutOfSight == true;
             if(so.data.smartRadius != undefined) smartRadius = so.data.smartRadius;
             if(so.data.smartAcquire != undefined) smartAcquire = so.data.smartAcquire;
@@ -203,6 +205,7 @@ package
             so.data.ricochet = ricochet;
             so.data.smartEnabled = smartEnabled;
             so.data.smartMultiLock = smartMultiLock;
+            so.data.smartExclusions = MSWSmartExclusions.copy(smartExclusions);
             so.data.smartKeepOutOfSight = smartKeepOutOfSight;
             so.data.smartRadius = smartRadius;
             so.data.smartAcquire = smartAcquire;

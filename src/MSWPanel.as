@@ -27,6 +27,17 @@ package
          items = MSWSettingsHub.buildMswItems(m);
       }
 
+      /** Keep F6 limited to this mod's pages, independent of test/legacy registrations. */
+      private function localPages():Array
+      {
+         var ids:Array=["msw","msw-smart","msw-laser"],result:Array=[];
+         for each(var group:Array in MSWSmartExclusions.GROUPS) ids.push("msw-exempt-"+group[0]);
+         for each(var id:String in ids)
+            for each(var page:Object in mod.settings.getPages())
+               if(page.modId==id) {result.push(page);break;}
+         return result;
+      }
+
       // ---------------- 状态查询 ----------------
 
       /** 原版选项页是否打开（诊断计数用）。 */
@@ -59,7 +70,8 @@ package
       public function tabToggle(w:*):void
       {
          var api:* = mod.settings.api;
-         if(api != null && api.togglePage(pageIndex==2?"msw-laser":pageIndex==1?"msw-smart":"msw")) mod.cfg.diagAdd("tabOn");
+         var pages:Array=localPages();
+         if(api != null && pages.length>0 && api.togglePage(pages[pageIndex%pages.length].modId)) mod.cfg.diagAdd("tabOn");
       }
 
       /** 自动测试用：对模组按钮派发真实点击。 */
@@ -111,8 +123,10 @@ package
       {
          if(code==9 || code==33 || code==34)
          {
-            pageIndex=(pageIndex+(code==33?2:1))%3;sel=0;
-            items=pageIndex==2?MSWSettingsHub.buildLaserItems(mod):pageIndex==1?MSWSettingsHub.buildSmartItems(mod):MSWSettingsHub.buildMswItems(mod);
+            var pages:Array=localPages();
+            if(pages.length==0) return true;
+            pageIndex=(pageIndex+(code==33?pages.length-1:1))%pages.length;sel=0;
+            items=pages[pageIndex].items;
             refresh(); return true;
          }
          if(code == 38) // Up
@@ -227,7 +241,8 @@ package
          if(ovTf == null) return;
          var c:* = mod.cfg;
          var s:String = "";
-         s += (pageIndex==2?"非致命激光枪":pageIndex==1?"智能武器":MSWWeapon.WEAPON_NAME) + " 模组设置 [Tab 切页]\n";
+         var pages:Array=localPages();
+         s += (pages.length>0?pages[pageIndex%pages.length].displayName:MSWWeapon.WEAPON_NAME) + " 模组设置 [Tab 切页]\n";
          s += "--------------------------------\n";
          for(var i:int = 0; i < items.length; i++)
          {

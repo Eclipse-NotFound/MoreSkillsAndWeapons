@@ -12,6 +12,8 @@ package
       public function MSWSmartLock() {}
       public function clear():void
       { target=null; candidate=null; progress=0; strength=0; lost=0; interrupted=0; }
+      public function clearCandidate():void
+      { candidate=null; progress=0; interrupted=0; }
       public function advance(choice:*, visible:Boolean, dt:Number, c:*):void
       {
          if(target != null)

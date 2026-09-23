@@ -39,7 +39,8 @@ package
          return u!=null && u!==w.gg && MSWU.has(u,"loc") && u.loc===w.loc &&
             MSWU.num(u,"hp")>0 && MSWU.num(u,"sost")<3 &&
             MSWU.num(u,"fraction")>=1 && MSWU.num(u,"fraction")<=4 && u.fraction!=w.gg.fraction &&
-            !u.disabled && !u.trigDis && !u.npc && !u.noAgro;
+            !u.disabled && !u.trigDis && !u.npc && !u.noAgro &&
+            !MSWSmartExclusions.excludes(u,mod.cfg.smartExclusions);
       }
       private function alivePlayer(w:*):Boolean
       { return w!=null && MSWU.has(w,"gg") && w.gg!=null && MSWU.num(w.gg,"hp")>0 && MSWU.num(w.gg,"sost")<3; }
@@ -104,6 +105,7 @@ package
             else
             {
                if(lock.target!=null && !targetAllowed(lock.target,w)) lock.clear();
+               if(lock.candidate!=null && !targetAllowed(lock.candidate,w)) lock.clearCandidate();
                var choice:*=null; var nearest:Number=mod.cfg.smartRadius+0.0001;
                for each(var u:* in w.loc.units)
                {
@@ -277,7 +279,7 @@ package
          }
          if(best==null) { mod.cfg.diagAdd("smartReplayUnmatched");return null; }
          best.used=true;
-         if(best.shot==null)return null;
+         if(best.shot==null || MSWSmartExclusions.excludes(best.shot.target,mod.cfg.smartExclusions))return null;
          mod.cfg.diagAdd("smartReplayMatched");
          b.dx=best.dx;b.dy=best.dy;b.vel=best.vel;b.rot=Math.atan2(b.dy,b.dx);
          return {target:best.shot.target,strength:best.shot.strength,turn:best.shot.turn,turnRadius:best.shot.turnRadius,remaining:best.shot.remaining,
