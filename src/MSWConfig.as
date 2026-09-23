@@ -19,6 +19,7 @@ package
       public var ricochetResetDistance:Boolean = true;
 
       public var smartEnabled:Boolean = false;
+      public var smartKeepOutOfSight:Boolean = false;
       public var smartRadius:Number = 48;
       public var smartAcquire:Number = 0.6;
       public var smartGrace:Number = 0.15;
@@ -102,6 +103,7 @@ package
             for each(var laserKey:String in LASER_KEYS)if(so.data[laserKey]!==undefined)this[laserKey]=so.data[laserKey];
             if(so.data.ricochet != undefined) ricochet = so.data.ricochet;
             if(so.data.smartEnabled != undefined) smartEnabled = so.data.smartEnabled;
+            if(so.data.smartKeepOutOfSight != undefined) smartKeepOutOfSight = so.data.smartKeepOutOfSight == true;
             if(so.data.smartRadius != undefined) smartRadius = so.data.smartRadius;
             if(so.data.smartAcquire != undefined) smartAcquire = so.data.smartAcquire;
             if(so.data.smartGrace != undefined) smartGrace = so.data.smartGrace;
@@ -193,6 +195,7 @@ package
             for each(var laserKey:String in LASER_KEYS)so.data[laserKey]=this[laserKey];
             so.data.ricochet = ricochet;
             so.data.smartEnabled = smartEnabled;
+            so.data.smartKeepOutOfSight = smartKeepOutOfSight;
             so.data.smartRadius = smartRadius;
             so.data.smartAcquire = smartAcquire;
             so.data.smartGrace = smartGrace;

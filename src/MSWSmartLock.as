@@ -17,6 +17,12 @@ package
          if(target != null)
          {
             if(visible) { lost=0; strength=Math.min(1,strength+dt/c.smartRecover); }
+            else if(c.smartKeepOutOfSight)
+            {
+               // Only an existing lock is retained. An unfinished candidate
+               // still uses the normal interrupted-acquisition fade below.
+               lost=0;
+            }
             else
             {
                var old:Number=lost; lost+=dt;

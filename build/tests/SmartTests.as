@@ -29,6 +29,17 @@ package
             l.advance(null,false,1.5,c); ok(l.target==null,"complete loss requires acquisition again");
             l.advance(a,false,0.6,c); l.advance(b,true,0.3,c); ok(l.target===a,"old lock retained during new acquisition");
             l.advance(b,true,0.3,c); ok(l.target===b,"switch only on completion");
+            c.smartKeepOutOfSight=true;
+            l.strength=0.5;
+            l.advance(null,false,10,c);
+            ok(l.target===b && l.strength==0.5 && l.lost==0,"existing unseen lock holds current strength indefinitely");
+            l.advance(a,false,0.3,c);
+            l.advance(null,false,c.smartGrace+c.smartRetreat+0.1,c);
+            ok(l.target===b && l.candidate==null,"unseen new candidate still retreats while old lock persists");
+            l.advance(null,true,0.2,c);near(l.strength,1,"sight restores a previously weakened held lock");
+            c.smartKeepOutOfSight=false;
+            l.advance(null,false,c.smartHold+c.smartDecay+0.1,c);
+            ok(l.target==null,"turning the switch off resumes existing loss timer");
             c.smartTurn=NaN;c.smartLife=-2;c.smartRadius=205;c.smartGrace=0.149; c.clamp();
             near(c.smartTurn,1080,"bad numeric config fallback");near(c.smartLife,0.1,"positive guidance budget");near(c.smartRadius,200,"bounded search tolerance");near(c.smartGrace,0.15,"two decimal precision");
             c.smartTurnRadius=NaN;c.smartHudSize=NaN;c.clamp();
@@ -39,11 +50,11 @@ package
             near(c.smartTurnRadius,200,"radius upper bound");near(c.smartHudSize,12,"HUD lower bound");
             var legacy:SharedObject=SharedObject.getLocal("MSWConfig");legacy.clear();legacy.data.smartTurn=1440;legacy.data.smartEnabled=true;legacy.flush();
             var migrated:MSWConfig=new MSWConfig();migrated.load();
-            ok(migrated.smartTurn==1440 && migrated.smartEnabled && migrated.smartTurnRadius==50 && migrated.smartHudSize==24,"old config preserves choices and adds new defaults");
-            var items:Array=MSWSettingsHub.buildSmartItems({cfg:c});ok(items.length==12,"all twelve adjustable settings available");
+            ok(migrated.smartTurn==1440 && migrated.smartEnabled && migrated.smartTurnRadius==50 && migrated.smartHudSize==24 && !migrated.smartKeepOutOfSight,"old config preserves choices and adds new defaults");
+            var items:Array=MSWSettingsHub.buildSmartItems({cfg:c});ok(items.length==13,"all thirteen adjustable settings available");
             for each(var item:Object in items) { item["set"](item.def); near(Number(item["get"]()),Number(item.def),"default "+item.key); }
-            var fresh:MSWConfig=new MSWConfig(); c.smartEnabled=true;c.smartGrace=0.25;c.smartTurnRadius=30;c.smartHudSize=18;c.save();fresh.load();
-            ok(fresh.smartEnabled && fresh.smartGrace==0.25 && fresh.smartTurnRadius==30 && fresh.smartHudSize==18,"all smart settings persist");
+            var fresh:MSWConfig=new MSWConfig(); c.smartEnabled=true;c.smartKeepOutOfSight=true;c.smartGrace=0.25;c.smartTurnRadius=30;c.smartHudSize=18;c.save();fresh.load();
+            ok(fresh.smartEnabled && fresh.smartKeepOutOfSight && fresh.smartGrace==0.25 && fresh.smartTurnRadius==30 && fresh.smartHudSize==18,"all smart settings persist");
             var wall:Object={phis:1,phX1:90,phX2:130,phY1:40,phY2:120};
             var loc:Object={getAbsTile:function(x:Number,y:Number):* {return x>=90 && x<=130 && y>=40 && y<=120?wall:{phis:0};}};
             ok(!MSWSmartRoute.clear(loc,0,80,210,80),"wall blocks direct shot");

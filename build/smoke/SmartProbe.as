@@ -43,7 +43,7 @@ package
             }
             if(phase==1 && t-since>10)
             {
-               rows=[];collect(w.main);ok(rows.length==12,"real smart settings page shows 12 controls");
+               rows=[];collect(w.main);ok(rows.length==13,"real smart settings page shows 13 controls");
                ok(rows[0].settingsItem.key=="smartEnabled" && !m.cfg.smartEnabled,"default off in real UI");
                var sliders:int=0;var stored:MSWConfig;
                for each(var r:* in rows)
@@ -65,17 +65,22 @@ package
                rows=[];collect(w.main);
                rows[0].settingsSc.selected=true;rows[0].settingsSc.dispatchEvent(new Event(Event.CHANGE));
                ok(m.cfg.smartEnabled,"real checkbox enables smart guns");
+               rows[6].settingsSc.selected=true;rows[6].settingsSc.dispatchEvent(new Event(Event.CHANGE));
+               ok(m.cfg.smartKeepOutOfSight,"real out-of-sight switch enables indefinite hold");
                stored=new MSWConfig();stored.load();ok(stored.smartEnabled,"checkbox saves immediately");
+               ok(stored.smartKeepOutOfSight,"out-of-sight switch saves immediately");
                var reset:*=find(w.main,"恢复默认");ok(reset!=null,"smart reset button exists");reset.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));
-               ok(!m.cfg.smartEnabled && m.cfg.smartLife==2 && m.cfg.smartTurn==1080 && m.cfg.smartTurnRadius==50 && m.cfg.smartHudSize==24,"reset restores smart defaults including radius and HUD");
+               ok(!m.cfg.smartEnabled && !m.cfg.smartKeepOutOfSight && m.cfg.smartLife==2 && m.cfg.smartTurn==1080 && m.cfg.smartTurnRadius==50 && m.cfg.smartHudSize==24,"reset restores smart defaults including radius and HUD");
                screenshot();w.pip.onoff();w.onPause=true;w.godMode=false;w.catPause=false;w.gg.ggControl=true;
                m.panel.toggleOverlay();m.panel.handleKey(9);m.panel.handleKey(39);
                ok(m.cfg.smartEnabled,"F6 Tab smart page toggles master");
                m.panel.handleKey(40);m.panel.handleKey(39);ok(m.cfg.smartRadius==52,"F6 smart page adjusts numeric setting");
-               for(var nav:int=0;nav<8;nav++)m.panel.handleKey(40);
+               for(var nav:int=0;nav<5;nav++)m.panel.handleKey(40);
+               m.panel.handleKey(39);ok(m.cfg.smartKeepOutOfSight,"F6 can toggle out-of-sight hold");
+               for(nav=0;nav<4;nav++)m.panel.handleKey(40);
                m.panel.handleKey(39);ok(m.cfg.smartTurnRadius==60,"F6 adjusts turn radius");
                m.panel.handleKey(40);m.panel.handleKey(40);m.panel.handleKey(39);
-               ok(m.cfg.smartHudSize==26,"F6 adjusts diamond size");m.cfg.smartTurnRadius=50;m.cfg.smartHudSize=24;
+               ok(m.cfg.smartHudSize==26,"F6 adjusts diamond size");m.cfg.smartTurnRadius=50;m.cfg.smartHudSize=24;m.cfg.smartKeepOutOfSight=false;
                m.panel.handleKey(9);m.panel.toggleOverlay();m.cfg.smartRadius=48;
                m.cfg.smartEnabled=true;m.cfg.ricochet=false;m.cfg.clamp();
                var W:Class=MSWU.cls("fe.weapon.Weapon");weapon=W["create"](w.gg,"p9mm");w.gg.currentWeapon=weapon;
@@ -158,8 +163,22 @@ package
                if(phase==2 && elapsed>900)
                {
                   ok(m.smart.lock.target===target && m.smart.lock.strength==1,"real frame clock acquires reticle target");
+                  m.cfg.smartKeepOutOfSight=true;pos(1500,240);
+                  ok(!m.smart.visible(target,w),"locked target moved beyond visible screen");
+                  phase=21;stateSince=getTimer();
+               }
+               else if(phase==21 && elapsed>2600)
+               {
+                  ok(m.smart.lock.target===target && m.smart.lock.strength==1,"off-screen target stays locked beyond normal decay time");
+                  pos(440,240);
                   for(y=80;y<400;y+=40){tile=w.loc.getAbsTile(321,y+1);tile.phis=1;tile.phX1=320;tile.phX2=360;tile.phY1=y;tile.phY2=y+40;sightWall.push(tile);}
                   ok(!m.smart.visible(target,w),"wall removes player line of sight");
+                  phase=22;stateSince=getTimer();
+               }
+               else if(phase==22 && elapsed>2600)
+               {
+                  ok(m.smart.lock.target===target && m.smart.lock.strength==1,"occluded target stays locked while switch is on");
+                  m.cfg.smartKeepOutOfSight=false;
                   phase=3;stateSince=getTimer();
                }
                else if(phase==3 && elapsed>1100)
