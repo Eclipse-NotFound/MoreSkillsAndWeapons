@@ -52,17 +52,22 @@ package
             var legacy:SharedObject=SharedObject.getLocal("MSWConfig");legacy.clear();legacy.data.smartTurn=1440;legacy.data.smartEnabled=true;legacy.flush();
             var migrated:MSWConfig=new MSWConfig();migrated.load();
             ok(migrated.smartTurn==1440 && migrated.smartEnabled && migrated.smartTurnRadius==50 && migrated.smartHudSize==24 && !migrated.smartKeepOutOfSight && !migrated.smartMultiLock,"old config preserves choices and adds new defaults");
-            ok(!migrated.smartSmooth && migrated.smartSmoothing==50,"old config adds disabled smooth mode and its default amount");
-            c.smartSmoothing=NaN;c.clamp();near(c.smartSmoothing,50,"invalid smoothing uses default");
-            c.smartSmoothing=-5;c.clamp();near(c.smartSmoothing,0,"smoothing minimum");
-            c.smartSmoothing=103;c.clamp();near(c.smartSmoothing,100,"smoothing maximum");
+            ok(!migrated.smartAdaptiveRadius && migrated.smartMinTurnRadius==10,"old config adds disabled adaptation and minimum radius");
+            legacy.data.smartSmooth=true;legacy.data.smartSmoothing=75;legacy.data.smartTurnRadius=160;legacy.flush();
+            migrated=new MSWConfig();migrated.load();
+            ok(migrated.smartAdaptiveRadius && migrated.smartMinTurnRadius==10 && migrated.smartTurnRadius==160,"legacy enabled state migrates without converting smoothing amount");
+            legacy.data.smartAdaptiveRadius=false;legacy.flush();migrated.load();
+            ok(!migrated.smartAdaptiveRadius,"explicit new off overrides old smooth on");
+            c.smartMinTurnRadius=NaN;c.clamp();near(c.smartMinTurnRadius,10,"invalid minimum uses default");
+            c.smartMinTurnRadius=-5;c.clamp();near(c.smartMinTurnRadius,10,"minimum radius lower bound");
+            c.smartMinTurnRadius=999;c.clamp();near(c.smartMinTurnRadius,200,"minimum radius upper bound");
             var items:Array=MSWSettingsHub.buildSmartItems({cfg:c});ok(items.length==16,"all sixteen adjustable settings available");
             for each(var item:Object in items) { item["set"](item.def); near(Number(item["get"]()),Number(item.def),"default "+item.key); }
-            var fresh:MSWConfig=new MSWConfig(); c.smartEnabled=true;c.smartMultiLock=true;c.smartKeepOutOfSight=true;c.smartGrace=0.25;c.smartTurnRadius=30;c.smartHudSize=18;c.smartSmooth=true;c.smartSmoothing=75;c.save();fresh.load();
+            var fresh:MSWConfig=new MSWConfig(); c.smartEnabled=true;c.smartMultiLock=true;c.smartKeepOutOfSight=true;c.smartGrace=0.25;c.smartTurnRadius=30;c.smartHudSize=18;c.smartAdaptiveRadius=true;c.smartMinTurnRadius=20;c.save();fresh.load();
             ok(fresh.smartEnabled && fresh.smartMultiLock && fresh.smartKeepOutOfSight && fresh.smartGrace==0.25 && fresh.smartTurnRadius==30 && fresh.smartHudSize==18,"all smart settings persist");
             multiTests();
-            ok(fresh.smartSmooth && fresh.smartSmoothing==75,"smooth mode and amount persist");
-            smoothTests();
+            ok(fresh.smartAdaptiveRadius && fresh.smartMinTurnRadius==20,"adaptive mode and minimum radius persist");
+            adaptiveTests();
             var wall:Object={phis:1,phX1:90,phX2:130,phY1:40,phY2:120};
             var loc:Object={getAbsTile:function(x:Number,y:Number):* {return x>=90 && x<=130 && y>=40 && y<=120?wall:{phis:0};}};
             ok(!MSWSmartRoute.clear(loc,0,80,210,80),"wall blocks direct shot");
@@ -131,42 +136,40 @@ package
          ok(multi.locks.length==256 && order,"all visible targets retained without an artificial target cap");
          multi.clear();ok(multi.locks.length==0 && multi.pick()==null,"mode or world reset clears all locks and rotation");
       }
-      private function smoothTests():void
+      private function adaptiveTests():void
       {
-         var clearTile:Object={phis:0};
-         var empty:Object={getAbsTile:function(x:Number,y:Number):* {return clearTile;}};
-         var peaks:Array=[],turns:Array=[];
-         for each(var amount:Number in [0,25,50,100])
-         {
-            var b:Object={X:0,Y:0,dx:20,dy:0,vel:20,loc:empty};
-            var s:Object={smoothing:amount,remaining:5};
-            var previous:Number=0,peak:Number=0,early:Number=0;
-            for(var i:int=0;i<100;i++)
-            {
-               var old:Number=Math.atan2(b.dy,b.dx),ty:Number=i<40?300:-300;
-               if(amount==0)MSWSmartRoute.steer(b,1800,ty,0.12,empty,0.2,0.5);
-               else MSWSmartSmooth.steer(b,s,[{x:1800,y:ty}],0.12,0.2,0.5);
-               var change:Number=MSWSmartRoute.angle(Math.atan2(b.dy,b.dx)-old);
-               peak=Math.max(peak,Math.abs(change-previous));previous=change;
-               if(i==4)early=Math.abs(Math.atan2(b.dy,b.dx));
-               b.X+=b.dx*0.2;b.Y+=b.dy*0.2;
-               if(Math.abs(b.vel-20)>0.000001 || Math.abs(change)>0.120001)throw new Error("smooth controller changed speed/turn ceiling");
-            }
-            peaks.push(peak);turns.push(early);
-            ok(amount==0 || !(s.smoothUrgent>0),"ordinary distant pursuit needs no emergency at "+amount);
-         }
-         ok(peaks[2]<peaks[0]*0.3 && peaks[3]<peaks[2],"smooth controller reduces turn-rate jump when target reverses");
-         ok(turns[0]>turns[1] && turns[1]>turns[2] && turns[2]>turns[3],"higher amount progressively softens initial turn response");
-         ok(true,"all smoothing levels retain native speed and original turn ceiling");
-         var urgent:Object={X:0,Y:0,dx:20,dy:0,vel:20,loc:empty};
-         s={smoothing:100,remaining:0.05};
-         MSWSmartSmooth.steer(urgent,s,[{x:10,y:10}],0.1,0.2,0.5);
-         ok(s.smoothUrgent>0 && Math.abs(urgent.rot)<=0.100001,"near target and expiring budget allow bounded urgent correction");
-         var wall:Object={phis:1,phX1:16,phX2:40,phY1:-10,phY2:10};
-         var blocked:Object={getAbsTile:function(x:Number,y:Number):* {return x>=16 && x<=40 && y>=-10 && y<=10?wall:clearTile;}};
-         urgent={X:0,Y:0,dx:20,dy:0,vel:20,loc:blocked};s={smoothing:100,remaining:2};
-         MSWSmartSmooth.steer(urgent,s,[{x:200,y:0}],0.1,0.2,0.5);
-         ok(s.smoothUrgent>0 && isFinite(urgent.dx) && Math.abs(urgent.rot)<=0.100001,"lookahead detects imminent wall without violating angular limit");
+         var tile:Object={phis:0},loc:Object={getAbsTile:function(x:Number,y:Number):*{return tile;}};
+         var b:Object={X:0,Y:0,dx:20,dy:0,ddx:0,ddy:0,liv:100,loc:loc};
+         var u:Object={X1:588,X2:612,Y1:10,Y2:50,dx:0,dy:0};
+         var path:Array=[{x:600,y:30}],s:Object={target:u,remaining:2,turnRadius:200,minTurnRadius:10};
+         var before:String=JSON.stringify(path),x:Number=b.X,dx:Number=b.dx;
+         var prediction:Object=MSWAdaptiveRadius.evaluate(b,s,path,Math.PI/5,2);
+         ok(prediction.hit,"normal large radius can reach the open target: "+prediction.status);
+         near(MSWAdaptiveRadius.select(b,s,path,Math.PI/5),2,"feasible normal radius is retained");
+         ok(JSON.stringify(path)==before && b.X==x && b.dx==dx,"prediction does not move real projectile or mutate route");
+         u.X1=188;u.X2=212;u.Y1=80;u.Y2=120;path=[{x:200,y:100}];
+         s={target:u,remaining:0.6,turnRadius:200,minTurnRadius:10};
+         prediction=MSWAdaptiveRadius.evaluate(b,s,path,Math.PI/60,2);
+         ok(!prediction.hit && prediction.status!="unknown","wide slow turn misses before guidance ends");
+         var radius:Number=MSWAdaptiveRadius.select(b,s,path,Math.PI/60);
+         ok(radius<2 && radius>0.1,"early rescue chooses an intermediate radius, not always minimum: "+radius);
+         ok(MSWAdaptiveRadius.evaluate(b,s,path,Math.PI/60,radius).hit,"selected rescue reaches predicted target area");
+         s={target:u,remaining:0.6,turnRadius:200,minTurnRadius:180};
+         radius=MSWAdaptiveRadius.select(b,s,path,Math.PI/60);
+         ok(radius>=1.8 && radius<=2,"unreachable target never overrides user minimum");
+         s={target:u,remaining:2,turnRadius:50,minTurnRadius:200};
+         near(MSWAdaptiveRadius.select(b,s,path,Math.PI/5),0.5,"minimum above normal never widens ordinary radius");
+         u.X1=588;u.X2=612;u.Y1=10;u.Y2=50;path=[{x:600,y:30}];
+         s={target:u,remaining:2,turnRadius:200,minTurnRadius:10,radiusNow:50};
+         near(MSWAdaptiveRadius.select(b,s,path,Math.PI/5),0.5,"first safe forecast does not immediately restore radius");
+         s.radiusAge=0;radius=MSWAdaptiveRadius.select(b,s,path,Math.PI/5);
+         ok(radius>0.5 && radius<2,"stable recovery grows gradually");
+         s.radiusAge=0;s.radiusNow=30;s.radiusStable=4;MSWAdaptiveRadius.reset(s);
+         ok(s.radiusNow==200 && s.radiusAge==0 && s.radiusStable==0,"ricochet resets prediction and recovery history");
+         ok(MSWAdaptiveRadius.intersects(0,0,200,0,90,-5,110,5),"swept target test catches fast crossings");
+         ok(!MSWAdaptiveRadius.intersects(0,6,200,6,90,-5,110,5),"swept target test rejects a near miss");
+         b.liv=1000;s.remaining=8;u.X1=99990;u.X2=100010;path=[{x:100000,y:30}];
+         ok(MSWAdaptiveRadius.evaluate(b,s,path,Math.PI/5,2).status=="unknown","forecast budget exhaustion is not proof of a miss");
       }
       private function finish(s:String,code:int):void
       {

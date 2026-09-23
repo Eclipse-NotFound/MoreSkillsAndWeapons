@@ -58,12 +58,12 @@ package
                {
                   if(r.settingsItem.key=="smartTurnRadius") {r.settingsSc.scrollPosition=2;r.settingsSc.dispatchEvent(new Event("scroll"));}
                   if(r.settingsItem.key=="smartHudSize") {r.settingsSc.scrollPosition=3;r.settingsSc.dispatchEvent(new Event("scroll"));}
-                  if(r.settingsItem.key=="smartSmoothing") {r.settingsSc.scrollPosition=15;r.settingsSc.dispatchEvent(new Event("scroll"));}
+                  if(r.settingsItem.key=="smartMinTurnRadius") {r.settingsSc.scrollPosition=6;r.settingsSc.dispatchEvent(new Event("scroll"));}
                }
                rows[4].settingsSc.scrollPosition=5;rows[4].settingsSc.dispatchEvent(new Event("scroll"));
                m.panel.tabToggle(w);stored=new MSWConfig();stored.load();
                ok(stored.smartGrace==0.25,"changed decimal slider persists on page close");
-               ok(stored.smartSmoothing==75,"smooth amount persists on page close");
+               ok(stored.smartMinTurnRadius==70,"minimum radius persists on page close");
                ok(stored.smartTurnRadius==30 && stored.smartHudSize==18,"radius and HUD sliders persist on page close");m.panel.tabToggle(w);
                if(MSWU.has(m.settings,"api") && m.settings.api!=null)m.settings.api.selectPage("msw-smart");
                rows=[];collect(w.main);
@@ -77,10 +77,10 @@ package
                ok(stored.smartKeepOutOfSight,"out-of-sight switch saves immediately");
                ok(stored.smartMultiLock,"multi-lock switch saves immediately");
                rows[12].settingsSc.selected=true;rows[12].settingsSc.dispatchEvent(new Event(Event.CHANGE));
-               stored=new MSWConfig();stored.load();ok(stored.smartSmooth,"real smooth-mode checkbox saves immediately");
+               stored=new MSWConfig();stored.load();ok(stored.smartAdaptiveRadius,"real adaptive-radius checkbox saves immediately");
                var reset:*=find(w.main,"恢复默认");ok(reset!=null,"smart reset button exists");reset.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));
                ok(!m.cfg.smartEnabled && !m.cfg.smartMultiLock && !m.cfg.smartKeepOutOfSight && m.cfg.smartLife==2 && m.cfg.smartTurn==1080 && m.cfg.smartTurnRadius==50 && m.cfg.smartHudSize==24,"reset restores smart defaults including modes, radius and HUD");
-               ok(!m.cfg.smartSmooth && m.cfg.smartSmoothing==50,"reset restores disabled smooth mode and default amount");
+               ok(!m.cfg.smartAdaptiveRadius && m.cfg.smartMinTurnRadius==10,"reset restores disabled adaptive radius and default amount");
                screenshot();w.pip.onoff();w.onPause=true;w.godMode=false;w.catPause=false;w.gg.ggControl=true;
                m.panel.toggleOverlay();m.panel.handleKey(9);m.panel.handleKey(39);
                ok(m.cfg.smartEnabled,"F6 Tab smart page toggles master");
@@ -90,11 +90,11 @@ package
                m.panel.handleKey(39);ok(m.cfg.smartKeepOutOfSight,"F6 can toggle out-of-sight hold");
                for(nav=0;nav<4;nav++)m.panel.handleKey(40);
                m.panel.handleKey(39);ok(m.cfg.smartTurnRadius==60,"F6 adjusts turn radius");
-               m.panel.handleKey(40);m.panel.handleKey(39);ok(m.cfg.smartSmooth,"F6 toggles smooth mode");
-               m.panel.handleKey(40);m.panel.handleKey(39);ok(m.cfg.smartSmoothing==55,"F6 adjusts smooth amount");
+               m.panel.handleKey(40);m.panel.handleKey(39);ok(m.cfg.smartAdaptiveRadius,"F6 toggles adaptive radius");
+               m.panel.handleKey(40);m.panel.handleKey(39);ok(m.cfg.smartMinTurnRadius==20,"F6 adjusts minimum radius");
                m.panel.handleKey(40);m.panel.handleKey(40);m.panel.handleKey(39);
                ok(m.cfg.smartHudSize==26,"F6 adjusts diamond size");m.cfg.smartTurnRadius=50;m.cfg.smartHudSize=24;m.cfg.smartKeepOutOfSight=false;m.cfg.smartMultiLock=false;
-               m.cfg.smartSmooth=false;m.cfg.smartSmoothing=50;
+               m.cfg.smartAdaptiveRadius=false;m.cfg.smartMinTurnRadius=10;
                m.panel.handleKey(9);m.panel.toggleOverlay();m.cfg.smartRadius=48;
                m.cfg.smartEnabled=true;m.cfg.ricochet=false;m.cfg.clamp();
                var W:Class=MSWU.cls("fe.weapon.Weapon");weapon=W["create"](w.gg,"p9mm");w.gg.currentWeapon=weapon;

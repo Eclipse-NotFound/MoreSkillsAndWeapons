@@ -147,7 +147,7 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.10.0-body-assist");
+         cfg.diagSet("ver", "1.11.0-adaptive-radius");
          cfg.diagSet("smartHudVersion", MSWSmartHUD.VERSION);
          settings.registerPage("msw", "MoreSkills&Weapons",
             MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");

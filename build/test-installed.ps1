@@ -1,4 +1,5 @@
 param(
+    [string]$GameDirectory = '',
     [string]$ExpectedVersion = '1.5.3-smart-diamond',
     [string]$ExpectedHudVersion = '',
     [string]$ProductionSwf = '',
@@ -7,7 +8,7 @@ param(
     [string]$PythonPath = 'C:\Users\hello\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
 )
 $ErrorActionPreference = 'Stop'
-$gameRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
+$gameRoot = if($GameDirectory){[IO.Path]::GetFullPath($GameDirectory)}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))}
 $runtimeDir = Join-Path $PSScriptRoot $RuntimeDirectory
 $outputDir = Join-Path $PSScriptRoot $OutputDirectory
 New-Item -ItemType Directory -Force $outputDir | Out-Null

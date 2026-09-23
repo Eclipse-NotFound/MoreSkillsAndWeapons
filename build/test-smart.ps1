@@ -1,7 +1,7 @@
-param([string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$HostSwf='', [string]$SettingsSwf='', [string]$SourcePath='../src')
+param([string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$HostSwf='', [string]$SettingsSwf='', [string]$SourcePath='../src', [string]$GameDirectory='')
 $ErrorActionPreference = 'Stop'
 & (Join-Path $PSScriptRoot 'build-smart-host.ps1') -AnimateRoot $AnimateRoot
-$gameRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
+$gameRoot = if($GameDirectory){[IO.Path]::GetFullPath($GameDirectory)}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))}
 $runtimeDir = Join-Path $PSScriptRoot 'test-smart-runtime'
 $outputDir = Join-Path $PSScriptRoot 'out\smart'
 $javaPath = Join-Path $AnimateRoot 'jre\bin\java.exe'

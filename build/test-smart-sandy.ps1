@@ -1,12 +1,12 @@
-param([string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$SourcePath='../src', [switch]$MultiLock, [switch]$SmoothMode)
+param([string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$SourcePath='../src', [switch]$MultiLock, [Alias('SmoothMode')][switch]$AdaptiveRadius, [string]$GameDirectory='')
 $ErrorActionPreference = 'Stop'
 & (Join-Path $PSScriptRoot 'build-smart-host.ps1') -AnimateRoot $AnimateRoot
-$gameRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
+$gameRoot = if($GameDirectory){[IO.Path]::GetFullPath($GameDirectory)}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))}
 $runtimeDir = Join-Path $PSScriptRoot 'test-sandy-runtime'
 $outputDir = Join-Path $PSScriptRoot 'out\sandy-smart'
 $probeName='SandySmartSmokeMod'
 if($MultiLock){$runtimeDir=Join-Path $PSScriptRoot 'out\sandy-multi\runtime';$outputDir=Join-Path $PSScriptRoot 'out\sandy-multi';$probeName='MultiSandySmartSmokeMod'}
-if($SmoothMode){$runtimeDir=Join-Path $PSScriptRoot 'out\sandy-smooth\runtime';$outputDir=Join-Path $PSScriptRoot 'out\sandy-smooth';$probeName='SmoothSandySmartSmokeMod'}
+if($AdaptiveRadius){$runtimeDir=Join-Path $PSScriptRoot 'out\sandy-adaptive\runtime';$outputDir=Join-Path $PSScriptRoot 'out\sandy-adaptive';$probeName='SmoothSandySmartSmokeMod'}
 $javaPath = Join-Path $AnimateRoot 'jre\bin\java.exe'
 $compilerPath = Join-Path $AnimateRoot 'Common\Configuration\ActionScript 3.0\bin\mxmlc.jar'
 New-Item -ItemType Directory -Force $runtimeDir,$outputDir,(Join-Path $runtimeDir 'mods\MoreSkills&Weapons\release') | Out-Null

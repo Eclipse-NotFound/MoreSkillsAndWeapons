@@ -1,5 +1,18 @@
 # 构建工具链说明（可复现）
 
+## 当前开发：自适应转弯半径
+
+旧「平滑弹道/平滑程度」已替换为「自适应转弯半径/最小半径倍率」。旧开关状态迁移，普通倍率原样保留；最小倍率10–200%/步长10/默认10%，有效下限不高于普通倍率。以下历史小节的smooth-mode入口已由自适应入口替代，不部署旧产物。
+
+- `test-smart-unit.ps1`：102条规则，含旧配置迁移、新字段优先、最大可行倍率、最低值、稳定后恢复及预测预算耗尽。
+- `test-smart.ps1`：16项真实设置、Pip/F6保存与默认值、原单目标回归；新增项所在settings.png已检查。
+- `test-adaptive-radius-production.ps1 -ProductionSwf <准确生产SWF> -Nodebug`：24项真实物理检查；固定200%与自适应的实际命中对照、倍率轨迹、恢复、绕箱、通道、反弹、原寿命/预算和64弹压力。输出out/adaptive-radius-production。
+- `test-smart-sandy.ps1 -AdaptiveRadius`：真实时停逐发保留目标、30/40/50%普通倍率与10/20/30%最小倍率，回放前关闭模式并改为200%仍沿用原值。输出out/sandy-adaptive；旧-SmoothMode保留为参数别名。
+- `test-multi-lock-production.ps1`、`test-exclusion-production.ps1`：自适应开启后的52项多锁及312项单菜单豁免/实际单位/在途弹检查。
+- `tools/plot-adaptive-radius.py <结果目录>`：Pillow读取真实位置与倍率记录绘图，不重新模拟。
+
+上述启动/规则/智能/时停脚本支持-GameDirectory指定实际游戏根，允许从嵌套独立检出测试。生产文件须单独通过激光真实读档/光束检查及安装前后900帧检查；相同RuntimeDirectory不能同时跑两种场景。当前实验与候选指纹见knowledge/experiments/smart-adaptive-radius-20260923.md。
+
 弹道平滑回归：`test-smooth.ps1` 测原生轨迹拐角、距离、曳光、绕墙扣血、跳弹入墙面、时限/寿命、清理及 64 发批量，结果和截图在 `out/smooth/`。`test-smart-sandy.ps1` 同时测真实慢步/回放的曲线。两者支持 `-SourcePath` 指定固定源码快照（相对 build 目录），生产候选分别写入各自结果目录的 `Production.swf`；Smoke/Probe 仍禁止部署。详见 `knowledge/experiments/smart-smoothing-20260920.md`。
 
 v1.5.1 起真实游戏 UI 测试需要正式安装 ModSettings 及其 loader。`test-game-smoke.ps1`、`test-damage.ps1`、`test-smart.ps1` 可用 `-HostSwf` / `-SettingsSwf` 指定预部署候选；测试只复制到私有目录。`test-installed.ps1` 使用正式宿主与正式依赖字节。

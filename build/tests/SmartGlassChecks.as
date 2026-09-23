@@ -14,9 +14,12 @@ package
          ok(MSWSmartRoute.find(loc,0,80,210,80,b).length==1,"breakable normal window takes the shorter direct route");
          MSWSmartRoute.steer(b,210,80,0.5,loc);
          ok(b.dx==20 && b.dy==0,"near-window steering does not evade chosen glass");
-         var s:Object={smoothing:100,remaining:2};
-         MSWSmartSmooth.steer(b,s,[{x:210,y:80}],0.1,0.2,0.5);
-         ok(b.dy==0 && s.smoothUrgent==null,"smooth forecast does not evade chosen glass");
+         b.liv=100;
+         var s:Object={turnRadius:200,minTurnRadius:10,remaining:2,
+            target:{X1:200,X2:220,Y1:60,Y2:100,dx:0,dy:0}};
+         ok(MSWAdaptiveRadius.evaluate(b,s,[{x:210,y:80}],0.1,2).hit,"adaptive forecast retains a chosen breakable window route");
+         ok(MSWAdaptiveRadius.select(b,s,[{x:210,y:80}],0.1)==2,"planned normal glass does not force a smaller radius");
+         ok(b.X==80 && b.dx==20 && t.hp==10 && !t.door.dead,"window forecast cannot move the shot or damage the window");
          b.destroy=0;
          ok(MSWSmartRoute.find(loc,0,80,210,80,b).length>1,"zero terrain damage must take the open detour");
          b.destroy=0.9;ok(!MSWSmartGlass.breakable(loc,t,b),"native integer damage cannot round fractional damage up");

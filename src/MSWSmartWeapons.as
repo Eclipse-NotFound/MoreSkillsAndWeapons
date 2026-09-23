@@ -75,7 +75,7 @@ package
       {
          try
          {
-            mod.cfg.diagSet("smartMotionVersion","1.3-smooth-mode");
+            mod.cfg.diagSet("smartMotionVersion","1.4-adaptive-radius");
             mod.cfg.diagSet("smartGlassVersion",MSWSmartGlass.VERSION);
             afterProjectiles(); motion.prune();
             var now:int=getTimer(); var dt:Number=lastTime==0?0:Math.min(0.1,(now-lastTime)/1000); lastTime=now;
@@ -211,14 +211,14 @@ package
                      var selected:MSWSmartLock=multiMode?multiLock.pick(valid):lock;
                      if(selected!=null && selected.target!=null && selected.strength>0 && valid(selected.target))
                         shot={target:selected.target,strength:selected.strength,turn:mod.cfg.smartTurn,turnRadius:mod.cfg.smartTurnRadius,
-                           smooth:mod.cfg.smartSmooth,smoothing:mod.cfg.smartSmoothing,
+                           adaptive:mod.cfg.smartAdaptiveRadius,minTurnRadius:mod.cfg.smartMinTurnRadius,
                            remaining:mod.cfg.smartLife,route:[],routeAge:0,goalX:0,goalY:0};
                   }
                   if(shot!=null) { states[b]=shot;b.precision=0;b.miss=0;mod.cfg.diagAdd("smartShots"); }
                   if(recording && eligible(b,w))
                      history.push({used:false,x:b.begx,y:b.begy,id:MSWU.str(b.weap,"id"),dx:b.dx,dy:b.dy,vel:b.vel,
                         shot:shot==null?null:{target:shot.target,strength:shot.strength,turn:shot.turn,turnRadius:shot.turnRadius,
-                           smooth:shot.smooth,smoothing:shot.smoothing,remaining:shot.remaining}});
+                           adaptive:shot.adaptive,minTurnRadius:shot.minTurnRadius,remaining:shot.remaining}});
                }
                var s:Object=states[b];
                // The time-stop mod pins recorded originals during replay; only
@@ -265,7 +265,7 @@ package
          motion.remove(from);
          observed[to]=true;
          var s:Object=states[from];
-         if(s!=null) { states[to]=s; delete states[from]; s.route=[]; s.routeAge=0; s.smoothRate=0; }
+         if(s!=null) { states[to]=s; delete states[from]; s.route=[]; s.routeAge=0; MSWAdaptiveRadius.reset(s); }
       }
       public function snapshot(b:*):Object { return states[b]; }
       private function replayShot(b:*):Object
@@ -286,7 +286,7 @@ package
          mod.cfg.diagAdd("smartReplayMatched");
          b.dx=best.dx;b.dy=best.dy;b.vel=best.vel;b.rot=Math.atan2(b.dy,b.dx);
          return {target:best.shot.target,strength:best.shot.strength,turn:best.shot.turn,turnRadius:best.shot.turnRadius,remaining:best.shot.remaining,
-            smooth:best.shot.smooth,smoothing:best.shot.smoothing,
+            adaptive:best.shot.adaptive,minTurnRadius:best.shot.minTurnRadius,
             route:[],routeAge:0,goalX:0,goalY:0};
       }
       public function visible(u:*,w:*):Boolean

@@ -51,7 +51,7 @@ package
             if(t!=null){t.phis=0;t.water=0;t.door=null;t.indestruct=false;t.hp=1000;t.thre=0;t.opac=0;
                t.phX1=x;t.phX2=x+40;t.phY1=y;t.phY2=y+40;}
          }
-         w.loc.destroyOn=true;position();m.cfg.smartMultiLock=false;m.cfg.smartSmooth=false;m.cfg.smartSmoothing=50;
+         w.loc.destroyOn=true;position();m.cfg.smartMultiLock=false;m.cfg.smartAdaptiveRadius=false;m.cfg.smartMinTurnRadius=10;
          m.cfg.smartTurn=1080;m.cfg.smartTurnRadius=50;m.cfg.smartLife=2;m.cfg.ricochet=false;
          m.smart.frame(w);m.smart.lock.target=target;m.smart.lock.strength=1;
       }
@@ -85,16 +85,16 @@ package
       private function physicsChecks():void
       {
          var b:*,after:*,hp:Number,t:*,s:*,i:int;
-         for each(var amount:int in [0,50,100])
+         for each(var amount:int in [0,50,200])
          {
-            scene();pane=glass();m.cfg.smartSmooth=amount>0;m.cfg.smartSmoothing=amount;
+            scene();pane=glass();m.cfg.smartAdaptiveRadius=amount>0;m.cfg.smartTurnRadius=amount>0?amount:50;
             hp=target.hp;b=spawn();fly(b);
-            ok(pane.dead && b.babah && b.tilehit && b.X<400,"normal window is broken by the stopped original bullet; smooth="+amount);
-            ok(target.hp==hp,"breaking shot does not damage the distant target; smooth="+amount);
+            ok(pane.dead && b.babah && b.tilehit && b.X<400,"normal window is broken by the stopped original bullet; adaptive normal="+amount);
+            ok(target.hp==hp,"breaking shot does not damage the distant target; adaptive normal="+amount);
             t=w.loc.getAbsTile(380,280);
             ok(t.phis==0 && t.door===pane,"native break opens tiles while retaining window identity");
             after=spawn();fly(after);
-            ok(target.hp<hp,"next bullet passes the actual opening and damages target; smooth="+amount);
+            ok(target.hp<hp,"next bullet passes the actual opening and damages target; adaptive normal="+amount);
          }
          scene();pane=glass("window1",380,25);hp=target.hp;
          for(i=0;i<3;i++)
@@ -109,9 +109,9 @@ package
          b=spawn();fly(b);ok(target.hp<hp,"third shot traverses both opened windows");
          for each(amount in [0,100])
          {
-            scene();pane=glass("window2");hp=target.hp;m.cfg.smartSmooth=amount>0;m.cfg.smartSmoothing=amount;
+            scene();pane=glass("window2");hp=target.hp;m.cfg.smartAdaptiveRadius=amount>0;m.cfg.smartTurnRadius=amount>0?amount:50;
             b=spawn(10000);fly(b);
-            ok(!pane.dead && pane.tiles[0].hp==1000 && target.hp<hp,"powerful shot detours around intact armor; smooth="+amount);
+            ok(!pane.dead && pane.tiles[0].hp==1000 && target.hp<hp,"powerful shot detours around intact armor; adaptive normal="+amount);
          }
          scene();pane=glass("window2");pane.die();hp=target.hp;b=spawn(0);fly(b);
          ok(target.hp<hp && w.loc.getAbsTile(380,280).door===pane,"zero-destruction shot traverses broken armored window");

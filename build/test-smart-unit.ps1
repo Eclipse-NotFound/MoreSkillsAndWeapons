@@ -1,8 +1,8 @@
 param(
-    [string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024'
+    [string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$GameDirectory=''
 )
 $ErrorActionPreference = 'Stop'
-$gameRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
+$gameRoot = if($GameDirectory){[IO.Path]::GetFullPath($GameDirectory)}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))}
 $javaPath = Join-Path $AnimateRoot 'jre\bin\java.exe'
 $compilerPath = Join-Path $AnimateRoot 'Common\Configuration\ActionScript 3.0\bin\mxmlc.jar'
 $outputDir = Join-Path $PSScriptRoot 'out\smart-tests'
