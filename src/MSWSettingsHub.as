@@ -31,7 +31,15 @@ package
             if(next !== api) { api = next; sentRevision = -1; }
             if(api == null || sentRevision == revision) return;
             for each(var page:Object in pages)
-               api.registerPage(page.modId, page.displayName, page.items, page.onPageClose, page.desc);
+            {
+               var ids:Array = ["msw", "msw-smart", "msw-laser", "msw-exempt"];
+               var labels:Array = ["基础设置", "智能武器", "非致命激光枪", "锁定豁免"];
+               var order:int = ids.indexOf(page.modId);
+               if("menuVersion" in api && api.menuVersion >= 1 && order >= 0)
+                  api.registerPage(page.modId, page.displayName, page.items, page.onPageClose, page.desc,
+                     {moduleId:"msw", moduleName:"MSW", featureName:labels[order], featureOrder:order});
+               else api.registerPage(page.modId, page.displayName, page.items, page.onPageClose, page.desc);
+            }
             sentRevision = revision;
          }
          catch(e:*) { api = null; sentRevision = -1; }

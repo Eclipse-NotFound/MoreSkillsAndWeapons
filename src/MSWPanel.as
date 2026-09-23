@@ -70,7 +70,10 @@ package
       {
          var api:* = mod.settings.api;
          var pages:Array=localPages();
-         if(api != null && pages.length>0 && api.togglePage(pages[pageIndex%pages.length].modId)) mod.cfg.diagAdd("tabOn");
+         if(api == null || pages.length == 0) return;
+         var handled:Boolean = "menuVersion" in api && api.menuVersion >= 1 ?
+            api.toggleModule("msw") : api.togglePage(pages[pageIndex % pages.length].modId);
+         if(handled) mod.cfg.diagAdd("tabOn");
       }
 
       /** 自动测试用：对模组按钮派发真实点击。 */
