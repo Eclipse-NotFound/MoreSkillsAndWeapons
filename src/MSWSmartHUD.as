@@ -9,10 +9,9 @@ package
    /** Screen-sized lock markers. Lock state owns timing, visibility and expiry. */
    public class MSWSmartHUD extends Sprite
    {
-      public static const VERSION:String="1-top-ccw";
+      public static const VERSION:String="2-adjustable-size";
       private static const RED:uint=0xFF4040;
       private static const BLUE:uint=0x40A8FF;
-      private static const RADIUS:Number=20;
 
       public function MSWSmartHUD()
       {
@@ -21,17 +20,18 @@ package
          mouseChildren=false;
       }
 
-      public function render(w:*,lock:MSWSmartLock):void
+      public function render(w:*,lock:MSWSmartLock,size:Number=24):void
       {
          if(parent!==w.main) w.main.addChild(this);
          graphics.clear();
          visible=lock.target!=null || lock.candidate!=null;
-         if(lock.target!=null) marker(w,lock.target,lock.strength);
+         var radius:Number=(isFinite(size)?Math.max(12,Math.min(80,size)):24)/2;
+         if(lock.target!=null) marker(w,lock.target,lock.strength,radius);
          if(lock.candidate!=null && lock.candidate!==lock.target)
-            marker(w,lock.candidate,lock.progress);
+            marker(w,lock.candidate,lock.progress,radius);
       }
 
-      private function marker(w:*,u:*,progress:Number):void
+      private function marker(w:*,u:*,progress:Number,radius:Number):void
       {
          if(progress<=0 || isNaN(progress)) return;
          progress=Math.min(1,progress);
@@ -40,12 +40,12 @@ package
             (u.X1+u.X2)/2+(u.X2-u.X1)*0.15*facing,
             u.Y1+(u.Y2-u.Y1)*0.4));
          // Build in stage coordinates before converting to our parent: camera
-         // zoom and parent transforms must not stretch the 40 px diamond.
+         // zoom and parent transforms must not stretch the configured diamond.
          var vertices:Array=[
-            globalToLocal(new Point(center.x,center.y-RADIUS)),
-            globalToLocal(new Point(center.x-RADIUS,center.y)),
-            globalToLocal(new Point(center.x,center.y+RADIUS)),
-            globalToLocal(new Point(center.x+RADIUS,center.y))];
+            globalToLocal(new Point(center.x,center.y-radius)),
+            globalToLocal(new Point(center.x-radius,center.y)),
+            globalToLocal(new Point(center.x,center.y+radius)),
+            globalToLocal(new Point(center.x+radius,center.y))];
          if(progress<1) outline(vertices,RED,4);
          outline(vertices,BLUE,progress*4);
       }

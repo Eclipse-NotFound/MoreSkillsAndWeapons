@@ -16,6 +16,9 @@ package
          b.dx+=b.ddx; b.dy+=b.ddy;
          var speed:Number=Math.sqrt(b.dx*b.dx+b.dy*b.dy);
          if(!(speed>0) || !isFinite(speed)) return;
+         var radiusScale:Number=s.turnRadius==null?1:Number(s.turnRadius)/100;
+         radiusScale=isFinite(radiusScale)?Math.max(0.1,Math.min(2,radiusScale)):1;
+         maxTurn/=radiusScale;
          // At most six pixels / three degrees per native collision sample.
          var count:int=Math.min(256,Math.max(1,Math.ceil(speed/6),Math.ceil(maxTurn/(Math.PI/60))));
          var points:Array=[{x:b.X,y:b.Y}];
@@ -24,7 +27,7 @@ package
          {
             while(path.length>1 && MSWSmartRoute.clear(b.loc,b.X,b.Y,path[1].x,path[1].y)) path.shift();
             var p:Object=path[0];
-            MSWSmartRoute.steer(b,p.x,p.y,maxTurn/count,b.loc,1/count);
+            MSWSmartRoute.steer(b,p.x,p.y,maxTurn/count,b.loc,1/count,radiusScale);
             b.run(count);
             points.push({x:b.X,y:b.Y});
          }

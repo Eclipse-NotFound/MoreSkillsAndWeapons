@@ -3,6 +3,7 @@ package
    import flash.display.BitmapData;
    import flash.events.Event;
    import flash.geom.Point;
+   import flash.geom.Rectangle;
    import flash.utils.Timer;
 
    public class SmartHudProbe
@@ -50,6 +51,14 @@ package
                var a:Point=w.visual.localToGlobal(new Point(target.X,target.Y));
                write("scene.txt","player="+w.gg.X+","+w.gg.Y+" target="+target.X+","+target.Y+" screen="+a+" stage="+w.main.stage.stageWidth+"x"+w.main.stage.stageHeight);
                m.smart.lock.candidate=null;m.smart.lock.progress=0;
+               w.celX=-1000;w.celY=-1000;
+               for each(var size:Number in [12,24,40,80])
+               {
+                  m.cfg.smartHudSize=size;m.smart.frame(w);
+                  var bounds:Rectangle=hud.getBounds(w.main.stage);
+                  ok(Math.abs(bounds.width-size)<4 && Math.abs(bounds.height-size)<4,"production frame uses configured HUD size "+size);
+               }
+               m.cfg.smartHudSize=24;
                m.smart.lock.advance(null,false,m.cfg.smartHold+m.cfg.smartDecay/2,m.cfg);
                hud.render(w,m.smart.lock);screenshot("game-loss.png");
                ok(Math.abs(m.smart.lock.strength-0.5)<0.001,"actual lock decay reaches half blue");

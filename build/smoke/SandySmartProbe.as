@@ -41,7 +41,7 @@ package
                var U:Class=MSWU.cls("fe.unit.Unit");target=new U();target.loc=w.loc;target.fraction=2;target.sost=1;target.hp=target.maxhp=1000000;
                target.isVis=true;target.blood=0;target.showNumbs=false;target.opt=null;target.X=800;target.Y=320;target.X1=785;target.X2=815;target.Y1=260;target.Y2=320;
                w.loc.units.push(target);
-               m.cfg.smartEnabled=true;m.cfg.smartLife=2;m.cfg.ricochet=false;m.cfg.smartHold=3;m.cfg.smartDecay=5;
+               m.cfg.smartEnabled=true;m.cfg.smartTurnRadius=30;m.cfg.smartLife=2;m.cfg.ricochet=false;m.cfg.smartHold=3;m.cfg.smartDecay=5;
                m.smart.frame(w);m.smart.lock.target=target;m.smart.lock.strength=1;
                var B:Class=MSWU.cls("fe.weapon.Bullet");preExisting=new B(w.gg,250,240,null,true);preExisting.weap=weapon;preExisting.damage=20;preExisting.dx=2;preExisting.vel=2;
                m.smart.frame(w);ok(m.smart.snapshot(preExisting)!=null,"pre-stop smart bullet has its own budget");
@@ -52,6 +52,7 @@ package
             {
                if(getQualifiedClassName(b)=="fe.weapon::Bullet" && b.owner===w.gg && (s=m.smart.snapshot(b))!=null)
                {
+                  if(s.turnRadius!=30)throw new Error("recorded/replayed shot lost radius snapshot");
                   if(s.motionPath!=null && s.motionPath.length>2)
                   {
                      var pts:Array=s.motionPath;var firstAngle:Number=Math.atan2(pts[1].y-pts[0].y,pts[1].x-pts[0].x);
@@ -87,6 +88,7 @@ package
                {
                   ok(frozen>0 && budgetChecks>0,"real time-stop frozen frames and slow physics budget agree");
                   preBudget=m.smart.snapshot(preExisting).remaining;
+                  m.cfg.smartTurnRadius=200; // Replay must use the recorded 30%, not current settings.
                   key();ok(w.onPause && w.godMode,"real hotkey starts Sandevistan replay");phase=2;since=t;
                }
             }
@@ -98,6 +100,7 @@ package
                ok(m.cfg.diag.smartReplayMatched>=3,"recreated shots recover their original lock snapshots");
                ok(!(m.cfg.diag.smartReplayUnmatched>0),"no recreated shot loses its recording match");
                ok(replaySteps>0,"actual replay steps curve recreated accurate bullets");
+               ok(m.cfg.smartTurnRadius==200,"replay retained recorded 30% radius after settings changed to 200%");
                ok(heldChecks>0,"pre-existing bullet replay budget verified");
                ok(target.hp<target.maxhp,"replayed smart bullets settle real target damage");
                ok(!w.godMode,"Sandevistan restores normal world state");

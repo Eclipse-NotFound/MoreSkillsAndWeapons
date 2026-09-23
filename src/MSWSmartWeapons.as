@@ -72,7 +72,7 @@ package
       {
          try
          {
-            mod.cfg.diagSet("smartMotionVersion","1.1-smooth");
+            mod.cfg.diagSet("smartMotionVersion","1.2-radius");
             afterProjectiles(); motion.prune();
             var now:int=getTimer(); var dt:Number=lastTime==0?0:Math.min(0.1,(now-lastTime)/1000); lastTime=now;
             if(w.loc!==lastLoc || w.gg!==lastPlayer)
@@ -182,13 +182,13 @@ package
                   if(eligible(b,w) && replaying) shot=replayShot(b);
                   else if(eligible(b,w) && lock.target!=null && lock.strength>0 && targetAllowed(lock.target,w) && active(w))
                   {
-                     shot={target:lock.target,strength:lock.strength,turn:mod.cfg.smartTurn,
+                     shot={target:lock.target,strength:lock.strength,turn:mod.cfg.smartTurn,turnRadius:mod.cfg.smartTurnRadius,
                         remaining:mod.cfg.smartLife,route:[],routeAge:0,goalX:0,goalY:0};
                   }
                   if(shot!=null) { states[b]=shot;b.precision=0;b.miss=0;mod.cfg.diagAdd("smartShots"); }
                   if(recording && eligible(b,w))
                      history.push({used:false,x:b.begx,y:b.begy,id:MSWU.str(b.weap,"id"),dx:b.dx,dy:b.dy,vel:b.vel,
-                        shot:shot==null?null:{target:shot.target,strength:shot.strength,turn:shot.turn,remaining:shot.remaining}});
+                        shot:shot==null?null:{target:shot.target,strength:shot.strength,turn:shot.turn,turnRadius:shot.turnRadius,remaining:shot.remaining}});
                }
                var s:Object=states[b];
                // The time-stop mod pins recorded originals during replay; only
@@ -250,7 +250,7 @@ package
          if(best.shot==null)return null;
          mod.cfg.diagAdd("smartReplayMatched");
          b.dx=best.dx;b.dy=best.dy;b.vel=best.vel;b.rot=Math.atan2(b.dy,b.dx);
-         return {target:best.shot.target,strength:best.shot.strength,turn:best.shot.turn,remaining:best.shot.remaining,
+         return {target:best.shot.target,strength:best.shot.strength,turn:best.shot.turn,turnRadius:best.shot.turnRadius,remaining:best.shot.remaining,
             route:[],routeAge:0,goalX:0,goalY:0};
       }
       public function visible(u:*,w:*):Boolean
@@ -267,7 +267,7 @@ package
       private function hide():void { hud.visible=false; }
       private function draw(w:*):void
       {
-         hud.render(w,lock);
+         hud.render(w,lock,mod.cfg.smartHudSize);
       }
    }
 }

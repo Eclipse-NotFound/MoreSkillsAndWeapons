@@ -27,7 +27,7 @@ package
             target=new U();target.loc=w.loc;target.fraction=2;target.sost=1;target.hp=target.maxhp=1000000;target.isVis=true;
             target.blood=0;target.showNumbs=false;target.opt=null;target.skin=target.armor=target.armor_qual=target.shithp=0;target.dexter=100;w.testDam=true;w.showHit=0;
             target.X=720;target.Y=140;target.X1=710;target.X2=730;target.Y1=100;target.Y2=140;w.loc.units.push(target);
-            m.cfg.smartEnabled=true;m.cfg.smartTurn=1080;m.cfg.smartLife=2;m.smart.frame(w);m.smart.lock.target=target;m.smart.lock.strength=1;
+            m.cfg.smartEnabled=true;m.cfg.smartTurn=1080;m.cfg.smartTurnRadius=100;m.cfg.smartLife=2;m.smart.frame(w);m.smart.lock.target=target;m.smart.lock.strength=1;
             var b:*=spawn(220,400,160,0);
             points=[{x:b.X,y:b.Y}];w.loc.firstObj.step();var shot:Object=m.smart.snapshot(b);
             if(m.cfg.diag.smartError!=null)throw new Error(m.cfg.diag.smartError);
@@ -59,6 +59,22 @@ package
             ok(shot.remaining==budget,"frozen display frames retain budget");
             w.loc.remObj(b);m.smart.frame(w);
             ok(b.vis.parent==null,"removed native projectile visual cleaned");
+            // Compare identical native shots. Smaller radius must bend farther
+            // during the same travelled distance, with no speed/lifetime change.
+            var turns:Array=[];
+            for each(var radius:Number in [10,50,100,200])
+            {
+               m.cfg.smartTurnRadius=radius;m.smart.lock.target=target;m.smart.lock.strength=1;
+               b=spawn(220,400,160,0);w.loc.firstObj.step();shot=m.smart.snapshot(b);
+               turns.push(Math.abs(Math.atan2(b.dy,b.dx)));b.step();m.smart.afterProjectiles();
+               log+="RADIUS percent="+radius+" degrees="+(turns[turns.length-1]*180/Math.PI)+" distance="+b.dist+"\n";
+               ok(b.liv==99 && Math.abs(b.dist-160)<0.001 && shot.turnRadius==radius,"radius "+radius+" uses same native speed and age");
+               m.cfg.smartTurnRadius=70;m.smart.frame(w);
+               ok(shot.turnRadius==radius,"in-flight shot keeps radius snapshot "+radius);
+               w.loc.remObj(b);m.smart.frame(w);
+            }
+            ok(turns[0]>turns[1] && turns[1]>turns[2] && turns[2]>turns[3],"smaller radius bends native shots more sharply");
+            m.cfg.smartTurnRadius=50;
             // Native damage and detouring around a physical 80x80 box.
             pos(520,240);var wall:Array=[];
             for(x=320;x<400;x+=40)for(y=200;y<280;y+=40){tile=w.loc.getAbsTile(x+1,y+1);tile.phis=1;tile.phX1=x;tile.phX2=x+40;tile.phY1=y;tile.phY2=y+40;wall.push(tile);}
@@ -74,6 +90,7 @@ package
             m.bullets.process(w);var bounce:*=w.loc.firstObj;
             while(bounce!=null && (bounce===b || m.smart.snapshot(bounce)!==shot))bounce=bounce.nobj;
             ok(bounce!=null && bounce.dx<0 && shot.remaining==budget,"ricochet uses actual final segment and inherits remaining budget");
+            ok(m.smart.snapshot(bounce).turnRadius==50,"ricochet preserves radius snapshot");
             w.loc.remObj(b);w.loc.remObj(bounce);m.cfg.ricochet=false;m.cfg.smartTurn=1080;
             for each(tile in wall)tile.phis=0;
             // Expiry restores native straight flight; no stale trail survives.

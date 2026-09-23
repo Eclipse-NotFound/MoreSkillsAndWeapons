@@ -17,11 +17,12 @@ package
       private var lock:MSWSmartLock=new MSWSmartLock(), w:Object;
       private var unit:Object={X1:80,X2:120,Y1:80,Y2:120,storona:1};
       private var log:String="", checks:int=0;
+      private var size:Number=40;
       public function SmartHudRenderTest() { addEventListener(Event.ADDED_TO_STAGE,run); }
       private function ok(value:Boolean,message:String):void
       { if(!value)throw new Error(message);checks++;log+="PASS "+message+"\n"; }
       private function raster():BitmapData
-      { hud.render(w,lock);var b:BitmapData=new BitmapData(800,500,true,0);b.draw(stage);return b; }
+      { hud.render(w,lock,size);var b:BitmapData=new BitmapData(800,500,true,0);b.draw(stage);return b; }
       private function color(b:BitmapData,x:int,y:int,blue:Boolean):Boolean
       { var c:uint=b.getPixel(x,y);return blue?((c&255)>150 && ((c>>16)&255)<140):(((c>>16)&255)>150 && (c&255)<140); }
       private function boundsOf(b:BitmapData,isBlue:Boolean):Rectangle
@@ -52,13 +53,18 @@ package
             ok(boundsOf(b,false).isEmpty(),"full lock has no red pixels");b.dispose();
             lock.strength=0.75;b=raster();ok(color(b,116,86,false) && color(b,116,106,true),"loss retracts from the same blue endpoint");b.dispose();
             lock.strength=1;
+            scene.x=scene.y=100; // Keep the largest marker inside the bitmap at 0.5x.
             for each(var scale:Number in [0.5,1,1.5,2])
             {
                scene.scaleX=scale;scene.scaleY=scale;world.scaleX=1.25;world.scaleY=0.8;
-               b=raster();var bounds:Rectangle=blue(b);
-               log+="INFO scale="+scale+" bounds="+bounds+"\n";
-               ok(bounds.width>=38 && bounds.width<=43 && bounds.height>=38 && bounds.height<=43,"40 screen px at parent scale "+scale);b.dispose();
+               for each(size in [12,24,40,80])
+               {
+                  b=raster();var bounds:Rectangle=blue(b);
+                  ok(bounds.width>=size-2 && bounds.width<=size+3 && bounds.height>=size-2 && bounds.height<=size+3,size+" screen px at parent scale "+scale);b.dispose();
+               }
             }
+            size=40;
+            scene.x=scene.y=0;
             scene.scaleX=scene.scaleY=world.scaleX=world.scaleY=1;
             unit.storona=-1;b=raster();bounds=blue(b);ok(Math.abs(bounds.x+bounds.width/2-94)<2,"chest anchor mirrors when facing left");b.dispose();
             unit.X1+=70;unit.X2+=70;b=raster();bounds=blue(b);ok(Math.abs(bounds.x+bounds.width/2-164)<2,"marker follows target movement");b.dispose();

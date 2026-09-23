@@ -68,7 +68,7 @@ package
       { return Math.sqrt((x-tx)*(x-tx)+(y-ty)*(y-ty)); }
       public static function angle(a:Number):Number
       { while(a>Math.PI)a-=Math.PI*2; while(a< -Math.PI)a+=Math.PI*2; return a; }
-      public static function steer(b:*,tx:Number,ty:Number,maxTurn:Number,loc:*,fraction:Number=1):void
+      public static function steer(b:*,tx:Number,ty:Number,maxTurn:Number,loc:*,fraction:Number=1,radiusScale:Number=1):void
       {
          var speed:Number=Math.sqrt(b.dx*b.dx+b.dy*b.dy);
          if(!(speed>0) || !isFinite(speed)) return;
@@ -78,7 +78,12 @@ package
          // distance, instead of snapping onto a ray as soon as the turn fits.
          var requested:Number=desired;
          if(fraction<1 && Math.abs(desired)<Math.PI/2)
-            requested=2*speed*fraction*Math.sin(desired)/Math.max(speed*fraction,distance(b.X,b.Y,tx,ty));
+         {
+            requested=2*speed*fraction*Math.sin(desired)/(Math.max(speed*fraction,distance(b.X,b.Y,tx,ty))*radiusScale);
+            // Radius changes pursuit curvature as well as the angular ceiling.
+            // Stop at the target bearing instead of oversteering across it.
+            if(radiusScale<1) requested=Math.max(-Math.abs(desired),Math.min(Math.abs(desired),requested));
+         }
          var turn:Number=Math.max(-maxTurn,Math.min(maxTurn,requested));
          // Preserve momentum and angular limit. If the preferred arc hits terrain,
          // try other legal headings for this step; never teleport around an obstacle.
