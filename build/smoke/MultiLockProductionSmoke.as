@@ -72,7 +72,7 @@ package
             if(phase==0)
             {
                if(m.cfg.diag.frames<600)return;
-               ok(m.cfg.diag.ver=="1.13.1-settings-groups","exact production version loaded");
+               ok(m.cfg.diag.ver=="1.13.2-laser-response","exact production version loaded");
                ok(!m.cfg.smartAdaptiveRadius,"adaptive radius defaults off before multi-lock test");
                m.cfg.smartAdaptiveRadius=true;m.cfg.smartMinTurnRadius=10;
                ok(!m.cfg.smartMultiLock,"new mode defaults off");

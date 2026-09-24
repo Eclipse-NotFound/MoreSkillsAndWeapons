@@ -108,14 +108,19 @@ package
       }
       private function benchmark():void
       {
-         w.celX=target.X;w.celY=target.Y-target.scY/2;
+         w.gg.dx=w.gg.dy=0;w.celX=target.X;w.celY=target.Y-target.scY/2;
          var all:Array=[w.gg],units:Array=[];
          for(var n:int=0;n<32;n++) {
             var u:*=w.loc.createUnit("raider",650,395,true);u.fraction=2;u.sost=1;u.hp=u.maxhp;
             u.disabled=u.trigDis=u.npc=u.noAgro=false;u.isVis=true;u.invis=false;u.storona=-1;
-            u.setPos(650,395);u.actions();u.animate();u.setVisPos();u.storona=-1;u.vis.visible=true;units.push(u);all.push(u);
+            u.setPos(650,395);u.actions();u.animate();u.setVisPos();u.storona=-1;u.isVis=true;u.vis.visible=true;units.push(u);all.push(u);
          }
          all.push(target);w.loc.units=all;
+         ok(baseline!==geom,"old and candidate geometry classes are isolated");
+         var eligible:int=0;
+         for each(u in units)if(geom["hostile"](u,w) && u.isVis && !u.invis && u.vis.visible)eligible++;
+         log+="BENCH fixture eligible-halo-enemies="+eligible+" aim="+w.celX+","+w.celY+" firstBody="+units[0].X1+","+units[0].Y1+","+units[0].X2+","+units[0].Y2+"\n";
+         ok(eligible==32,"crowd benchmark includes 32 eligible halo candidates before the pointed enemy");
          var selected:*,start:int,oldTimes:Array=[],newTimes:Array=[];
          for(n=0;n<50;n++){geom["assist"](w,wp,m.cfg);baseline["assist"](w,wp,m.cfg);}
          for(var round:int=0;round<10;round++)for(var order:int=0;order<2;order++) {

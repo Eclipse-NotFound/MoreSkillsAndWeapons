@@ -20,6 +20,8 @@ try {
     Copy-Item -LiteralPath $ProductionSwf -Destination (Join-Path $mswDir 'MoreSkillsWeaponsMod.swf')
     if(!$BaselineSwf){$BaselineSwf=$ProductionSwf}
     Copy-Item -LiteralPath $BaselineSwf -Destination (Join-Path $mswDir 'Baseline.swf')
+    $baselineHash=(Get-FileHash -LiteralPath $BaselineSwf).Hash
+    if((Get-FileHash -LiteralPath (Join-Path $mswDir 'Baseline.swf')).Hash -ne $baselineHash){throw 'Baseline copy mismatch'}
     $hash=(Get-FileHash -LiteralPath $ProductionSwf).Hash
     if((Get-FileHash -LiteralPath (Join-Path $mswDir 'MoreSkillsWeaponsMod.swf')).Hash -ne $hash){throw 'Production copy mismatch'}
     $settingsEntry=& (Join-Path $PSScriptRoot 'copy-settings-host.ps1') -GameDirectory $gameRoot -RuntimeDirectory $runtime
@@ -58,6 +60,7 @@ try {
         $lines=Get-Content -LiteralPath $result
         if((Get-FileHash -LiteralPath (Join-Path $mswDir 'MoreSkillsWeaponsMod.swf')).Hash -ne $hash){throw 'Runtime production copy changed during testing'}
         "Production SHA256=$hash nodebug=$Nodebug"
+        "Baseline SHA256=$baselineHash"
         $lines
         if($lines[-1] -ne 'PASS laser assist latency'){throw 'Laser assist latency regression failed'}
     }

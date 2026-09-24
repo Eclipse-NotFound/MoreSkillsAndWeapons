@@ -18,6 +18,7 @@ package
       private var sats:Class;
       private var weaponClass:Class;
       private var inputStage:Stage;
+      private var shownTarget:*;
       public function MSWLaser(m:*) {mod=m;blind=new MSWBlindController(m);}
       public function injectXml():void
       {
@@ -120,7 +121,7 @@ package
       public function clear():void
       {blind.clear();clearVisuals();}
       private function clearVisuals():void
-      {for each(var b:MSWLaserBeam in beams)b.dispose();beams=[];hud.clearDebug();hud.visible=false;}
+      {for each(var b:MSWLaserBeam in beams)b.dispose();beams=[];shownTarget=null;hud.clearDebug();hud.visible=false;}
       public function fire(w:*,wp:*):Object
       {
          mod.cfg.diagAdd("laserShotEntered");
@@ -154,19 +155,23 @@ package
             if(wp==null || wp.id!=ID || w.pip.active || mod.panel.overlayOpen || w.sats.active || w.sats.que.length>0)return;
             if(w.mm.active || w.gui.guiPause || w.verror.visible || w.onConsol || w.catPause || w.t_exit>0 || (w.onPause && w.godMode))return;
             var scale:Number=w.cam.scaleV;if(!(scale>0))return;
-            render(w,(event.stageX-w.cam.vx)/scale,(event.stageY-w.cam.vy)/scale);
-            event.updateAfterEvent();
+            if(render(w,(event.stageX-w.cam.vx)/scale,(event.stageY-w.cam.vy)/scale,true))event.updateAfterEvent();
          }
          catch(e:*) {mod.cfg.diagSet("laserError","input:"+e);}
       }
-      private function render(w:*,aimX:Number=NaN,aimY:Number=NaN):void
+      private function render(w:*,aimX:Number=NaN,aimY:Number=NaN,inputOnly:Boolean=false):Boolean
       {
          for(var i:int=beams.length-1;i>=0;i--)if(!beams[i].in_chain)beams.splice(i,1);
          var wp:*=w.gg.currentWeapon;
          var equipped:Boolean=wp!=null && wp.id==ID && !w.pip.active && !mod.panel.overlayOpen;
          var target:*=null;
          if(equipped) {wp.getBulXY();target=MSWLaserGeometry.assist(w,wp,mod.cfg,aimX,aimY);}
+         // Between game frames the actor pose and status timers are unchanged.
+         // A cursor move inside the same selection need not redraw the world.
+         if(inputOnly && target===shownTarget)return false;
+         shownTarget=target;
          hud.render(w,equipped,target,blind.states,mod.cfg.laserDebug);
+         return true;
       }
    }
 }
