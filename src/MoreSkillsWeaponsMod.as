@@ -149,7 +149,7 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.14.0-laser-contact");
+         cfg.diagSet("ver", "1.14.1-sats-selection");
          cfg.diagSet("smartHudVersion", MSWSmartHUD.VERSION);
          settings.registerPage("msw", "MoreSkills&Weapons",
             MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");

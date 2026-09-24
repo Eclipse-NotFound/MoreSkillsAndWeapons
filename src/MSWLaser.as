@@ -8,7 +8,7 @@ package
       public static const ID:String="mswdazzler";
       public static const NAME:String="非致命激光枪";
       public static const GIFT:String="msw_dazzler_granted_v1";
-      public static const VERSION:String="8-responsive-assist";
+      public static const VERSION:String="9-sats-selection";
       private var mod:*;
       public var blind:MSWBlindController;
       private var hud:MSWLaserHUD=new MSWLaserHUD();
@@ -33,7 +33,7 @@ package
          node.appendChild(<ammo holder="12" rashod="2" reload="60"/>);
          node.phis.@deviation=0;node.phis.@recoil=0;
          node.vis.@vweap="vislasp";node.vis.@tipdec=0;
-         node.sats.@cons=17;node.sats.@noperc=1;node.n=NAME;
+         node.sats.@cons=17;delete node.sats.@noperc;node.n=NAME;
          d.appendChild(node);
       }
       public function provision(w:*):void
@@ -74,7 +74,9 @@ package
          // Original shoot supplies ammo, sound, semi-auto and SATS bookkeeping.
          // Zero projectiles prevents any ordinary damage/accuracy/ricochet path.
          wp.kol=0;wp.auto=false;wp.damage=wp.damageExpl=wp.explRadius=wp.destroy=wp.otbros=0;
-         wp.deviation=wp.recoil=0;wp.precision=0;wp.noPerc=true;wp.noTrass=true;
+         // noPerc also disables native SATS hover selection. Deterministic
+         // eye hits come from our zero-projectile cast, not this UI flag.
+         wp.deviation=wp.recoil=0;wp.precision=0;wp.noPerc=false;wp.noTrass=true;
          var rapid:int=Math.max(3,Math.round(c.laserInterval*30));
          if(wp.rapid!=rapid && wp.t_attack>0)
             wp.t_attack=wp.t_attack==wp.rapid?rapid:Math.min(wp.t_attack,rapid-1);
@@ -109,6 +111,8 @@ package
                if(inputStage!=null)inputStage.addEventListener(MouseEvent.MOUSE_MOVE,onMouseMove,false,0,true);
             }
             provision(w);blind.prune(w);
+            if(sats==null)sats=MSWU.cls("fe.inter.MSWLaserSats");
+            if(sats!=null)sats["refreshLabels"](w.sats,wp);
             render(w);
          }
          catch(e:*) {mod.cfg.diagSet("laserError","frame:"+e);}

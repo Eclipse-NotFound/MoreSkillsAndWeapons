@@ -192,3 +192,10 @@ v1.9.0-lock-exemption 在平滑弹道和激光4基础上增加五组31项。Pip�
 `out/laser-contact/`冻结准确候选、src、manifest和verification；`test-pointer.ps1 -ProbeClass PointerContactSmoke`使用原生两枪与普通/首领天角兽验证开盾眼区、两面开关、身体/墙箱阻挡、无生命和护盾损失、快速扫眼及共享设置持久化。省略ProbeClass仍运行完整PointerSmoke。嵌套工作树须传真实`-GameDirectory`，所有测试只用独立AIR ID。
 
 最终版本合入已提交的眼圈响应优化。合并后的contacts/laser/multi日志直接位于verification；`verification/pre-merge`为ABC1CCFC候选的历史证据（含完整激光笔与真实时停），不能冒称全部重跑。安装检查使用`-ExpectedVersion 1.14.0-laser-contact -ExpectedHudVersion 3-multi-lock`，复用同一个独立RuntimeDirectory时必须串行。同期尚未提交的SATS修复不在本候选中。
+
+
+## 2026-09-24 原版SATS选敌修复（v1.14.1，已安装）
+
+准确候选及冻结源在`out/laser-sats-final/`，安装SHA/回滚与验证见`../knowledge/experiments/laser-sats-fix-20260924.md`。`test-laser-sats-select.ps1 -ProductionSwf <准确候选> -Nodebug -OutputDirectory out/laser-sats-final/selection`从原生候选与鼠标事件开始建立队列，验证提示、实际17AP/2电池/6秒致盲、多目标/取消、空地、读档及切枪。正式验收不得加`-ProbeNoPerc`；评估期的临时改字段探针不是修复证明。
+
+已按用户要求在隔离验证后安装，安装后只核对正式与候选SHA，不再追加运行测试。同期v1.14.0的激光笔方向/天角兽规则、眼圈响应及设置分组保留。未将近距智能开发中的未提交源码编入候选。
