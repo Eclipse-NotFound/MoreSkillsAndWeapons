@@ -185,3 +185,10 @@ v1.9.0-lock-exemption 在平滑弹道和激光4基础上增加五组31项。Pip�
 `test-laser-assist-latency.ps1`在独立AIR实例中加载准确生产SWF，可通过`-BaselineSwf`装载旧版进行同进程选敌对照，`-ConfigFile`只读复制配置，`-Vision`加入现有视野模组，`-RuntimeDirectory`复用隔离运行目录。覆盖33原生敌人、600组固定种子选敌一致性及8Hz鼠标事件眼圈更新。所有路径建议传绝对路径，使用`-Nodebug`核查发布构建。
 
 本轮冻结包为`out/laser-response/`，安装状态、准确字节和源文件见manifest.json；已按用户要求直接部署，本次不追加测试，回执见installation.json。实验与边界见`../knowledge/experiments/laser-assist-response-20260924.md`。
+
+
+## 2026-09-24 激光笔非正面与天角兽护盾（v1.14.0）
+
+`out/laser-contact/`冻结准确候选、src、manifest和verification；`test-pointer.ps1 -ProbeClass PointerContactSmoke`使用原生两枪与普通/首领天角兽验证开盾眼区、两面开关、身体/墙箱阻挡、无生命和护盾损失、快速扫眼及共享设置持久化。省略ProbeClass仍运行完整PointerSmoke。嵌套工作树须传真实`-GameDirectory`，所有测试只用独立AIR ID。
+
+最终版本合入已提交的眼圈响应优化。合并后的contacts/laser/multi日志直接位于verification；`verification/pre-merge`为ABC1CCFC候选的历史证据（含完整激光笔与真实时停），不能冒称全部重跑。安装检查使用`-ExpectedVersion 1.14.0-laser-contact -ExpectedHudVersion 3-multi-lock`，复用同一个独立RuntimeDirectory时必须串行。同期尚未提交的SATS修复不在本候选中。
