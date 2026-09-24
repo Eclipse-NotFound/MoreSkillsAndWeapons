@@ -86,15 +86,32 @@ package
       }
       public static function register(mod:*):void
       {
-         var combined:Array=[];
+         var combined:Array=[],groups:Array=[];
          for each(var group:Array in GROUPS)
+         {
+            var keys:Array=[],labels:Object={};
             for each(var option:Object in items(mod,group[0]))
             {
+               keys.push(option.key); labels[option.key]=option.label;
                option.label=group[1]+" · "+option.label;
                combined.push(option);
             }
+            groups.push({id:group[0],label:group[1],keys:keys,itemLabels:labels,
+               offLabel:"未豁免",mixedLabel:"部分豁免",onLabel:"全部豁免",setAll:groupSetter(mod,group[0])});
+         }
          mod.settings.registerPage("msw-exempt","锁定豁免",combined,null,
-            "勾选＝不锁定；用右侧上页/下页查看全部分类。单/多锁共用。恢复默认会清除全部豁免，不改变普通子弹的碰撞和伤害。");
+            "勾选＝不锁定；大类按钮全选/清空，展开可逐项调整。单/多锁共用。恢复默认清除全部豁免，普通子弹碰撞和伤害不变。",groups);
+      }
+      private static function groupSetter(mod:*,groupId:String):Function
+      {
+         return function(value:Boolean):void {
+            for each(var d:Array in DEFINITIONS) if(d[1]==groupId)
+            {
+               if(value) mod.cfg.smartExclusions[d[0]]=true;
+               else delete mod.cfg.smartExclusions[d[0]];
+            }
+            mod.cfg.save();
+         };
       }
    }
 }

@@ -149,7 +149,7 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.13.0-laser-pointer");
+         cfg.diagSet("ver", "1.13.1-settings-groups");
          cfg.diagSet("smartHudVersion", MSWSmartHUD.VERSION);
          settings.registerPage("msw", "MoreSkills&Weapons",
             MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");

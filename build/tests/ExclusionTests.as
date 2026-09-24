@@ -49,6 +49,20 @@ package
             ok(fresh.smartExclusions.rat===true && !fresh.smartExclusions.mine && !fresh.smartExclusions.ant && !fresh.smartExclusions.hasOwnProperty("raider"),"stored data keeps only supported boolean selections");
             var a:Object={},b:Object={},lock:MSWSmartLock=new MSWSmartLock();lock.advance(a,false,0.6,c);lock.advance(b,true,0.2,c);lock.clearCandidate();
             ok(lock.target===a && lock.strength==1 && lock.candidate==null && lock.progress==0,"discard excluded candidate without losing valid old target");
+            var saves:int=0;
+            var batch:Object={cfg:{smartExclusions:{rat:true},save:function():void{saves++;}},settings:new MSWSettingsHub()};
+            MSWSmartExclusions.register(batch);
+            var grouped:Object=batch.settings.getPages()[0];
+            ok(grouped.items.length==31 && grouped.groups.length==5,"group metadata preserves flat list");
+            for each(var g:Object in grouped.groups) {
+               var before:int=saves;g.setAll(true);
+               ok(saves==before+1,"group enable saves once "+g.id);
+               for each(var k:String in g.keys)ok(batch.cfg.smartExclusions[k.substr(13)]===true,"group includes "+k);
+               before=saves;g.setAll(false);
+               ok(saves==before+1,"group disable saves once "+g.id);
+               for each(k in g.keys)ok(!batch.cfg.smartExclusions.hasOwnProperty(k.substr(13)),"group removes "+k);
+            }
+            ok(grouped.items[0].label=="生物 · 血翼" && grouped.groups[0].itemLabels.smartExclude_bloodwing=="血翼","flat and expanded labels coexist");
             finish("PASS "+n+" assertions",0);
          }catch(e:*){finish("FAIL "+e+"\n"+e.getStackTrace(),1);}
       }

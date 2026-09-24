@@ -82,7 +82,7 @@ package
                // The fixture's final automatic page switch occurs about 800 frames
                // after the world starts. Begin only after it relinquishes the UI.
                if(m.cfg.diag.frames<1100)return;
-               ok(m.cfg.diag.ver=="1.13.0-laser-pointer","exact production version loaded");
+               ok(m.cfg.diag.ver=="1.13.1-settings-groups","exact production version loaded");
                ok(m.cfg.diag.smartMotionVersion=="1.4-adaptive-radius" && m.cfg.diag.laserRuntimeVersion=="7-nonfront-assist","adaptive motion and current laser components preserved");
                var exemptionPages:int=0;
                for each(var registered:Object in m.settings.getPages())if(String(registered.modId).indexOf("msw-exempt")==0){exemptionPages++;ok(registered.modId=="msw-exempt" && registered.items.length==31,"one registered menu contains all 31 options");}
@@ -93,10 +93,17 @@ package
                if(!m.settings.api.selectPage("msw-exempt"))return;next(1);return;
             }
             if(phase==1 && elapsed>200) {
+               var grouped:Boolean="groupVersion" in m.settings.api && m.settings.api.groupVersion>=1;
+               var groupIds:Array=["bio","nests","small","mines","devices"];
+               if(grouped){
+                  sizes=[9,3,5,6,8];r=named(host,"SettingsGroupExpand:"+groupIds[page]);
+                  ok(r!=null,"group expansion control "+groupIds[page]);
+                  if(!r.settingsExpanded)r.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));
+               }
                rows=[];collect(host);
                // Both supported settings hosts paginate the same 31 MSW items:
                // ModSettings uses 18 rows, the current ModLoader uses 16.
-               if(page==0){ok(rows.length==16 || rows.length==18,"known settings-host page capacity");sizes=[rows.length,31-rows.length];}
+               if(page==0 && !grouped){ok(rows.length==16 || rows.length==18,"known settings-host page capacity");sizes=[rows.length,31-rows.length];}
                ok(rows.length==sizes[page],"internal page "+page+" count="+rows.length);
                for each(r in rows) {
                   item=r.settingsItem;var previous:Boolean=item.key=="smartExclude_rat" || item.key=="smartExclude_mine" || item.key=="smartExclude_transmitter";
@@ -105,9 +112,12 @@ package
                   var saved:*=new (cls("MSWConfig"))();saved.load();ok(saved.smartExclusions[item.key.substr(13)]===true,"persistent UI choice "+item.key);
                }
                allRows=allRows.concat(rows);screenshot("settings-page"+(page+1)+".png");
-               if(page==0){r=named(host,"SettingsNextItems");ok(r!=null && r.mouseEnabled,"internal next page enabled");r.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));page=1;next(1);return;}
-               ok(allRows.length==31,"all options reached through internal paging");
-               r=named(host,"SettingsPreviousItems");ok(r!=null && r.mouseEnabled,"internal previous page enabled");r.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));
+               if(page<sizes.length-1){
+                  if(!grouped){r=named(host,"SettingsNextItems");ok(r!=null && r.mouseEnabled,"internal next page enabled");r.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));}
+                  page++;next(1);return;
+               }
+               ok(allRows.length==31,"all options accessible through settings controls");
+               r=named(host,grouped?"SettingsGroupExpand:bio":"SettingsPreviousItems");ok(r!=null && r.mouseEnabled,"return control enabled");r.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));
                rows=[];collect(host);ok(rows.length==sizes[0] && rows[0].settingsItem.key=="smartExclude_bloodwing" && rows[0].settingsSc.selected,"return to first internal page keeps choices");
                r=named(host,"SettingsReset");ok(r!=null,"page reset exists");r.dispatchEvent(new MouseEvent(MouseEvent.CLICK,true));
                for each(r in allRows)ok(!r.settingsItem.get(),"all-group default restored "+r.settingsItem.key);

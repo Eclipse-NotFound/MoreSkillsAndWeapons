@@ -36,8 +36,12 @@ package
                var labels:Array = ["基础设置", "智能武器", "非致命激光枪", "锁定豁免", "激光笔"];
                var order:int = ids.indexOf(page.modId);
                if("menuVersion" in api && api.menuVersion >= 1 && order >= 0)
+               {
+                  var navigation:Object = {moduleId:"msw", moduleName:"MSW", featureName:labels[order], featureOrder:order};
+                  if("groupVersion" in api && api.groupVersion >= 1) navigation.groups = page.groups;
                   api.registerPage(page.modId, page.displayName, page.items, page.onPageClose, page.desc,
-                     {moduleId:"msw", moduleName:"MSW", featureName:labels[order], featureOrder:order});
+                     navigation);
+               }
                else api.registerPage(page.modId, page.displayName, page.items, page.onPageClose, page.desc);
             }
             sentRevision = revision;
@@ -46,7 +50,7 @@ package
       }
 
       public function registerPage(modId:String, displayName:String, items:Array,
-                                   onPageClose:Function = null, desc:String = ""):void
+                                   onPageClose:Function = null, desc:String = "", groups:Array = null):void
       {
          if(modId == null || items == null) return;
          for(var i:int = 0; i < pages.length; i++)
@@ -57,13 +61,14 @@ package
                pages[i]["items"] = items;
                pages[i]["onPageClose"] = onPageClose;
                pages[i]["desc"] = desc;
+               pages[i]["groups"] = groups == null ? [] : groups;
                revision++;
                return; // 重复注册 = 更新
             }
          }
          var p:Object = {
             "modId": modId, "displayName": displayName, "items": items,
-            "onPageClose": onPageClose, "desc": desc
+            "onPageClose": onPageClose, "desc": desc, "groups": groups == null ? [] : groups
          };
          pages[pages.length] = p;
          revision++;

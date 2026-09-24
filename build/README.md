@@ -1,6 +1,14 @@
 # 构建工具链说明（可复现）
 
-## 当前版本：自适应转弯半径
+## 当前版本：v1.13.1 锁定豁免分组
+
+在v1.13.0完整激光笔版本上增加ModLoader通用分组接入，正式54503字节/E1EA2AC2…。Pip原5类31项支持批量与展开，F6保留平面五功能页。规则1197项、准确生产字节豁免320项、多锁52项、激光真实存读档与开火通过；最终宿主安装前后各65项。完整证据和边界见../knowledge/experiments/grouped-exemptions-20260924.md。
+
+`test-exclusion-production.ps1`新增可选`-SettingsSwf <ModLoader候选SWF绝对路径>`，只替换私有测试副本中的宿主；生产参数仍用`-ProductionSwf <准确候选> -Nodebug`。不传时复制当前正式宿主。分组和原平面宿主均可验证。`test-exclusion-unit.ps1`包括整组批量仅一次保存的规则断言。
+
+当前冻结构建：从项目目录运行`./build/build.ps1 -SourcePath '../../ModLoader/work/groups-source/src' -OutputDirectory 'out/groups'`（脚本内部先进入build，SourcePath相对于build）。未来构建改回当前src，不把历史冻结副本当新源码。宿主分组/旧版兼容/跨重启测试见ModLoader/build/test-menus.ps1与其接口说明。
+
+## 既有自适应转弯半径
 
 旧「平滑弹道/平滑程度」已替换为「自适应转弯半径/最小半径倍率」。旧开关状态迁移，普通倍率原样保留；最小倍率10–200%/步长10/默认10%，有效下限不高于普通倍率。以下历史小节的smooth-mode入口已由自适应入口替代，不部署旧产物。
 

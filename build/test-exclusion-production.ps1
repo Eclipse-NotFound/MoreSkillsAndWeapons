@@ -1,4 +1,4 @@
-param([string]$ProductionSwf='', [string]$AnimateRoot='D:\Program Files\Adobe Animate 2024', [switch]$Nodebug, [string]$GameDirectory='', [string]$OutputDirectory='out\exclusion-production')
+param([string]$ProductionSwf='', [string]$AnimateRoot='D:\Program Files\Adobe Animate 2024', [switch]$Nodebug, [string]$GameDirectory='', [string]$OutputDirectory='out\exclusion-production', [string]$SettingsSwf='')
 $ErrorActionPreference='Stop'
 $gameRoot=if($GameDirectory){[IO.Path]::GetFullPath($GameDirectory)}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))}
 if(!$ProductionSwf){$ProductionSwf=Join-Path $PSScriptRoot '..\release\MoreSkillsWeaponsMod.swf'}
@@ -18,6 +18,10 @@ try {
     $hash=(Get-FileHash -LiteralPath $ProductionSwf).Hash
     if((Get-FileHash -LiteralPath (Join-Path $mswDir 'MoreSkillsWeaponsMod.swf')).Hash -ne $hash){throw 'Production copy mismatch'}
     $settingsEntry=& (Join-Path $PSScriptRoot 'copy-settings-host.ps1') -GameDirectory $gameRoot -RuntimeDirectory $runtime
+    if($SettingsSwf){
+        if($settingsEntry -notmatch '^ModLoader\|ModLoaderMod\|'){throw 'SettingsSwf override requires the ModLoader host'}
+        Copy-Item -LiteralPath $SettingsSwf -Destination (Join-Path $runtime 'mods\ModLoader\release\ModLoaderMod.swf')
+    }
     "$settingsEntry`nExclusionProductionSmoke|ExclusionProductionSmoke|1|0|0" | Set-Content -LiteralPath (Join-Path $runtime 'mods\loader-manifest.txt') -Encoding utf8
     $testId='pfe-msw-exclusion-'+[guid]::NewGuid().ToString('N')
     $descriptor=Join-Path $runtime 'app_msw_exclusion_test.xml'
@@ -34,7 +38,7 @@ try {
         $result=Join-Path $env:APPDATA "$testId\Local Store\production-exclusion.txt"
         if(!(Test-Path -LiteralPath $result)){throw 'No production-shot result'}
         Copy-Item -LiteralPath $result -Destination (Join-Path $output 'results.txt')
-        foreach ($name in @('heartbeat.txt','settings-page1.png','settings-page2.png','settings-f6.png')) {
+        foreach ($name in @('heartbeat.txt','settings-page1.png','settings-page2.png','settings-page3.png','settings-page4.png','settings-page5.png','settings-f6.png')) {
             $artifact=Join-Path $env:APPDATA "$testId\Local Store\$name"
             if(Test-Path -LiteralPath $artifact){Copy-Item -LiteralPath $artifact -Destination $output}
         }
