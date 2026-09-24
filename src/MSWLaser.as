@@ -1,12 +1,14 @@
 package
 {
    import flash.utils.Dictionary;
+   import flash.display.Stage;
+   import flash.events.MouseEvent;
    public class MSWLaser
    {
       public static const ID:String="mswdazzler";
       public static const NAME:String="非致命激光枪";
       public static const GIFT:String="msw_dazzler_granted_v1";
-      public static const VERSION:String="7-nonfront-assist";
+      public static const VERSION:String="8-responsive-assist";
       private var mod:*;
       public var blind:MSWBlindController;
       private var hud:MSWLaserHUD=new MSWLaserHUD();
@@ -15,6 +17,7 @@ package
       private var beams:Array=[];
       private var sats:Class;
       private var weaponClass:Class;
+      private var inputStage:Stage;
       public function MSWLaser(m:*) {mod=m;blind=new MSWBlindController(m);}
       public function injectXml():void
       {
@@ -98,6 +101,12 @@ package
             if(!loc.active || w.invent==null || w.invent.weapons==null)return;
             var wp:*=ensureWeapon(w);if(wp!=null)configure(wp);
             if(!mod.cfg.laserEnabled) {blind.clearSource("laser");clearVisuals();blind.prune(w);return;}
+            if(inputStage!==w.main.stage)
+            {
+               if(inputStage!=null)inputStage.removeEventListener(MouseEvent.MOUSE_MOVE,onMouseMove);
+               inputStage=w.main.stage;
+               if(inputStage!=null)inputStage.addEventListener(MouseEvent.MOUSE_MOVE,onMouseMove,false,0,true);
+            }
             provision(w);blind.prune(w);
             render(w);
          }
@@ -132,13 +141,31 @@ package
          beams.push(new MSWLaserBeam(w,wp,hit));
          mod.cfg.diagAdd("laserShots");return hit;
       }
-      private function render(w:*):void
+      private function onMouseMove(event:MouseEvent):void
+      {
+         // Camera.calc copies the screen cursor into world coordinates only on
+         // the next game frame. Refresh the indicator from this input instead,
+         // without changing the game's cursor, advancing AI or firing a shot.
+         try
+         {
+            var w:*=MSWU.world();
+            if(w==null || w.loc!==loc || w.gg!==player || player==null || player.hp<=0 || !loc.active || !mod.cfg.laserEnabled)return;
+            var wp:*=player.currentWeapon;
+            if(wp==null || wp.id!=ID || w.pip.active || mod.panel.overlayOpen || w.sats.active || w.sats.que.length>0)return;
+            if(w.mm.active || w.gui.guiPause || w.verror.visible || w.onConsol || w.catPause || w.t_exit>0 || (w.onPause && w.godMode))return;
+            var scale:Number=w.cam.scaleV;if(!(scale>0))return;
+            render(w,(event.stageX-w.cam.vx)/scale,(event.stageY-w.cam.vy)/scale);
+            event.updateAfterEvent();
+         }
+         catch(e:*) {mod.cfg.diagSet("laserError","input:"+e);}
+      }
+      private function render(w:*,aimX:Number=NaN,aimY:Number=NaN):void
       {
          for(var i:int=beams.length-1;i>=0;i--)if(!beams[i].in_chain)beams.splice(i,1);
          var wp:*=w.gg.currentWeapon;
          var equipped:Boolean=wp!=null && wp.id==ID && !w.pip.active && !mod.panel.overlayOpen;
          var target:*=null;
-         if(equipped) {wp.getBulXY();target=MSWLaserGeometry.assist(w,wp,mod.cfg);}
+         if(equipped) {wp.getBulXY();target=MSWLaserGeometry.assist(w,wp,mod.cfg,aimX,aimY);}
          hud.render(w,equipped,target,blind.states,mod.cfg.laserDebug);
       }
    }

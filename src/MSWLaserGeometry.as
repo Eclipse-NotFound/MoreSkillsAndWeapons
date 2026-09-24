@@ -97,41 +97,52 @@ package
          if(hit)best=eyeAlong;
          return {unit:first,eye:hit,x:x+dx*best,y:y+dy*best,distance:best,angle:a,reason:reason};
       }
-      public static function assist(w:*,wp:*,cfg:*):*
+      public static function assist(w:*,wp:*,cfg:*,aimX:Number=NaN,aimY:Number=NaN):*
       {
          if(!cfg.laserAssist)return null;
+         if(isNaN(aimX))aimX=w.celX;
+         if(isNaN(aimY))aimY=w.celY;
          var speed:Number=Math.sqrt(w.gg.dx*w.gg.dx+w.gg.dy*w.gg.dy);
          var range:Number=cfg.laserBodyRadius*(1-(1-cfg.laserAssistFloor/100)*Math.min(1,speed/cfg.laserAssistSpeed));
-         var pointed:*=null,pointedEye:Number=Infinity,result:*=null,bestBody:Number=Infinity,bestEye:Number=Infinity;
+         var pointed:*=null,pointedEye:Number=Infinity,pointedPos:Object=null,candidates:Array=[];
          for each(var u:* in w.loc.units)
          {
             if(!hostile(u,w) || !u.isVis || u.invis || (u.vis!=null && !u.vis.visible))continue;
-            var bx:Number=Math.max(u.X1-w.celX,0,w.celX-u.X2),by:Number=Math.max(u.Y1-w.celY,0,w.celY-u.Y2);
+            var bx:Number=Math.max(u.X1-aimX,0,aimX-u.X2),by:Number=Math.max(u.Y1-aimY,0,aimY-u.Y2);
             var body:Number=bx*bx+by*by;
             if(body>range*range)continue;
-            var e:Object=eye(u);
-            var dist:Number=(e.x-w.celX)*(e.x-w.celX)+(e.y-w.celY)*(e.y-w.celY);
-            // Identify the body under the cursor BEFORE checking its eye ray.
-            // An invalid pointed target must not redirect this shot to a neighbour.
+            // Finish identifying the directly pointed body before any halo ray.
+            // A blocked pointed eye must still return null, never a neighbour.
             if(body==0)
             {
-               if(dist<pointedEye) {pointed=u;pointedEye=dist;}
-               continue;
+               var e:Object=eye(u),dist:Number=(e.x-aimX)*(e.x-aimX)+(e.y-aimY)*(e.y-aimY);
+               if(dist<pointedEye) {pointed=u;pointedEye=dist;pointedPos=e;}
             }
-            // Only the halo outside the body shrinks. Use the same normalized
-            // muzzle-to-eye direction as the actual ray, including turret pitch.
+            else if(pointed==null)candidates.push({unit:u,body:body,index:candidates.length});
+         }
+         if(pointed!=null)return reachable(w,wp,pointed,pointedPos,cfg)?pointed:null;
+         var ordered:Array=[];
+         for each(var candidate:Object in candidates)
+         {
+            u=candidate.unit;e=eye(u);
+            // Only the halo outside the body shrinks. Turret pitch is included.
             if(cfg.laserNonFront)
             {
                var a:Number=Math.atan2(e.y-wp.bulY,e.x-wp.bulX);
                var halo:Number=front(u,Math.cos(a),Math.sin(a))?range:range*cfg.laserNonFrontRatio/100;
-               if(body>halo*halo)continue;
+               if(candidate.body>halo*halo)continue;
             }
-            if(pointed!=null || body>bestBody || (body==bestBody && dist>=bestEye))continue;
-            if(reachable(w,wp,u,e,cfg)) {bestBody=body;bestEye=dist;result=u;}
+            candidate.eye=e;candidate.dist=(e.x-aimX)*(e.x-aimX)+(e.y-aimY)*(e.y-aimY);
+            ordered.push(candidate);
          }
-         if(pointed!=null)return reachable(w,wp,pointed,eye(pointed),cfg)?pointed:null;
-         return result;
+         // Same body/eye/order priority as before, but check each candidate only
+         // until the nearest reachable one is known instead of tracing losers.
+         ordered.sort(compareCandidates);
+         for each(candidate in ordered)if(reachable(w,wp,candidate.unit,candidate.eye,cfg))return candidate.unit;
+         return null;
       }
+      private static function compareCandidates(a:Object,b:Object):Number
+      {return a.body-b.body || a.dist-b.dist || a.index-b.index;}
       private static function reachable(w:*,wp:*,u:*,e:Object,cfg:*):Boolean
       {
          var hit:Object=castRay(w,wp.bulX,wp.bulY,Math.atan2(e.y-wp.bulY,e.x-wp.bulX),cfg.laserEye,2000,w.gg,cfg.laserNonFront);
