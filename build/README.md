@@ -179,3 +179,9 @@ v1.9.0-lock-exemption 在平滑弹道和激光4基础上增加五组31项。Pip�
 `test-pointer`真实装备/保存/读档后验证40类敌人、连续光束、库存余量、快速扫眼和真实时停，输出results及两张画面。所有驱动都用独立AIR应用ID；嵌套工作树加`-GameDirectory <游戏根>`，不可操作用户存档。原枪、炮塔、智能多锁/豁免脚本同样指定准确ProductionSwf；多锁/豁免新增OutputDirectory，按当前清单复制实际设置宿主。五页F6导航与失明按来源计时的测试预期已同步。
 
 `test-installed`是隔离启动检查，不会自行安装；指定`-ExpectedVersion 1.13.0-laser-pointer -ExpectedHudVersion 3-multi-lock`并复用已经准备好的独立RuntimeDirectory，不能与使用同目录的其他测试同时运行。已按用户安装请求部署相同字节；安装后检查见out/laser-pointer/postinstall，回滚备份与记录见激光笔实验。
+
+## 非致命激光枪眼圈响应（v1.13.2候选）
+
+`test-laser-assist-latency.ps1`在独立AIR实例中加载准确生产SWF，可通过`-BaselineSwf`装载旧版进行同进程选敌对照，`-ConfigFile`只读复制配置，`-Vision`加入现有视野模组，`-RuntimeDirectory`复用隔离运行目录。覆盖33原生敌人、600组固定种子选敌一致性及8Hz鼠标事件眼圈更新。所有路径建议传绝对路径，使用`-Nodebug`核查发布构建。
+
+本轮冻结包为`out/laser-response/`，安装状态、准确字节和源文件见manifest.json；尚未部署。实验与边界见`../knowledge/experiments/laser-assist-response-20260924.md`。
