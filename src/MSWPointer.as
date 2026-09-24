@@ -7,7 +7,7 @@ package
       public static const NAME:String="激光笔";
       public static const GIFT:String="msw_pointer_granted_v1";
       public static const CHARGE:String="msw_pointer_charge_v1";
-      public static const VERSION:String="2-shared-direction";
+      public static const VERSION:String="3-prop-switch";
       private var mod:*;
       private var loc:*,player:*,weaponClass:Class;
       private var beam:MSWPointerBeam=new MSWPointerBeam();
@@ -130,7 +130,7 @@ package
          var hit:Object=sweep.scan(w,wp.bulX,wp.bulY,a,mod.cfg.pointerEye,function(sample:Object):void
          {
             if(sample.eye && MSWLaserGeometry.hostile(sample.unit,w))mod.laser.blind.apply(sample.unit,w,mod.cfg.pointerDuration,"pointer");
-         },mod.cfg.laserNonFront);
+         },mod.cfg.laserNonFront,mod.cfg.pointerBlockObjects);
          beam.draw(w,wp.bulX,wp.bulY,hit);
          var result:String=hit.eye && mod.laser.blind.remaining(hit.unit)>0?"blind":(hit.eye?"ineligible":hit.reason);
          mod.cfg.diagSet("pointerLastHit",result);

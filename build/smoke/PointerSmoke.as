@@ -195,9 +195,9 @@ package
          var accept:Function=function(hit:Object):void {if(hit.eye && hit.unit===target)hits++;};
          sweep.scan(w,300,eye.y,-.28,6,accept);sweep.scan(w,300,eye.y,.28,6,accept);
          ok(hits>0,"fast sweep crossing catches eye between two individually missing endpoints");
-         var block:Object={X1:350,X2:360,Y1:80,Y2:420,dead:false,phis:1};w.loc.objs=[block];sweep.reset();hits=0;
+         var wallFixture:Array=LaserTestWall.put(w.loc,350,360,80,420);sweep.reset();hits=0;
          sweep.scan(w,300,eye.y,-.28,6,accept);sweep.scan(w,300,eye.y,.28,6,accept);
-         ok(hits==0,"swept samples cannot blind through intervening wall box");w.loc.objs=[];
+         ok(hits==0,"swept samples cannot blind through intervening solid terrain");LaserTestWall.restore(wallFixture);
          sweep.reset();hits=0;target.setPos(500,280);target.actions();target.animate();target.setVisPos();
          sweep.scan(w,300,eye.y,0,6,accept);target.setPos(500,360);target.actions();target.animate();target.setVisPos();sweep.scan(w,300,eye.y,0,6,accept);
          ok(hits>0,"moving eye crossing a stationary beam is caught between samples");
@@ -233,7 +233,7 @@ package
       private function settings():void
       {
          var items:Array=null;for each(var page:Object in m.settings.api.getPages())if(page.modId=="msw-pointer")items=page.items;
-         ok(items!=null && items.length==5,"independent pointer page contains five settings");
+         ok(items!=null && items.length==6,"independent pointer page contains six settings");
          var gun:Number=m.cfg.laserDuration;items[1].set(9);items[2].set(8);items[3].set(3.4);items[4].set(true);m.cfg.save();
          var C:Class=domain.getDefinition("MSWConfig") as Class,c:*=new C();c.load();
          ok(c.pointerDuration==9 && c.pointerEye==8 && c.pointerRate==3.4 && c.pointerDebug && c.laserDuration==gun,"pointer settings persist independently from gun");

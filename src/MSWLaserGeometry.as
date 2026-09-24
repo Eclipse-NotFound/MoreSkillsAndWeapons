@@ -51,7 +51,7 @@ package
          else {a=(b.Y1-y)/dy;c=(b.Y2-y)/dy;lo=Math.max(lo,Math.min(a,c));hi=Math.min(hi,Math.max(a,c));}
          return hi>=lo && hi>=0?lo:Infinity;
       }
-      public static function wall(loc:*,x:Number,y:Number,dx:Number,dy:Number,limit:Number):Number
+      public static function wall(loc:*,x:Number,y:Number,dx:Number,dy:Number,limit:Number,blockObjects:Boolean=false):Number
       {
          var best:Number=limit;
          // Traverse every crossed grid cell, then intersect its actual solid
@@ -67,23 +67,26 @@ package
          {
             if(cx<0 || cy<0 || cx>=loc.spaceX || cy>=loc.spaceY) {best=Math.min(best,t);break;}
             var tile:*=loc.getTile(cx,cy);
-            if(tile.phis==1)
+            if(tile.phis==1 && !MSWSmartGlass.window(tile))
                best=Math.min(best,rect(x,y,dx,dy,{X1:tile.phX1,X2:tile.phX2,Y1:tile.phY1,Y2:tile.phY2},limit));
             if(tx<ty) {t=tx;tx+=deltax;cx+=stepx;}
             else {t=ty;ty+=deltay;cy+=stepy;}
          }
-         for each(var box:* in loc.objs)
+         // Ordinary gunfire collides with map tiles, not every prop's body.
+         // Closed doors still block through their tiles. Both native glass
+         // window identities transmit light without taking damage.
+         if(blockObjects)for each(var box:* in loc.objs)
          {
-            if(box!=null && MSWU.has(box,"dead") && !box.dead && MSWU.num(box,"phis")>0)
+            if(box!=null && MSWU.has(box,"dead") && !box.dead && MSWU.num(box,"phis")>0 && MSWU.num(box,"door")<=0)
                best=Math.min(best,rect(x,y,dx,dy,box,limit));
          }
          return best;
       }
       // Do not name this trace: release mxmlc can erase an unqualified call as
       // a debug trace while leaving its return-value coercion (VerifyError 1024).
-      public static function castRay(w:*,x:Number,y:Number,a:Number,eyeRadius:Number,limit:Number=2000,owner:*=null,allowNonFront:Boolean=false,poses:Dictionary=null):Object
+      public static function castRay(w:*,x:Number,y:Number,a:Number,eyeRadius:Number,limit:Number=2000,owner:*=null,allowNonFront:Boolean=false,poses:Dictionary=null,blockObjects:Boolean=false):Object
       {
-         var dx:Number=Math.cos(a),dy:Number=Math.sin(a),end:Number=wall(w.loc,x,y,dx,dy,limit);
+         var dx:Number=Math.cos(a),dy:Number=Math.sin(a),end:Number=wall(w.loc,x,y,dx,dy,limit,blockObjects);
          var first:*=null,best:Number=end,eyeAlong:Number=0,hit:Boolean=false,reason:String="miss";
          for each(var u:* in w.loc.units)
          {

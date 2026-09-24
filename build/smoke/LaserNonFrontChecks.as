@@ -127,8 +127,8 @@ package
          aim(w,u.X2-1,u.Y2-1);u.shithp=50;
          w.loc.units=[w.gg,b];ok(G["assist"](w,wp,c)===b,"non-front priority fixture has valid neighbouring eye");w.loc.units=[w.gg,u,b];
          ok(G["assist"](w,wp,c)==null,"shielded pointed rear body never retargets valid neighbour");u.shithp=0;
-         w.loc.objs=[{dead:false,phis:1,X1:480,X2:500,Y1:240,Y2:280}];
-         ok(G["assist"](w,wp,c)==null,"box-blocked rear body never retargets neighbour");w.loc.objs=[];
+         var wallFixture:Array=LaserTestWall.put(w.loc,480,500,240,280);
+         ok(G["assist"](w,wp,c)==null,"wall-blocked rear body never retargets neighbour");LaserTestWall.restore(wallFixture);
          // Lower the neighbour enough that its eye ray passes below the first
          // body's bottom. The previous no-retarget fixture need not do that.
          pose(b,660,430,-1);var be:Object=G["eye"](b);

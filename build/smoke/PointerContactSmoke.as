@@ -68,7 +68,7 @@ package
       {
          var eye:Object=G["eye"](target),hp:Number=target.hp,shield:Number=target.shithp;
          aim(body?target.X:eye.x,body?target.Y-12:eye.y);
-         if(blocked)w.loc.objs=[{X1:wp.bulX+40,X2:wp.bulX+50,Y1:60,Y2:470,dead:false,phis:1}];
+         var wallFixture:Array=blocked?LaserTestWall.put(w.loc,wp.bulX+40,wp.bulX+50,60,470):[];
          var shots:Number=Number(m.cfg.diag.laserShots||0);
          if(wp.id=="mswlaserpointer")
          {m.pointer.prepare(w);wp.step();w.ctr.keyAttack=true;wp.attack();m.pointer.frame(w);check(m.pointer.lit,"pointer actually lit "+label);}
@@ -77,7 +77,7 @@ package
          var blind:Number=m.laser.blind.remaining(target),reason:*=wp.id=="mswlaserpointer"?m.cfg.diag.pointerLastHit:m.cfg.diag.laserLastHit;
          check(expect?blind==6:blind==0,label+" remain="+blind+" reason="+reason);
          check(target.hp==hp && target.shithp==shield,"no health or shield loss "+label);
-         m.pointer.stop();m.laser.blind.clear();w.loc.objs=[];
+         m.pointer.stop();m.laser.blind.clear();w.loc.objs=[];LaserTestWall.restore(wallFixture);
       }
       private function contacts():void
       {
@@ -114,9 +114,9 @@ package
          check(hits>0,"rear sweep catches shielded eye between missing endpoints");
          s.reset();hits=0;s.scan(w,eye.x-200,eye.y,-.25,6,contact,false);s.scan(w,eye.x-200,eye.y,.25,6,contact,false);
          check(hits==0,"rear sweep obeys disabled direction");
-         w.loc.objs=[{X1:eye.x-100,X2:eye.x-90,Y1:60,Y2:470,dead:false,phis:1}];s.reset();hits=0;
+         var wallFixture:Array=LaserTestWall.put(w.loc,eye.x-100,eye.x-90,60,470);s.reset();hits=0;
          s.scan(w,eye.x-200,eye.y,-.25,6,contact,true);s.scan(w,eye.x-200,eye.y,.25,6,contact,true);
-         check(hits==0,"rear sweep cannot pass actual wall");w.loc.objs=[];
+         check(hits==0,"rear sweep cannot pass actual wall");LaserTestWall.restore(wallFixture);
       }
       private function settings():void
       {

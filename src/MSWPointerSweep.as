@@ -34,12 +34,13 @@ package
          var x:Number=previous.x+(now.x-previous.x)*t,y:Number=previous.y+(now.y-previous.y)*t;
          return MSWLaserGeometry.angle(Math.atan2(p.eye.y+(b.eye.y-p.eye.y)*t-y,p.eye.x+(b.eye.x-p.eye.x)*t-x)-previous.a-turn*t);
       }
-      public function scan(w:*,x:Number,y:Number,a:Number,r:Number,contact:Function,allowNonFront:Boolean=false):Object
+      public function scan(w:*,x:Number,y:Number,a:Number,r:Number,contact:Function,allowNonFront:Boolean=false,blockObjects:Boolean=false):Object
       {
-         var now:Object=capture(w,x,y,a),hit:Object=MSWLaserGeometry.castRay(w,x,y,a,r,2000,w.gg,allowNonFront);
+         var now:Object=capture(w,x,y,a),hit:Object=MSWLaserGeometry.castRay(w,x,y,a,r,2000,w.gg,allowNonFront,null,blockObjects);
          now.allowNonFront=allowNonFront;
+         now.blockObjects=blockObjects;
          contact(hit);
-         if(previous!=null && previous.allowNonFront===allowNonFront)
+         if(previous!=null && previous.allowNonFront===allowNonFront && previous.blockObjects===blockObjects)
          {
             var turn:Number=MSWLaserGeometry.angle(a-previous.a),times:Array=[];
             // Coarse samples cover grazing contacts; roots capture tiny eye
@@ -60,7 +61,7 @@ package
             for each(var t:Number in times)
             {
                var sample:Object=MSWLaserGeometry.castRay(w,previous.x+(x-previous.x)*t,previous.y+(y-previous.y)*t,
-                  previous.a+turn*t,r,2000,w.gg,allowNonFront,between(now,t));
+                  previous.a+turn*t,r,2000,w.gg,allowNonFront,between(now,t),blockObjects);
                contact(sample);
             }
          }

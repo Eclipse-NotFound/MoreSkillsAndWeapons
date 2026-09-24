@@ -179,7 +179,8 @@ package
             ["pointerDuration","失明时长","slider",0.5,30,0.5,"扫眼立即失明，持续照射刷新；与已有剩余时长取较长值。",6,"秒"],
             ["pointerEye","眼区基础半径","slider",3,10,0.5,"按体型缩放至3–10像素；方向跟随激光枪页的允许非正面致盲开关，无辅助瞄准。",6,"px"],
             ["pointerRate","每秒电池消耗","slider",0.1,10,0.1,"按累计亮灯时间消耗随身电池；已付余量跨切换和存读档保留。",2,"份/秒"],
-            ["pointerDebug","失明命中调试标志","check",0,0,1,"标出命中点和眼区，说明未致盲原因。",false,""]
+            ["pointerDebug","失明命中调试标志","check",0,0,1,"标出命中点和眼区，说明未致盲原因。",false,""],
+            ["pointerBlockObjects","箱柜阻挡光束","check",0,0,1,"开启后箱子、集装箱、医疗箱和文件柜等物体会挡住激光笔；普通和装甲玻璃始终透光，墙体和关闭的门仍阻挡。",false,""]
          ];
          var result:Array=[];
          for each(var d:Array in defs)result.push({key:d[0],label:d[1],kind:d[2],min:d[3],max:d[4],step:d[5],hint:d[6],def:d[7],suffix:d[8],get:makeGetter(mod,d[0]),set:makeSetter(mod,d[0],d[2])});

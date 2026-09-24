@@ -60,7 +60,8 @@ package
       public var pointerDuration:Number = 6;
       public var pointerEye:Number = 6;
       public var pointerRate:Number = 2;
-      private static const POINTER_KEYS:Array=["pointerEnabled","pointerDebug","pointerDuration","pointerEye","pointerRate"];
+      public var pointerBlockObjects:Boolean = false;
+      private static const POINTER_KEYS:Array=["pointerEnabled","pointerDebug","pointerDuration","pointerEye","pointerRate","pointerBlockObjects"];
       private static const LASER_KEYS:Array=["laserEnabled","laserDebug","laserDuration","laserEye","laserRadius","laserAngle","laserSpeed","laserInterval","laserMagazine","laserReload","laserAmmo","laserAP","laserAssist","laserBodyRadius","laserAssistFloor","laserAssistSpeed","laserNonFront","laserNonFrontRatio"];
 
       /** 可编程榴弹炮下坠速率 = weapon.grav（1.0 = 原版，0 = 无下坠） */

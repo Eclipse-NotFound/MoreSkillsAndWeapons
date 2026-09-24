@@ -150,8 +150,8 @@ package
          ok(G["assist"](w,wp,c)==null,"back-facing pointed body never retargets neighbour");
          hit=m.laser.fire(w,wp);ok(!hit.eye && m.laser.blind.remaining(b)==0,"rejected pointed body fires original ray without blinding neighbour");
          pose(a,600,320);a.shithp=50;ok(G["assist"](w,wp,c)==null,"shielded pointed body never retargets neighbour");a.shithp=0;
-         w.loc.objs=[{dead:false,phis:1,X1:480,X2:500,Y1:240,Y2:280}];
-         ok(G["assist"](w,wp,c)==null,"blocked pointed eye never retargets neighbour");w.loc.objs=[];
+         var wallFixture:Array=LaserTestWall.put(w.loc,480,500,240,280);
+         ok(G["assist"](w,wp,c)==null,"wall-blocked pointed eye never retargets neighbour");LaserTestWall.restore(wallFixture);
          // Overlapping native collision rectangles: nearer eye, not unit-array order.
          pose(b,615,340);aim(w,615,310);w.loc.units=[w.gg,a,b];
          ok(w.celX>=a.X1 && w.celX<=a.X2 && w.celY>=a.Y1 && w.celY<=a.Y2 && w.celX>=b.X1 && w.celX<=b.X2 && w.celY>=b.Y1 && w.celY<=b.Y2,"overlap fixture points into both native bodies");
