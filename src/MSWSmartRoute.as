@@ -68,6 +68,9 @@ package
       { return Math.sqrt((x-tx)*(x-tx)+(y-ty)*(y-ty)); }
       public static function angle(a:Number):Number
       { while(a>Math.PI)a-=Math.PI*2; while(a< -Math.PI)a+=Math.PI*2; return a; }
+      /** Forecasts and native motion must use identical curvature integration. */
+      public static function motionSamples(speed:Number,maxTurn:Number):int
+      { return Math.min(256,Math.max(1,Math.ceil(speed/6),Math.ceil(maxTurn/(Math.PI/60)))); }
       public static function steer(b:*,tx:Number,ty:Number,maxTurn:Number,loc:*,fraction:Number=1,radiusScale:Number=1):void
       {
          var speed:Number=Math.sqrt(b.dx*b.dx+b.dy*b.dy);

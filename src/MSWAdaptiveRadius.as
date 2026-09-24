@@ -88,6 +88,7 @@ package
          var available:Number=Math.min(Math.max(1,Number(s.remaining)*30+1),Math.max(1,Number(b.liv)-3));
          var steps:Number=Math.min(100,available);
          var time:Number=0,samples:int=0,closest:Number=1e30;
+         var bearing:Number=Math.atan2(p.Y-cy,p.X-cx),winding:Number=0;
          var speed:Number=Math.sqrt(p.dx*p.dx+p.dy*p.dy);
          if(!(speed>0) || route.length==0)return {hit:false,status:"unknown",score:closest};
          while(time<steps-0.000001)
@@ -95,11 +96,9 @@ package
             speed=Math.sqrt(p.dx*p.dx+p.dy*p.dy);
             var maxTurn:Number=turn/scale;
             var first:Object=route[0];
-            var needed:Number=Math.abs(MSWSmartRoute.pursuit(p,first.x,first.y,maxTurn*0.1,0.1,scale))*10;
-            // Long gentle segments can be sampled more cheaply; near a goal or
-            // corner shorten the sample. Terrain still checks the whole segment.
-            var stride:Number=Math.max(6,Math.min(20,MSWSmartRoute.distance(p.X,p.Y,first.x,first.y)/6));
-            var count:int=Math.min(32,Math.max(2,Math.ceil(speed/stride),Math.ceil(needed/(Math.PI/12))));
+            // A coarse forecast can cut inside the real arc and falsely report
+            // a near hit. Share the exact native integration subdivision.
+            var count:int=MSWSmartRoute.motionSamples(speed,maxTurn);
             var dt:Number=Math.min(1/count,steps-time);
             for(var k:int=0;k<count && time<steps-0.000001;k++)
             {
@@ -109,9 +108,21 @@ package
                first=route[0];dt=Math.min(1/count,steps-time);
                MSWSmartRoute.steer(p,first.x,first.y,maxTurn*dt,p.loc,dt,scale);
                var nx:Number=p.X+p.dx*dt,ny:Number=p.Y+p.dy*dt;
-               var hit:Boolean=intersects(p.X-vx*time,p.Y-vy*time,nx-vx*(time+dt),ny-vy*(time+dt),x1,y1,x2,y2);
+               // Bullet.run tests the sampled position, not a swept rectangle.
+               // A segment grazing a corner between samples is not a native hit.
+               var rx:Number=nx-vx*(time+dt),ry:Number=ny-vy*(time+dt);
+               var hit:Boolean=rx>=x1 && rx<=x2 && ry>=y1 && ry<=y2;
                closest=Math.min(closest,MSWSmartRoute.distance(nx,ny,cx+vx*(time+dt),cy+vy*(time+dt)));
                if(!MSWSmartRoute.clear(p.loc,p.X,p.Y,nx,ny,0.5,p))return {hit:false,status:"wall",score:closest+800};
+               var nextBearing:Number=Math.atan2(ny-cy-vy*(time+dt),nx-cx-vx*(time+dt));
+               // Once on the final approach, circling most of the way around
+               // the target is observed failure of this approach, not merely
+               // an exhausted forecast. Try tighter radii before flying it.
+               // Do not count turns along an intentional multi-corner detour.
+               if(route.length==1)winding+=MSWSmartRoute.angle(nextBearing-bearing);
+               else winding=0;
+               bearing=nextBearing;
+               if(Math.abs(winding)>Math.PI*1.5)return {hit:false,status:"orbit",score:closest+400};
                if(hit)return {hit:true,status:"hit",score:0,time:time+dt};
                p.X=nx;p.Y=ny;time+=dt;
             }

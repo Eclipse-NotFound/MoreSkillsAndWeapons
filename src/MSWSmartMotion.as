@@ -21,7 +21,7 @@ package
          if(s.adaptive==true)radiusScale=MSWAdaptiveRadius.select(b,s,path,maxTurn);
          maxTurn/=radiusScale;
          // At most six pixels / three degrees per native collision sample.
-         var count:int=Math.min(256,Math.max(1,Math.ceil(speed/6),Math.ceil(maxTurn/(Math.PI/60))));
+         var count:int=MSWSmartRoute.motionSamples(speed,maxTurn);
          var points:Array=[{x:b.X,y:b.Y}];
          s.motionPath=points;
          for(var i:int=0;i<count && !b.babah && b.in_chain;i++)
