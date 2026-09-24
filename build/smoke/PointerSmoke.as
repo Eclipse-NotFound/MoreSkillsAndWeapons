@@ -186,8 +186,10 @@ package
       {
          var b:*=m.laser.blind,eye:Object=geom["eye"](target);var hp:Number=target.hp;
          aim(target.X,target.Y-15);click();draw();ok(b.remaining(target)==0,"aiming at body has no hidden eye assist");m.pointer.stop();
-         m.cfg.laserNonFront=true;target.storona=1;target.animate();target.setVisPos();eye=geom["eye"](target);aim(eye.x,eye.y);click();draw();
-         ok(b.remaining(target)==0,"backside eye remains invalid even with original gun non-front enabled");m.cfg.laserNonFront=false;m.pointer.stop();target.storona=-1;target.animate();target.setVisPos();
+         m.cfg.laserNonFront=false;target.storona=1;target.animate();target.setVisPos();eye=geom["eye"](target);aim(eye.x,eye.y);click();draw();
+         ok(b.remaining(target)==0,"backside eye remains invalid with shared direction switch off");m.pointer.stop();m.cfg.laserNonFront=true;click();draw();
+         ok(b.remaining(target)==6,"shared direction switch enables native pointer rear eye contact");
+         b.clear();m.cfg.laserNonFront=false;m.pointer.stop();target.storona=-1;target.animate();target.setVisPos();
          eye=geom["eye"](target);target.shithp=50;aim(eye.x,eye.y);click();draw();ok(b.remaining(target)==0,"actual shield blocks pointer");m.pointer.stop();target.shithp=0;
          var S:Class=domain.getDefinition("MSWPointerSweep") as Class,sweep:*=new S(),hits:int=0;
          var accept:Function=function(hit:Object):void {if(hit.eye && hit.unit===target)hits++;};

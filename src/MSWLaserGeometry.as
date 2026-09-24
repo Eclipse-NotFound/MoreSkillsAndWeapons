@@ -31,6 +31,14 @@ package
          }
          return dx*u.storona< -0.000001;
       }
+      // Optical control bypasses only alicorn shields; it never invokes damage
+      // or lowers shield health. Other actors retain their shield obstruction.
+      private static function shieldBlocks(u:*):Boolean
+      {
+         if(MSWU.num(u,"shithp")<=0)return false;
+         var type:String=getQualifiedClassName(u);
+         return type!="fe.unit::UnitAlicorn" && type!="fe.unit::UnitBossAlicorn";
+      }
       public static function eye(u:*):Object
       {return MSWLaserEyes.point(u);}
       public static function angle(a:Number):Number {while(a>Math.PI)a-=2*Math.PI;while(a< -Math.PI)a+=2*Math.PI;return a;}
@@ -90,8 +98,9 @@ package
             {
                first=u;best=d;eyeAlong=along;
                var directionAllowed:Boolean=allowNonFront || front(u,dx,dy);
-               hit=throughEye && directionAllowed && MSWU.num(u,"shithp")<=0;
-               reason=!throughEye?"body":(!directionAllowed?"back":(MSWU.num(u,"shithp")>0?"shield":"eye"));
+               var shield:Boolean=shieldBlocks(u);
+               hit=throughEye && directionAllowed && !shield;
+               reason=!throughEye?"body":(!directionAllowed?"back":(shield?"shield":"eye"));
             }
          }
          if(hit)best=eyeAlong;

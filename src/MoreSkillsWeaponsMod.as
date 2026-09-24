@@ -149,17 +149,17 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.13.2-laser-response");
+         cfg.diagSet("ver", "1.14.0-laser-contact");
          cfg.diagSet("smartHudVersion", MSWSmartHUD.VERSION);
          settings.registerPage("msw", "MoreSkills&Weapons",
             MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");
          settings.registerPage("msw-smart", "智能武器", MSWSettingsHub.buildSmartItems(this), mswPageClose,
             "实弹枪与霰弹枪：准星停留锁定，弯曲追踪与局部绕障；时长可调。");
          settings.registerPage("msw-laser", "非致命激光枪", MSWSettingsHub.buildLaserItems(this), mswPageClose,
-            "正面命中眼部使敌人失明并恐慌；直接伤害为零，恐慌误伤仍可能致命。");
+            "命中有效眼区使敌人失明并恐慌；天角兽护盾不阻挡，激光不伤血、不削盾。");
          MSWSmartExclusions.register(this);
          settings.registerPage("msw-pointer","激光笔",MSWSettingsHub.buildPointerItems(this),mswPageClose,
-            "点击常亮，再点熄灭；用随身电池，手动扫眼致盲。");
+            "点击常亮，再点熄灭；手动扫眼，非正面开关与激光枪共用，天角兽护盾不阻挡。");
          weapon.injectXml();
          laser.injectXml();
          pointer.injectXml();
