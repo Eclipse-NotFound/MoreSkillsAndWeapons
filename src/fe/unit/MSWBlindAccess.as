@@ -26,7 +26,7 @@ package fe.unit
          // rectangle that was actually rendered, not the next animation frame.
          var r:*=u.blitRect;
          if(r==null || r.width<=0 || r.height<=0)return null;
-         return {id:int(r.y/r.height),frame:int(r.x/r.width),x:u.visBmp.x,y:u.visBmp.y};
+         return {id:int(r.y/r.height),frame:int(r.x/r.width),x:u.visBmp.x,y:u.visBmp.y,bitmap:u.visBmp};
       }
       public static function facing(target:*,direction:int):void
       {
