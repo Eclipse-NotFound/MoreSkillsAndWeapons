@@ -1,5 +1,7 @@
 # MoreSkillsAndWeapons
 
+[English](README.md) · [简体中文](README.zh-CN.md)
+
 New skills and weapons for **Fallout Equestria: REMAINS** — the combat-expansion mod of this mod collection.
 
 ## Features (v1.14.x)
