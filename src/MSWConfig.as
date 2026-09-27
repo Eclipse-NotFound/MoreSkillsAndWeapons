@@ -20,6 +20,8 @@ package
 
       public var smartEnabled:Boolean = false;
       public var smartMultiLock:Boolean = false;
+      public var smartFocus:Boolean = false;
+      public var smartFocusRadius:Number = 48;
       public var smartExclusions:Object = {};
       public var smartKeepOutOfSight:Boolean = false;
       public var smartRadius:Number = 48;
@@ -126,6 +128,8 @@ package
             if(so.data.ricochet != undefined) ricochet = so.data.ricochet;
             if(so.data.smartEnabled != undefined) smartEnabled = so.data.smartEnabled;
             if(so.data.smartMultiLock != undefined) smartMultiLock = so.data.smartMultiLock == true;
+            if(so.data.smartFocus != undefined) smartFocus = so.data.smartFocus == true;
+            if(so.data.smartFocusRadius != undefined) smartFocusRadius = so.data.smartFocusRadius;
             smartExclusions = MSWSmartExclusions.copy(so.data.smartExclusions);
             if(so.data.smartKeepOutOfSight != undefined) smartKeepOutOfSight = so.data.smartKeepOutOfSight == true;
             if(so.data.smartRadius != undefined) smartRadius = so.data.smartRadius;
@@ -223,6 +227,8 @@ package
             so.data.ricochet = ricochet;
             so.data.smartEnabled = smartEnabled;
             so.data.smartMultiLock = smartMultiLock;
+            so.data.smartFocus = smartFocus;
+            so.data.smartFocusRadius = smartFocusRadius;
             so.data.smartExclusions = MSWSmartExclusions.copy(smartExclusions);
             so.data.smartKeepOutOfSight = smartKeepOutOfSight;
             so.data.smartRadius = smartRadius;
@@ -285,6 +291,7 @@ package
          laserAmmo=smartClamp(laserAmmo,2,1,10,1);
          laserAP=smartClamp(laserAP,17,1,100,1);
          smartRadius = smartClamp(smartRadius,48,0,200,4);
+         smartFocusRadius = smartClamp(smartFocusRadius,48,0,200,4);
          smartAcquire = smartClamp(smartAcquire,0.6,0.1,3,0.1);
          smartGrace = smartClamp(smartGrace,0.15,0,0.5,0.05);
          smartRetreat = smartClamp(smartRetreat,0.6,0.1,3,0.1);

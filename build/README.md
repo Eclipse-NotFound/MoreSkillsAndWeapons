@@ -1,6 +1,15 @@
 # 构建工具链说明（可复现）
 
-## 当前版本：v1.13.1 锁定豁免分组
+## 当前版本：v1.15.0 聚焦模式
+
+已安装57398字节/49944BA8…。多重锁定新增默认关的「聚焦模式」及48px（0–200）独立范围；具体规则见design/smart-focus.md，证据见knowledge/experiments/smart-focus-20260927.md（均在模组根下）。准确候选和完整冻结源在out/smart-focus/candidate；同一模组并发眼位任务的未提交改动不在该候选中。
+
+- `test-smart-unit.ps1`：159断言；支持SourcePath、TestSourcePath、OutputDirectory以固定来源。旧半径恢复夹具的修正及红对照见实验记录。
+- `test-focus-production.ps1 -ProductionSwf <候选绝对路径> -Nodebug`：正式字节聚焦、真实Pip/F6、新旧弹、霰弹、死亡等待和原多锁87检查。
+- `test-focus-sandy.ps1 -ProductionSwf <候选绝对路径> -Nodebug`：实际时停三发A/A/B和逐发参数回放。两个驱动均不链接另一份MSW实现，只在私有副本加载候选。
+- 完整候选另经激光真实读档/开火回归及正常入口900帧检查。安装后只核对字节，不操作真实游戏或真实存档。
+
+## 历史v1.13.1 锁定豁免分组
 
 在v1.13.0完整激光笔版本上增加ModLoader通用分组接入，正式54503字节/E1EA2AC2…。Pip原5类31项支持批量与展开，F6保留平面五功能页。规则1197项、准确生产字节豁免320项、多锁52项、激光真实存读档与开火通过；最终宿主安装前后各65项。完整证据和边界见../knowledge/experiments/grouped-exemptions-20260924.md。
 

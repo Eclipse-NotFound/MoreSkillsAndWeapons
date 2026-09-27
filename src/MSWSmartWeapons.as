@@ -1,6 +1,8 @@
 package
 {
    import flash.geom.Point;
+   import flash.display.Stage;
+   import flash.events.MouseEvent;
    import flash.utils.Dictionary;
    import flash.utils.getQualifiedClassName;
    import flash.utils.getTimer;
@@ -11,6 +13,9 @@ package
       private var mod:*;
       public var lock:MSWSmartLock=new MSWSmartLock();
       public var multiLock:MSWSmartMultiLock=new MSWSmartMultiLock();
+      private var focus:MSWSmartFocus=new MSWSmartFocus();
+      private var inputStage:Stage;
+      private var mouseX:Number=NaN,mouseY:Number=NaN;
       private var multiMode:Boolean=false;
       private var lastLoc:*;
       private var lastPlayer:*;
@@ -86,6 +91,8 @@ package
                recording=false;replaying=false;history=[];
             }
             syncMode();
+            bindInput(w);
+            if(!mod.cfg.smartFocus)focus.clear();
             if(!mod.cfg.smartEnabled || !alivePlayer(w)) { clearLocks(); stopGuidance(); detach(); hide(); return; }
             prepare(w);
             if(!replaying) attach(w);
@@ -102,6 +109,7 @@ package
                   if(visible(unit,w)) seen.push(unit);
                }
                multiLock.advance(allowed,seen,dt,mod.cfg);
+               updateFocus(w);
             }
             else
             {
@@ -125,7 +133,42 @@ package
          catch(e:*) { mod.cfg.diagSet("smartError","frame:"+e); }
       }
       private function clearLocks():void
-      { lock.clear();multiLock.clear(); }
+      { lock.clear();multiLock.clear();focus.clear(); }
+      private function bindInput(w:*):void
+      {
+         if(inputStage===w.main.stage)return;
+         if(inputStage!=null)inputStage.removeEventListener(MouseEvent.MOUSE_MOVE,onMouseMove);
+         inputStage=w.main.stage;mouseX=w.cam.celX;mouseY=w.cam.celY;
+         if(inputStage!=null)inputStage.addEventListener(MouseEvent.MOUSE_MOVE,onMouseMove,false,0,true);
+      }
+      private function onMouseMove(event:MouseEvent):void
+      {
+         var changed:Boolean=event.stageX!=mouseX || event.stageY!=mouseY;
+         mouseX=event.stageX;mouseY=event.stageY;
+         if(!changed)return;
+         try
+         {
+            var w:*=MSWU.world();
+            if(w==null || w.loc!==lastLoc || w.gg!==lastPlayer || !mod.cfg.smartEnabled ||
+               !mod.cfg.smartMultiLock || !mod.cfg.smartFocus || !alivePlayer(w) || !active(w) ||
+               !weaponAllowed(w.gg.currentWeapon))return;
+            focus.aimMoved();
+            // Use the event position: Camera.calc has not yet copied this input to w.celX/Y.
+            if(w.cam.scaleV>0)updateFocus(w,(mouseX-w.cam.vx)/w.cam.scaleV,(mouseY-w.cam.vy)/w.cam.scaleV);
+         }
+         catch(e:*) { mod.cfg.diagSet("smartError","focusInput:"+e); }
+      }
+      private function updateFocus(w:*,x:Number=NaN,y:Number=NaN):MSWSmartLock
+      {
+         if(!mod.cfg.smartFocus || !multiMode || !weaponAllowed(w.gg.currentWeapon))
+         { focus.clear();return null; }
+         if(isNaN(x) || isNaN(y))
+         {
+            if(!(w.cam.scaleV>0))return null;
+            x=(w.cam.celX-w.cam.vx)/w.cam.scaleV;y=(w.cam.celY-w.cam.vy)/w.cam.scaleV;
+         }
+         return focus.select(multiLock.locks,x,y,mod.cfg.smartFocusRadius,function(u:*):Boolean { return targetAllowed(u,w); });
+      }
       private function syncMode():void
       {
          if(multiMode==mod.cfg.smartMultiLock) return;
@@ -196,6 +239,7 @@ package
       {
          syncMode();
          var valid:Function=function(u:*):Boolean { return targetAllowed(u,w); };
+         var focused:MSWSmartLock=!replaying && active(w)?updateFocus(w):null;
          var b:*=w.loc.firstObj; var guard:int=0;
          while(b!=null && guard++<12000)
          {
@@ -208,7 +252,7 @@ package
                   if(eligible(b,w) && replaying) shot=replayShot(b);
                   else if(eligible(b,w) && active(w))
                   {
-                     var selected:MSWSmartLock=multiMode?multiLock.pick(valid):lock;
+                     var selected:MSWSmartLock=multiMode?(focused!=null?focused:multiLock.pick(valid)):lock;
                      if(selected!=null && selected.target!=null && selected.strength>0 && valid(selected.target))
                         shot={target:selected.target,strength:selected.strength,turn:mod.cfg.smartTurn,turnRadius:mod.cfg.smartTurnRadius,
                            adaptive:mod.cfg.smartAdaptiveRadius,minTurnRadius:mod.cfg.smartMinTurnRadius,

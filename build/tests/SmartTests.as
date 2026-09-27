@@ -61,11 +61,12 @@ package
             c.smartMinTurnRadius=NaN;c.clamp();near(c.smartMinTurnRadius,10,"invalid minimum uses default");
             c.smartMinTurnRadius=-5;c.clamp();near(c.smartMinTurnRadius,10,"minimum radius lower bound");
             c.smartMinTurnRadius=999;c.clamp();near(c.smartMinTurnRadius,200,"minimum radius upper bound");
-            var items:Array=MSWSettingsHub.buildSmartItems({cfg:c});ok(items.length==16,"all sixteen adjustable settings available");
+            var items:Array=MSWSettingsHub.buildSmartItems({cfg:c});ok(items.length==18,"all eighteen adjustable settings available");
             for each(var item:Object in items) { item["set"](item.def); near(Number(item["get"]()),Number(item.def),"default "+item.key); }
             var fresh:MSWConfig=new MSWConfig(); c.smartEnabled=true;c.smartMultiLock=true;c.smartKeepOutOfSight=true;c.smartGrace=0.25;c.smartTurnRadius=30;c.smartHudSize=18;c.smartAdaptiveRadius=true;c.smartMinTurnRadius=20;c.save();fresh.load();
             ok(fresh.smartEnabled && fresh.smartMultiLock && fresh.smartKeepOutOfSight && fresh.smartGrace==0.25 && fresh.smartTurnRadius==30 && fresh.smartHudSize==18,"all smart settings persist");
             multiTests();
+            SmartFocusChecks.run(ok);
             ok(fresh.smartAdaptiveRadius && fresh.smartMinTurnRadius==20,"adaptive mode and minimum radius persist");
             adaptiveTests();
             var wall:Object={phis:1,phX1:90,phX2:130,phY1:40,phY2:120};
@@ -159,8 +160,11 @@ package
          ok(radius>=1.8 && radius<=2,"unreachable target never overrides user minimum");
          s={target:u,remaining:2,turnRadius:50,minTurnRadius:200};
          near(MSWAdaptiveRadius.select(b,s,path,Math.PI/5),0.5,"minimum above normal never widens ordinary radius");
-         u.X1=588;u.X2=612;u.Y1=10;u.Y2=50;path=[{x:600,y:30}];
+         // Native-resolution forecasts need more samples since v1.14.2. Keep
+         // recovery's intermediate radius within the finite prediction budget.
+         u.X1=108;u.X2=132;u.Y1=10;u.Y2=50;path=[{x:120,y:30}];
          s={target:u,remaining:2,turnRadius:200,minTurnRadius:10,radiusNow:50};
+         ok(MSWAdaptiveRadius.evaluate(b,s,path,Math.PI/5,0.6).hit,"recovery fixture has a verified safe intermediate radius");
          near(MSWAdaptiveRadius.select(b,s,path,Math.PI/5),0.5,"first safe forecast does not immediately restore radius");
          s.radiusAge=0;radius=MSWAdaptiveRadius.select(b,s,path,Math.PI/5);
          ok(radius>0.5 && radius<2,"stable recovery grows gradually");

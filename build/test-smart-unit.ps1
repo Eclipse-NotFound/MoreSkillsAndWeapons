@@ -1,15 +1,16 @@
 param(
-    [string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$GameDirectory=''
+    [string]$AnimateRoot = 'D:\Program Files\Adobe Animate 2024', [string]$GameDirectory='',
+    [string]$SourcePath='../src', [string]$TestSourcePath='tests', [string]$OutputDirectory='out\smart-tests'
 )
 $ErrorActionPreference = 'Stop'
 $gameRoot = if($GameDirectory){[IO.Path]::GetFullPath($GameDirectory)}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))}
 $javaPath = Join-Path $AnimateRoot 'jre\bin\java.exe'
 $compilerPath = Join-Path $AnimateRoot 'Common\Configuration\ActionScript 3.0\bin\mxmlc.jar'
-$outputDir = Join-Path $PSScriptRoot 'out\smart-tests'
+$outputDir = Join-Path $PSScriptRoot $OutputDirectory
 New-Item -ItemType Directory -Force $outputDir | Out-Null
 Push-Location $PSScriptRoot
 try {
-    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-debug=true' '-target-player=11.1' '-source-path+=../src' '-source-path+=tests' '-output=out/smart-tests/SmartTests.swf' 'tests/SmartTests.as'
+    & $javaPath '-Dfile.encoding=UTF-8' -jar $compilerPath '-debug=true' '-target-player=11.1' ("-source-path+="+$SourcePath) ("-source-path+="+$TestSourcePath) ("-output="+(Join-Path $outputDir 'SmartTests.swf')) (Join-Path $TestSourcePath 'SmartTests.as')
     if ($LASTEXITCODE -ne 0) { throw 'Test compilation failed' }
     $testId = 'pfe-msw-smart-unit-' + [guid]::NewGuid().ToString('N')
     $descriptor = Join-Path $outputDir 'app_msw_test.xml'
