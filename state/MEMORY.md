@@ -66,6 +66,8 @@
 
 ## 4. 正在进行与卡点
 
+- 智能曳光偏弱已完成检查（2026-09-28），未修复/安装：每步覆盖路径使低速拖尾只有当前位移；原图缩为4%并用2px/70%单色线替换，丢失亮芯渐变。正式同字节五档两次复现，20px/步可见22px对原版88px，积分亮度26%；60连续步无丢帧。证据smart-tracer-20260928.md，入口build/test-smart-tracer.ps1；其6个症状断言在当前正式版预期失败。后续修复宜历史曲线路径+原生渐变，不能恢复整条直线；本轮未跑实际时停联测。
+
 - 多重锁定聚焦已完成实现、隔离验证及直接安装，无待答/待安装。设计design/smart-focus.md，准确冻结源/候选/结果/回执build/out/smart-focus；不得把另一任务的当前脏树当成该候选源码。
 
 - 狮鹫及其他敌人的眼位修复已合并聚焦并正式安装；当前完整冻结源在build/out/eye-audit-20260927/final-candidate。eye-alignment-20260924/candidate是旧单功能候选，不是当前回滚或覆盖来源。
@@ -131,6 +133,8 @@
 - 若另开新任务，优先读本文件及豁免/平滑/多锁/激光实验记录；已确认规则不重问。普通功能已完成，不自行建立提醒/待办。回到历史设置拆分前须成套恢复 ModSettings loader/客户端，不能只换本 SWF。
 
 ## 7. 深入了解
+
+- knowledge/experiments/smart-tracer-20260928.md：曳光弱的准确正式字节复现、五档长度/光量、60步连续性与单变量因果对照；仅检查，正式仍v1.15.1。build/out/smart-tracer保存对照图和原始结果。
 
 - knowledge/experiments/laser-enemy-eye-audit-20260927.md：其他敌人校准、原生标注及红绿实射、游骑兵头灯误标纠正、37套帧表、矢量部位、聚焦合并与安装回滚。build/fixtures两份JSON分别是生产校准和独立射击样本；生成脚本不能替代审图。
 - design/smart-focus.md、knowledge/experiments/smart-focus-20260927.md：全部已确认聚焦规则、真实输入与死亡等待、出生快照、159/87/真实时停/199/900帧、旧规则夹具纠正、冻结基线、安装与回滚。入口build/test-focus-production.ps1、test-focus-sandy.ps1；正常安装后未操作真实实例。
