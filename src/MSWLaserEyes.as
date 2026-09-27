@@ -1,6 +1,7 @@
 package
 {
    import flash.display.DisplayObject;
+   import flash.display.DisplayObjectContainer;
    import flash.geom.Point;
    import flash.utils.getQualifiedClassName;
    /** Visual eye/sensor anchors. Native eyeX/Y are coarse perception origins. */
@@ -53,8 +54,20 @@ package
          p=matrix.transformPoint(p);
          return {x:p.x,y:p.y};
       }
+      private static function child(node:*,index:int):DisplayObject
+      {
+         var c:DisplayObjectContainer=node as DisplayObjectContainer;
+         return c!=null && index>=0 && index<c.numChildren?c.getChildAt(index):null;
+      }
+      private static function pose(u:*):Object
+      {
+         if(access==null)access=MSWU.cls("fe.unit.MSWBlindAccess");
+         return access==null?null:access["pose"](u);
+      }
       public static function available(u:*):Boolean
       {
+         if(!MSWEyeFrames.available(pose(u)))return false;
+         if(getQualifiedClassName(u)=="fe.unit::UnitBat" && u.vis!=null && u.vis.osn!=null && u.vis.osn.currentFrame==1)return false;
          if(getQualifiedClassName(u)!="fe.unit::UnitTurret")return true;
          // Hidden mounts retain their light child even with the casing closed.
          // Only the fully deployed sprite exposes a hittable sensor.
@@ -74,13 +87,64 @@ package
             {
                var part:*=u.vis.osn.body.head.eye;
                if(part!=null)
-               {var bounds:*=part.getBounds(part);return local(u,part,bounds.x+bounds.width/2,bounds.y+bounds.height/2);}
+                  return type=="UnitBossRaider"?local(u,part,-42,-17):local(u,part,-34,-12);
             }
             if(type=="UnitTurret" && u.vis.osn!=null && u.vis.osn.light!=null)
                return local(u,u.vis.osn.light,0,0);
+            // Native vector timelines replace their inner clips when a pose
+            // changes. Resolve the current part instead of caching old clips.
+            var osn:*=MSWU.has(u.vis,"osn")?u.vis.osn:null;
+            if(osn!=null)
+            {
+               if(type=="UnitBat" && osn.currentFrame>1)
+               {
+                  part=child(osn,0);
+                  if(part!=null && MSWU.has(part,"head"))return local(u,part.head,10,-5);
+               }
+               if(type=="UnitFish" && MSWU.has(osn,"body"))
+               {
+                  part=child(osn.body,4);
+                  if(part!=null)return u.id=="fish2"?local(u,part,33,-84):local(u,part,49,-38);
+               }
+               if(type=="UnitBloat")
+               {
+                  var variant:int=int(String(u.id).substr(5));
+                  if(variant>=7)
+                  {part=child(osn,1);if(part!=null)return local(u,part,6.5,-6);}
+                  else
+                  {
+                     var insect:Array=[[6,-5],[7,-8],[7,-8],[13,-10],[9,-8],[9,-7],[9,-9]][Math.max(0,variant)];
+                     return local(u,osn,insect[0],insect[1]);
+                  }
+               }
+               if(type=="UnitMsp")
+               {
+                  part=child(osn,0);
+                  if(osn.currentFrame>1 && part is DisplayObjectContainer)
+                  {
+                     part=child(part,DisplayObjectContainer(part).numChildren-1);
+                     if(part!=null)
+                     {
+                        // The awake frame uses a Shape at a nonzero local
+                        // origin; walking uses a centred sensor MovieClip.
+                        var bounds:*=part.getBounds(part);
+                        return local(u,part,bounds.x+bounds.width/2,bounds.y+bounds.height/2);
+                     }
+                  }
+                  return local(u,osn,0,-16);
+               }
+               if(type=="UnitVortex")
+               {part=child(osn,0);if(part!=null)return local(u,part,0,-7);}
+               if(type=="UnitRobobrain" && MSWU.has(osn,"body"))
+               {part=child(osn.body,3);if(part!=null)return local(u,part,15,-3);}
+               if((type=="UnitSentinel" || type=="UnitBossUltra") && MSWU.has(osn,"body"))
+                  return type=="UnitBossUltra"?local(u,osn.body,10,-232):local(u,osn.body,0,-234);
+               if(type=="UnitDron" || type=="UnitBossDron" || type=="UnitRoller")return local(u,osn,0,0);
+               if(type=="UnitSpriteBot")return local(u,osn,16,0);
+            }
          }
-         if(access==null)access=MSWU.cls("fe.unit.MSWBlindAccess");
-         var p:Object=access==null?null:access["pose"](u);
+         var p:Object=pose(u),pixel:Array=MSWEyeFrames.point(p);
+         if(pixel!=null)return local(u,p.bitmap,pixel[0],pixel[1]);
          if(p!=null && type=="UnitMerc" && mercEyes[u.tr]!=null && mercEyes[u.tr][p.id]!=null)
          {
             var merc:Array=mercEyes[u.tr][p.id][p.frame];
@@ -92,13 +156,14 @@ package
             if(head!=null)
             {
                var ox:Number=-6,oy:Number=-10;
+               var offset:Array=MSWEyeFrames.headOffset(p.sprite);
+               if(offset!=null){ox+=offset[0];oy+=offset[1];}
                var a:Number=MSWU.num(head,"r")*Math.PI/180;
                // Alicorn tables describe a levitating weapon, whose rotation
                // is independent of the head; use only its animated translation.
                if(type=="UnitAlicorn") {ox=-20;oy=32;a=0;}
                if(type=="UnitBossAlicorn") {ox=-25;oy=45;a=0;}
-               return {x:u.X+(p.x+head.x+ox*Math.cos(a)-oy*Math.sin(a))*u.storona,
-                       y:u.Y+p.y+head.y+ox*Math.sin(a)+oy*Math.cos(a)};
+               return local(u,p.bitmap,head.x+ox*Math.cos(a)-oy*Math.sin(a),head.y+ox*Math.sin(a)+oy*Math.cos(a));
             }
          }
          var anchor:Array=anchors[type];

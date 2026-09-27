@@ -1,6 +1,16 @@
 # 构建工具链说明（可复现）
 
-## 当前版本：v1.15.0 聚焦模式
+## 当前版本：v1.15.1 敌人眼位校准
+
+已安装62289字节/88177481…；完整保留v1.15.0聚焦模式。两枪共用37套显示帧表（2028项）、23套头部偏移和当前矢量头部/传感器；狮鹫既有195帧表保留。安装及完整边界见`../knowledge/experiments/laser-enemy-eye-audit-20260927.md`，冻结产物/原生图像/日志在`out/eye-audit-20260927/`。
+
+- `test-eye-alignment.ps1 -ProductionSwf <绝对候选路径> -Nodebug`：五种狮鹫195帧及两枪40次开火；默认探针不变。
+- 加`-ProbeClass EnemyEyeRegressionSmoke`：读取`fixtures/eye-native-fixtures.json`的独立原生标注，112种外观/姿态 × 两枪 × 两朝向共448次开火，以及隐藏眼位负向检查。不要用生产eye返回值替代标注。
+- `-ProbeClass EyeCatalogSmoke`、`VectorEyeSmoke`：研究用原生位图/矢量姿态导出。`VectorPartsSmoke`是可修改预设的部位导出器，当前预设只导出bloat变体，不是完整回归。
+- `calibrate-eye-frames.py`只生成离线匹配候选与审图，不能直接当生产答案；低置信度匹配、反光、头灯/目镜及部分遮挡须复核。`fixtures/eye-frame-calibration.json`是审过的帧表正本；`generate-eye-frames.py`重生成`src/MSWEyeFrames.as`，不触碰游戏或release。
+- 准确最终字节还通过原枪读档199 PASS、接触规则93 PASS、聚焦87检查与900帧加载。安装后按约定只核字节，不操作真实游戏/存档。
+
+## v1.15.0 聚焦模式
 
 已安装57398字节/49944BA8…。多重锁定新增默认关的「聚焦模式」及48px（0–200）独立范围；具体规则见design/smart-focus.md，证据见knowledge/experiments/smart-focus-20260927.md（均在模组根下）。准确候选和完整冻结源在out/smart-focus/candidate；同一模组并发眼位任务的未提交改动不在该候选中。
 

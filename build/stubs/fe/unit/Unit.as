@@ -13,6 +13,7 @@ package fe.unit
       internal var aiVNapr:int;
       internal var visDamDY:int;
       internal var anims:Array;
+      internal var blitId:String;
       internal var visBmp:Bitmap;
       internal var blitRect:Rectangle;
       public var celUnit:Unit;

@@ -1,4 +1,4 @@
-param([string]$ProductionSwf='', [string]$AnimateRoot='D:\Program Files\Adobe Animate 2024', [switch]$Nodebug, [string]$GameDirectory='', [string]$OutputDirectory='out\eye-alignment-20260924\baseline')
+param([string]$ProductionSwf='', [string]$AnimateRoot='D:\Program Files\Adobe Animate 2024', [switch]$Nodebug, [string]$GameDirectory='', [string]$OutputDirectory='out\eye-alignment-20260924\baseline', [string]$ProbeClass='EyeAlignmentSmoke')
 $ErrorActionPreference='Stop'
 $gameRoot=if($GameDirectory){[IO.Path]::GetFullPath($GameDirectory)}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))}
 if(!$ProductionSwf){$ProductionSwf=Join-Path $PSScriptRoot '..\release\MoreSkillsWeaponsMod.swf'}
@@ -6,19 +6,21 @@ $ProductionSwf=[IO.Path]::GetFullPath($ProductionSwf)
 $output=Join-Path $PSScriptRoot $OutputDirectory
 $runtime=Join-Path $output 'runtime'
 $mswDir=Join-Path $runtime 'mods\MoreSkills&Weapons\release'
-$probeDir=Join-Path $runtime 'mods\EyeAlignmentSmoke\release'
+$probeDir=Join-Path $runtime "mods\$ProbeClass\release"
 New-Item -ItemType Directory -Force $output,$runtime,$mswDir,$probeDir | Out-Null
 Push-Location $PSScriptRoot
 try {
-    & (Join-Path $AnimateRoot 'jre\bin\java.exe') '-Dfile.encoding=UTF-8' -jar (Join-Path $AnimateRoot 'Common\Configuration\ActionScript 3.0\bin\mxmlc.jar') '-debug=true' '-target-player=11.1' '-source-path+=smoke' ("-output="+(Join-Path $probeDir 'EyeAlignmentSmoke.swf')) 'smoke/EyeAlignmentSmoke.as'
+    & (Join-Path $AnimateRoot 'jre\bin\java.exe') '-Dfile.encoding=UTF-8' -jar (Join-Path $AnimateRoot 'Common\Configuration\ActionScript 3.0\bin\mxmlc.jar') '-debug=true' '-target-player=11.1' '-source-path+=smoke' ("-output="+(Join-Path $probeDir "$ProbeClass.swf")) "smoke/$ProbeClass.as"
     if($LASTEXITCODE -ne 0){throw 'Eye-alignment harness compilation failed'}
+    $fixture=Join-Path $PSScriptRoot 'fixtures\eye-native-fixtures.json'
+    if(Test-Path -LiteralPath $fixture){Copy-Item -LiteralPath $fixture -Destination $runtime}
     Get-ChildItem -LiteralPath $gameRoot -File | Where-Object {$_.Name -eq 'pfe.swf' -or $_.Name -match '^(sound|sprite|texture).*\.swf$' -or $_.Extension -eq '.xml'} | ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $runtime}
     if(!(Test-Path -LiteralPath (Join-Path $runtime 'Rooms'))){Copy-Item -LiteralPath (Join-Path $gameRoot 'Rooms') -Destination $runtime -Recurse}
     Copy-Item -LiteralPath $ProductionSwf -Destination (Join-Path $mswDir 'MoreSkillsWeaponsMod.swf')
     $hash=(Get-FileHash -LiteralPath $ProductionSwf).Hash
     if((Get-FileHash -LiteralPath (Join-Path $mswDir 'MoreSkillsWeaponsMod.swf')).Hash -ne $hash){throw 'Production copy mismatch'}
     $settingsEntry=& (Join-Path $PSScriptRoot 'copy-settings-host.ps1') -GameDirectory $gameRoot -RuntimeDirectory $runtime
-    "$settingsEntry`nEyeAlignmentSmoke|EyeAlignmentSmoke|1|0|0" | Set-Content -LiteralPath (Join-Path $runtime 'mods\loader-manifest.txt') -Encoding utf8
+    "$settingsEntry`n$ProbeClass|$ProbeClass|1|0|0" | Set-Content -LiteralPath (Join-Path $runtime 'mods\loader-manifest.txt') -Encoding utf8
     $testId='pfe-modsettings-eyes-'+[guid]::NewGuid().ToString('N')
     $descriptor=Join-Path $runtime 'app_msw_eye_test.xml'
     @"

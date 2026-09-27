@@ -1,0 +1,1347 @@
+[
+  {
+    "id": "raider1",
+    "spawn": "raider",
+    "cid": "1",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      86,
+      47
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "raider2",
+    "spawn": "raider",
+    "cid": "2",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      88,
+      47
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "raider3",
+    "spawn": "raider",
+    "cid": "3",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      92,
+      50
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "raider4",
+    "spawn": "raider",
+    "cid": "4",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      90,
+      51
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "raider5",
+    "spawn": "raider",
+    "cid": "5",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      88,
+      44
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "raider6",
+    "spawn": "raider",
+    "cid": "6",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      88,
+      46
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "raider7",
+    "spawn": "raider",
+    "cid": "7",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      90,
+      50
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "raider8",
+    "spawn": "raider",
+    "cid": "8",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      89,
+      49
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "raider9",
+    "spawn": "raider",
+    "cid": "9",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      88,
+      48
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "slaver1",
+    "spawn": "slaver",
+    "cid": "1",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      86,
+      49
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "slaver2",
+    "spawn": "slaver",
+    "cid": "2",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      90,
+      49
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "slaver3",
+    "spawn": "slaver",
+    "cid": "3",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      88,
+      52
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "slaver4",
+    "spawn": "slaver",
+    "cid": "4",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      92,
+      51
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "slaver5",
+    "spawn": "slaver",
+    "cid": "5",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      90,
+      50
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "slaver6",
+    "spawn": "slaver",
+    "cid": "6",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      91,
+      50
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zebra1",
+    "spawn": "zebra",
+    "cid": "1",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      88,
+      55
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zebra2",
+    "spawn": "zebra",
+    "cid": "2",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      89,
+      56
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zebra3",
+    "spawn": "zebra",
+    "cid": "3",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      89,
+      57
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zebra4",
+    "spawn": "zebra",
+    "cid": "4",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      90,
+      55
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zebra5",
+    "spawn": "zebra",
+    "cid": "5",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      89,
+      55
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "ranger1",
+    "spawn": "ranger",
+    "cid": "1",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      94,
+      62
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "ranger2",
+    "spawn": "ranger",
+    "cid": "2",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      94,
+      62
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "ranger3",
+    "spawn": "ranger",
+    "cid": "3",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      94,
+      62
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "encl1",
+    "spawn": "encl",
+    "cid": "1",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      91,
+      51
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "encl2",
+    "spawn": "encl",
+    "cid": "2",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      91,
+      50
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "encl3",
+    "spawn": "encl",
+    "cid": "3",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      91,
+      51
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "encl4",
+    "spawn": "encl",
+    "cid": "4",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      91,
+      50
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "bossencl",
+    "spawn": "bossencl",
+    "cid": null,
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      93,
+      53
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "alicorn1",
+    "spawn": "alicorn",
+    "cid": "1",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      114,
+      46
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "alicorn2",
+    "spawn": "alicorn",
+    "cid": "2",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      113,
+      45
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "alicorn3",
+    "spawn": "alicorn",
+    "cid": "3",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      113,
+      45
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "bossalicorn",
+    "spawn": "bossalicorn",
+    "cid": null,
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      125,
+      64
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "hellhound1",
+    "spawn": "hellhound",
+    "cid": "1",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      128,
+      62
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zombie0",
+    "spawn": "zombie",
+    "cid": "0",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      88,
+      45
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zombie1",
+    "spawn": "zombie",
+    "cid": "1",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      88,
+      46
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zombie2",
+    "spawn": "zombie",
+    "cid": "2",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      86,
+      45
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zombie3",
+    "spawn": "zombie",
+    "cid": "3",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      87,
+      46
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zombie4",
+    "spawn": "zombie",
+    "cid": "4",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      90,
+      49
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zombie5",
+    "spawn": "zombie",
+    "cid": "5",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      88,
+      52
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zombie6",
+    "spawn": "zombie",
+    "cid": "6",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      86,
+      45
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zombie7",
+    "spawn": "zombie",
+    "cid": "7",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      86,
+      45
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zombie8",
+    "spawn": "zombie",
+    "cid": "8",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      89,
+      51
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "zombie9",
+    "spawn": "zombie",
+    "cid": "9",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      89,
+      57
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "tarakan",
+    "spawn": "tarakan",
+    "cid": null,
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      43,
+      16
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "rat",
+    "spawn": "rat",
+    "cid": null,
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      59,
+      12
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "molerat",
+    "spawn": "molerat",
+    "cid": null,
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      70,
+      24
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "scorp1",
+    "spawn": "scorp",
+    "cid": "scorp1",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      53,
+      40
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "scorp2",
+    "spawn": "scorp",
+    "cid": "scorp2",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      54,
+      41
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "scorp3",
+    "spawn": "scorp3",
+    "cid": null,
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      63,
+      53
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "ant1",
+    "spawn": "ant",
+    "cid": "1",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      48,
+      12
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "ant2",
+    "spawn": "ant",
+    "cid": "2",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      47,
+      9
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "ant3",
+    "spawn": "ant",
+    "cid": "3",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      47,
+      11
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "protect",
+    "spawn": "protect",
+    "cid": "0",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      84,
+      39
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "gutsy",
+    "spawn": "gutsy",
+    "cid": "0",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      66,
+      41
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "eqd",
+    "spawn": "eqd",
+    "cid": null,
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      87,
+      47
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "protect1",
+    "spawn": "protect",
+    "cid": "1",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      88,
+      51
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "gutsy1",
+    "spawn": "gutsy",
+    "cid": "1",
+    "row": 0,
+    "frame": 0,
+    "eye": [
+      66,
+      41
+    ],
+    "kind": "manually annotated native standing eye"
+  },
+  {
+    "id": "hellhound1",
+    "spawn": "hellhound",
+    "cid": "1",
+    "row": 1,
+    "frame": 0,
+    "eye": [
+      150,
+      94
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "hellhound1",
+    "spawn": "hellhound",
+    "cid": "1",
+    "row": 6,
+    "frame": 4,
+    "eye": [
+      103,
+      43
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "molerat",
+    "spawn": "molerat",
+    "cid": null,
+    "row": 0,
+    "frame": 6,
+    "eye": [
+      72,
+      27
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "eqd",
+    "spawn": "eqd",
+    "cid": null,
+    "row": 2,
+    "frame": 4,
+    "eye": [
+      100,
+      55
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "zombie4",
+    "spawn": "zombie",
+    "cid": "4",
+    "row": 3,
+    "frame": 0,
+    "eye": [
+      83,
+      41
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "alicorn1",
+    "spawn": "alicorn",
+    "cid": "1",
+    "row": 1,
+    "frame": 0,
+    "eye": [
+      114,
+      46
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "zombie4",
+    "spawn": "zombie",
+    "cid": "4",
+    "row": 3,
+    "frame": 8,
+    "eye": [
+      90,
+      45
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "zombie4",
+    "spawn": "zombie",
+    "cid": "4",
+    "row": 3,
+    "frame": 15,
+    "eye": [
+      94,
+      57
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "raider3",
+    "spawn": "raider",
+    "cid": "3",
+    "row": 3,
+    "frame": 0,
+    "eye": [
+      81,
+      40
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "raider9",
+    "spawn": "raider",
+    "cid": "9",
+    "row": 2,
+    "frame": 5,
+    "eye": [
+      95,
+      56
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "ranger1",
+    "spawn": "ranger",
+    "cid": "1",
+    "row": 4,
+    "frame": 6,
+    "eye": [
+      75,
+      47
+    ],
+    "kind": "manually annotated native pose holdout",
+    "annotation": "helmet visor centre; the yellow forehead lamp is not the eye"
+  },
+  {
+    "id": "slaver4",
+    "spawn": "slaver",
+    "cid": "4",
+    "row": 3,
+    "frame": 0,
+    "eye": [
+      82,
+      41
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "zebra3",
+    "spawn": "zebra",
+    "cid": "3",
+    "row": 3,
+    "frame": 0,
+    "eye": [
+      82,
+      47
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "robobrain",
+    "spawn": "robot",
+    "cid": null,
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      33,
+      -57
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "robobrain",
+    "spawn": "robot",
+    "cid": null,
+    "outer": 2,
+    "inner": 8,
+    "eye": [
+      33,
+      -57
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "sentinel",
+    "spawn": "sentinel",
+    "cid": null,
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      1,
+      -89
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bossultra",
+    "spawn": "ultra",
+    "cid": null,
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      -1,
+      -113
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bossdron",
+    "spawn": "megadron",
+    "cid": null,
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      0,
+      -20
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "roller",
+    "spawn": "roller",
+    "cid": null,
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      0,
+      0
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "spritebot",
+    "spawn": "spritebot",
+    "cid": null,
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      15,
+      -21
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "vortex",
+    "spawn": "vortex",
+    "cid": null,
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      2,
+      -14
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "msp",
+    "spawn": "msp",
+    "cid": null,
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      0,
+      -16
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "msp",
+    "spawn": "msp",
+    "cid": null,
+    "outer": 2,
+    "inner": 1,
+    "eye": [
+      0,
+      -26
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "msp",
+    "spawn": "msp",
+    "cid": null,
+    "outer": 3,
+    "inner": 8,
+    "eye": [
+      2,
+      -26
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bossraider",
+    "spawn": "bossraider",
+    "cid": null,
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      34,
+      -92
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bossnecr",
+    "spawn": "bossnecr",
+    "cid": null,
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      27,
+      -73
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloodwing",
+    "spawn": "bloodwing",
+    "cid": "1",
+    "outer": 2,
+    "inner": 1,
+    "eye": [
+      19,
+      -25
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloodwing",
+    "spawn": "bloodwing",
+    "cid": "1",
+    "outer": 3,
+    "inner": 8,
+    "eye": [
+      20,
+      -24
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloodwing2",
+    "spawn": "bloodwing",
+    "cid": "2",
+    "outer": 2,
+    "inner": 1,
+    "eye": [
+      20,
+      -25
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloodwing2",
+    "spawn": "bloodwing",
+    "cid": "2",
+    "outer": 3,
+    "inner": 8,
+    "eye": [
+      22,
+      -24
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "fish1",
+    "spawn": "fish",
+    "cid": "1",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      12,
+      -15.5
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "fish1",
+    "spawn": "fish",
+    "cid": "1",
+    "outer": 3,
+    "inner": 8,
+    "eye": [
+      12,
+      -20.5
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "fish1",
+    "spawn": "fish",
+    "cid": "1",
+    "outer": 4,
+    "inner": 16,
+    "eye": [
+      11.6,
+      -22.6
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "fish2",
+    "spawn": "fish",
+    "cid": "2",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      12,
+      -21
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "fish2",
+    "spawn": "fish",
+    "cid": "2",
+    "outer": 3,
+    "inner": 8,
+    "eye": [
+      13,
+      -27
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "fish2",
+    "spawn": "fish",
+    "cid": "2",
+    "outer": 4,
+    "inner": 16,
+    "eye": [
+      11,
+      -29
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloat0",
+    "spawn": "bloat",
+    "cid": "0",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      5,
+      -22
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloat1",
+    "spawn": "bloat",
+    "cid": "1",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      7,
+      -25
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloat2",
+    "spawn": "bloat",
+    "cid": "2",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      7,
+      -25
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloat3",
+    "spawn": "bloat",
+    "cid": "3",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      12,
+      -26
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloat4",
+    "spawn": "bloat",
+    "cid": "4",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      9,
+      -25
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloat5",
+    "spawn": "bloat",
+    "cid": "5",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      7,
+      -24
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloat6",
+    "spawn": "bloat",
+    "cid": "6",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      9,
+      -24
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloat7",
+    "spawn": "bloat",
+    "cid": "7",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      7,
+      -24
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloat8",
+    "spawn": "bloat",
+    "cid": "8",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      11,
+      -26
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloat9",
+    "spawn": "bloat",
+    "cid": "9",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      16,
+      -30
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "bloat10",
+    "spawn": "bloat",
+    "cid": "10",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      23,
+      -35
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "dron1",
+    "spawn": "dron",
+    "cid": "1",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      0,
+      -20
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "dron2",
+    "spawn": "dron",
+    "cid": "2",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      0,
+      -20
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "dron3",
+    "spawn": "dron",
+    "cid": "3",
+    "outer": 1,
+    "inner": 1,
+    "eye": [
+      0,
+      -20
+    ],
+    "kind": "vector"
+  },
+  {
+    "id": "ranger1",
+    "spawn": "ranger",
+    "cid": "1",
+    "row": 4,
+    "frame": 1,
+    "eye": [
+      74,
+      49
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "ranger2",
+    "spawn": "ranger",
+    "cid": "2",
+    "row": 4,
+    "frame": 1,
+    "eye": [
+      74,
+      49
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "ranger2",
+    "spawn": "ranger",
+    "cid": "2",
+    "row": 4,
+    "frame": 6,
+    "eye": [
+      75,
+      47
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "ranger3",
+    "spawn": "ranger",
+    "cid": "3",
+    "row": 4,
+    "frame": 1,
+    "eye": [
+      74,
+      49
+    ],
+    "kind": "manually annotated native pose holdout"
+  },
+  {
+    "id": "ranger3",
+    "spawn": "ranger",
+    "cid": "3",
+    "row": 4,
+    "frame": 6,
+    "eye": [
+      75,
+      47
+    ],
+    "kind": "manually annotated native pose holdout"
+  }
+]

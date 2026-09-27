@@ -149,7 +149,7 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.15.0-smart-focus");
+         cfg.diagSet("ver", "1.15.1-eye-alignment");
          cfg.diagSet("smartHudVersion", MSWSmartHUD.VERSION);
          settings.registerPage("msw", "MoreSkills&Weapons",
             MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");
