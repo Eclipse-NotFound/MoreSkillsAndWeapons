@@ -149,7 +149,7 @@ package
          {
          }
          cfg.load();
-         cfg.diagSet("ver", "1.15.2-native-tracer");
+         cfg.diagSet("ver", "1.15.3-visible-lock");
          cfg.diagSet("smartHudVersion", MSWSmartHUD.VERSION);
          settings.registerPage("msw", "MoreSkills&Weapons",
             MSWSettingsHub.buildMswItems(this), mswPageClose, "武器与技能扩展");

@@ -1,6 +1,6 @@
 # MoreSkills&Weapons —— 开发记忆入口
 
-> 协议见工作区 GOVERNANCE.md §8；本模组参数见 ../AGENT_SCOPE.md。最近正式安装：2026-09-28，v1.15.2-native-tracer；原版曳光贴图沿历史曲线绘制，完整保留眼位/聚焦。63443字节/36B9C191…；准确候选隔离验证后只核安装字节，未操作真实游戏或存档。
+> 协议见工作区 GOVERNANCE.md §8；本模组参数见 ../AGENT_SCOPE.md。最近正式安装：2026-09-28，v1.15.3-visible-lock；修正智能锁定感知起点与原生侦测显形，保留曳光/眼位/聚焦。63631字节/81FAD2EB…；准确候选隔离验证后只核安装字节，未操作真实游戏或存档。
 
 ## 1. 这个模组是什么
 
@@ -29,7 +29,9 @@
 
 ## 3. 当前状态
 
-- **正式已安装v1.15.2-native-tracer**：63443字节，SHA256 `36B9C19193D231C99DB02BBF9CCF9F801ECA81C5347AD01E9FD961ED4E67B474`，43生产定义。五档普通/彩虹原版对照49 PASS，长度差0–1px、光量约99%；60连续步/历史曲线/原图恢复、24自适应跳弹、实际时停慢步与回放、87聚焦、激光199 PASS、正常入口900帧通过。准确源和候选build/out/smart-tracer-fix/final，详情smart-native-tracer-fix-20260928.md。
+- **正式已安装v1.15.3-visible-lock**：63631字节，SHA256 `81FAD2EBCA9F272117BBDEAA8DFF2D2A550213700A0A04D1C761148F407F628F`，43生产定义。原生感知眼位替代身体估算起点；原生infravis已显形的天角兽/同机制首领可被锁定，不再仅凭残留isVis/invis拒绝。44可见性、87聚焦、39透窗、激光199行PASS及正常入口900帧通过。冻结源/候选/回执build/out/smart-visibility；详见smart-visibility-20260928.md。
+
+- **上一版v1.15.2-native-tracer**：63443字节，SHA256 `36B9C19193D231C99DB02BBF9CCF9F801ECA81C5347AD01E9FD961ED4E67B474`，43生产定义。五档普通/彩虹原版对照49 PASS，长度差0–1px、光量约99%；60连续步/历史曲线/原图恢复、24自适应跳弹、实际时停慢步与回放、87聚焦、激光199 PASS、正常入口900帧通过。准确源和候选build/out/smart-tracer-fix/final，详情smart-native-tracer-fix-20260928.md。
 
 - **上一版v1.15.1-eye-alignment**：62289字节，SHA256 `8817748176E17D3C32B286EB5780A818C580818393562973DA36EA3799F4425F`，42生产定义。37套帧表2028项、23套头部偏移、28种矢量外观/类型审查；原5种狮鹫195帧保留。两枪448+40次实射均6秒失明/零伤害，2023+416 PASS；读档199、方向/护盾93、聚焦87检查、正常入口900帧通过。见laser-enemy-eye-audit-20260927.md；所有源保留在当前版本。
 
@@ -68,6 +70,8 @@
 - 根 pfe.swf 使用通用 loader，已被其他工作更新；当前 SHA256 `C631CBF3511B6EE303F533D08D51511FE0EB702F43E5DB17F5241D8576C64867`，加载矩阵以 mods/loader-manifest.txt 为准。曳光最终生产/启动场景复制当前宿主；未改本体、清单、ModSettings、其他模组正式文件或真实存档。dist仍旧v1.0。
 
 ## 4. 正在进行与卡点
+
+- 多锁「无遮挡、明显屏幕内锁不上」已定位并修复两个实际场景：平台边缘起点偏差、原生侦测显形却保留隐身标记，已安装v1.15.3。具体敌人/枪名尚未补充，不能将两种复现泛称覆盖所有情况；若仍复发，沿build/test-smart-visibility.ps1继续。真实配置中的frame #1009是无时点的累计记录，隔离误判可在无错误时复现，未认定它为根因。原豁免/设置保留。
 
 - 智能曳光偏弱已修复并安装v1.15.2：原生贴图沿有限历史曲线绘制，低速尾长与渐变恢复；原版像素校准和实际时停均通过，无待确认/安装。旧版20px步只有22px尾长/26%光量的红色证据留smart-tracer-20260928.md；当前test-smart-tracer.ps1已转绿。
 
@@ -109,7 +113,8 @@
 
 ## 6. 下一步
 
-- v1.15.2原版曳光已安装；用户保存并重启生效，无新开关。当前准确源/产物/证据/回执在build/out/smart-tracer-fix；回滚首选release/MoreSkillsWeaponsMod.before-v1.15.2-native-tracer-20260928-082342.swf（v1.15.1/88177481…），关闭游戏后复制为正式文件再重启。
+- v1.15.3可见性修复已安装；用户保存并重启生效，无新开关。当前准确源/产物/证据/回执在build/out/smart-visibility；回滚首选release/MoreSkillsWeaponsMod.before-v1.15.3-visible-lock-20260928-212428.swf（v1.15.2/36B9C191…），关闭游戏后复制为正式文件再重启。
+- v1.15.2原版曳光完整保留；历史准确源/证据/回执在build/out/smart-tracer-fix，其before-v1.15.2备份是更旧v1.15.1，不是当前回滚首选。
 - 历史v1.15.1眼位准确产物/冻结源/原生图像/回执在build/out/eye-audit-20260927。before-v1.15.1-eye-alignment-20260927-214032.swf为更旧v1.15.0/49944BA8…，不是当前回滚首选。
 - 用户保存并重启后，在Pip「模组→MSW→智能武器」或F6第二页依次启用智能武器、多重锁定、聚焦模式；聚焦范围默认48、0–200。已安装，无待执行步骤。
 - 历史v1.15.0准确产物/冻结源/测试记录在build/out/smart-focus；installation.json为installed-hash-verified。回滚备份release/MoreSkillsWeaponsMod.before-v1.15.0-smart-focus-20260927-210640.swf（v1.14.3，3ECFA98B…）；退出游戏复制为正式文件并重启即可。
@@ -131,12 +136,14 @@
 - 用户重启后在Pip「模组→MSW→锁定豁免」点大类批量开关，点箭头展开逐项调整；F6仍切到豁免后↑↓选择31项。默认全不豁免，旧勾选保留；恢复默认清全部豁免并保留展开位置。类别不是玩法总开关，无需重问粒度。
 - 重启游戏后在Pip「模组→智能武器」或F6智能页使用「自适应转弯半径」和「最小半径倍率」。平时值仍由原「转弯半径倍率」控制；默认新开关关，已有旧平滑开关状态会迁移；最低默认10%。改配置作用于新弹，已发射/录制子弹保留快照。
 - 历史SATS回滚：release/MoreSkillsWeaponsMod.before-v1.14.1-sats-20260924.swf（v1.14.0/7AE25C6B…/55258字节），不是当前版本回滚首选，使用它会同时撤销后续功能。
-- 历史SATS同字节候选/冻结src/manifest及selection/laser/contact/startup结果在build/out/laser-sats-final；当前产物以smart-tracer-fix/final为准。
+- 历史SATS同字节候选/冻结src/manifest及selection/laser/contact/startup结果在build/out/laser-sats-final；当前产物以smart-visibility/final为准。
 - 后续发布必须验证准确生产字节的多目标实战与激光真实开火；保留 MSWLaserEyes/Beam、MSWBlindAccess.pose、castRay 和外部宿主声明。增加test-laser-reload.ps1覆盖装备→保存→comLoad→延迟装备→开火及完整舞台光束；旧combat即时装备测试不能替代。眼位测试仍须独立测量可见部位。
 - 测试使用独立 AIR ID；本环境隔离游戏启动需沙箱提权，否则可能无存储/无输出超时。不要部署任何 Smoke/Probe 或测试用 SandevistanMod.as；不要关闭用户游戏。
 - 若另开新任务，优先读本文件及豁免/平滑/多锁/激光实验记录；已确认规则不重问。普通功能已完成，不自行建立提醒/待办。回到历史设置拆分前须成套恢复 ModSettings loader/客户端，不能只换本 SWF。
 
 ## 7. 深入了解
+
+- knowledge/experiments/smart-visibility-20260928.md：原生眼位平台误判与infravis显形残留标记，两轮独立红绿、44/87/39/199行/900帧、准确候选与v1.15.3安装回滚。首领显形只核源码，未冒称独立实测；公共native-stealth-infrared-visibility.md记录原生语义。
 
 - knowledge/experiments/smart-native-tracer-fix-20260928.md：原版贴图/UV像素校准、历史曲线、实际时停、准确候选回归与v1.15.2安装回滚。smart-tracer-20260928.md及build/out/smart-tracer保留旧版红色检查；build/out/smart-tracer-fix为当前绿色情况。
 

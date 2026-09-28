@@ -335,14 +335,25 @@ package
       }
       public function visible(u:*,w:*):Boolean
       {
-         if(!u.isVis || MSWU.has(u,"invis") && u.invis) return false;
+         if((!u.isVis || MSWU.has(u,"invis") && u.invis) && !infraredRevealed(u,w)) return false;
          var a:Point=w.visual.localToGlobal(new Point(u.X1,u.Y1));
          var b:Point=w.visual.localToGlobal(new Point(u.X2,u.Y2));
          var st:*=w.main.stage;
          if(Math.max(a.x,b.x)<0 || Math.max(a.y,b.y)<0 || Math.min(a.x,b.x)>st.stageWidth || Math.min(a.y,b.y)>st.stageHeight) return false;
          var x:Number=(u.X1+u.X2)/2;
-         var gx:Number=(w.gg.X1+w.gg.X2)/2, gy:Number=w.gg.Y1+(w.gg.Y2-w.gg.Y1)*0.3;
+         // Match Unit.actions' eye position using the current pose. Its cached
+         // eyeX/Y may still belong to the previous position after a teleport.
+         var gx:Number=w.gg.X+w.gg.scX*0.25*w.gg.storona, gy:Number=w.gg.Y-w.gg.scY*0.75;
          return MSWSmartGlass.visible(w.loc,gx,gy,x,(u.Y1+u.Y2)/2) || MSWSmartGlass.visible(w.loc,gx,gy,x,u.Y1+3) || MSWSmartGlass.visible(w.loc,gx,gy,x,u.Y2-3);
+      }
+      private function infraredRevealed(u:*,w:*):Boolean
+      {
+         if(!MSWU.has(w,"pers") || MSWU.num(w.pers,"infravis")<=0 ||
+            !MSWU.has(u,"vis") || u.vis==null || !u.vis.visible || u.vis.alpha<=0.5) return false;
+         // These native animate() methods reveal stealth to infravis without
+         // clearing isVis/invis. Do not extend this to buried units or turrets.
+         var type:String=getQualifiedClassName(u);
+         return type=="fe.unit::UnitAlicorn" || type=="fe.unit::UnitBossAlicorn" || type=="fe.unit::UnitBossNecr";
       }
       private function hide():void { hud.visible=false; }
       private function draw(w:*):void
