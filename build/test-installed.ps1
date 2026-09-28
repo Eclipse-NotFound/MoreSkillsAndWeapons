@@ -5,7 +5,8 @@ param(
     [string]$ProductionSwf = '',
     [string]$RuntimeDirectory = 'test-runtime',
     [string]$OutputDirectory = 'out',
-    [string]$PythonPath = 'C:\Users\hello\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
+    [string]$PythonPath = 'C:\Users\hello\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe',
+    [ValidateRange(10,600)][int]$TimeoutSeconds = 100
 )
 $ErrorActionPreference = 'Stop'
 $gameRoot = if($GameDirectory){[IO.Path]::GetFullPath($GameDirectory)}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))}
@@ -25,6 +26,7 @@ if(Test-Path -LiteralPath $manifest){Copy-Item -LiteralPath $manifest -Destinati
 $installedHash = (Get-FileHash -LiteralPath $installed).Hash
 if ((Get-FileHash -LiteralPath $testMod).Hash -ne $installedHash) { throw 'Production copy mismatch' }
 $testId = 'pfe-msw-install-' + [guid]::NewGuid().ToString('N')
+$testId | Set-Content -LiteralPath (Join-Path $outputDir 'test-id.txt') -Encoding utf8
 $descriptor = Join-Path $runtimeDir 'app_msw_install_test.xml'
 @"
 <application xmlns="http://ns.adobe.com/air/application/30.0">
@@ -38,7 +40,7 @@ Push-Location $PSScriptRoot
 try {
     $proc = Start-Process -FilePath (Join-Path $gameRoot 'adl64.exe') -ArgumentList @('-runtime', ('"' + (Join-Path $gameRoot 'runtimes\air\win64') + '"'), ('"' + $descriptor + '"')) -WindowStyle Hidden -RedirectStandardOutput (Join-Path $outputDir 'install-stdout.log') -RedirectStandardError (Join-Path $outputDir 'install-stderr.log') -PassThru
     $passed = $false
-    for ($poll = 0; $poll -lt 10; $poll++) {
+    for ($poll = 0; $poll -lt [Math]::Ceiling($TimeoutSeconds/10); $poll++) {
         if ($proc.WaitForExit(10000)) { throw 'Installed build exited unexpectedly' }
         if (-not (Test-Path -LiteralPath $sol)) { continue }
         $raw = & $PythonPath -c 'import sys,json;sys.path.insert(0,"tools");from read_sol import SolParser;print(json.dumps(SolParser(sys.argv[1]).parse(),ensure_ascii=True))' $sol

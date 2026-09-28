@@ -1,6 +1,5 @@
 package
 {
-   import flash.display.Sprite;
    import flash.utils.Dictionary;
 
    /** Curved integration on the SAME native Bullet: run() owns every collision.
@@ -37,8 +36,9 @@ package
          if(!b.babah && b.in_chain) { b.babah=true; pending.push(b); }
          if(b.vis!=null && b.spring==1)
          {
-            var old:Object=trails[b];
-            trails[b]={points:points,sprite:old==null?null:old.sprite,dirty:true};
+            var trail:MSWSmartTrail=trails[b];
+            if(trail==null){trail=new MSWSmartTrail(b);trails[b]=trail;}
+            trail.append(points,b);
          }
       }
 
@@ -50,32 +50,15 @@ package
          {
             b=key;
             if(!b.in_chain || b.babah || b.vis==null || b.vis.parent==null) { remove(b); continue; }
-            var t:Object=trails[b];
-            if(!t.dirty) continue;
-            var line:Sprite=t.sprite;
-            if(line==null)
-            {
-               line=new Sprite();line.name="MSWSmartTrail";line.mouseEnabled=false;line.mouseChildren=false;t.sprite=line;
-            }
-            if(line.parent!==b.vis.parent) b.vis.parent.addChildAt(line,b.vis.parent.getChildIndex(b.vis));
-            line.graphics.clear();
-            line.graphics.lineStyle(2,0xFFDE91,0.7,false,"normal","round","round");
-            var points:Array=t.points;
-            line.graphics.moveTo(points[0].x,points[0].y);
-            for(var i:int=1;i<points.length;i++)line.graphics.lineTo(points[i].x,points[i].y);
-            // Native visualBullet stretches a straight 100px strip. Keep its
-            // small head; draw the actual curved travelled path behind it.
-            b.vis.scaleX=0.04;
-            t.dirty=false;
+            MSWSmartTrail(trails[b]).render(b);
          }
       }
 
       public function remove(b:*):void
       {
-         var t:Object=trails[b];
-         if(t!=null && t.sprite!=null && t.sprite.parent!=null) t.sprite.parent.removeChild(t.sprite);
+         var t:MSWSmartTrail=trails[b];
+         if(t!=null)t.release();
          delete trails[b];
-         if(b.vis!=null && b.spring==1) b.vis.scaleX=b.babah?1:Math.max(1,b.vel/100);
       }
       public function prune():void
       {

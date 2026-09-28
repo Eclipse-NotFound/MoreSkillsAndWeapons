@@ -21,7 +21,7 @@ package
       private static var probe:SmartTracerSmoke;
       private var loader:Loader=new Loader(),timer:Timer=new Timer(50),domain:ApplicationDomain;
       private var w:*,m:*,weapon:*,ticks:int=0,log:String="",failures:int=0;
-      private var sheet:BitmapData=new BitmapData(1100,600,false,0x18202B);
+      private var sheet:BitmapData=new BitmapData(1100,700,false,0x18202B);
       public function SmartTracerSmoke() {}
       public static function init(main:*):void {probe=new SmartTracerSmoke();probe.start(main);}
       private function cls(name:String):Class {return domain.getDefinition(name) as Class;}
@@ -54,23 +54,29 @@ package
                var native:Object=sample(speed,false,row),smart:Object=sample(speed,true,row);
                var energy:Number=smart.energy/native.energy,length:Number=smart.width/native.width;
                log+="MEASURE speed="+speed+" native="+JSON.stringify(native)+" smart="+JSON.stringify(smart)+" energyRatio="+energy+" lengthRatio="+length+"\n";
-               check(energy>=0.75,"speed="+speed+" smart tracer retains at least 75% of native visible light");
-               check(length>=0.75,"speed="+speed+" smart tracer retains at least 75% of native visible length");
+               check(energy>=0.9 && energy<=1.1,"speed="+speed+" smart visible light matches native within 10%");
+               check(Math.abs(smart.width-native.width)<=3,"speed="+speed+" smart visible length matches native within 3px");
+               check(profileError(native,smart)<0.12,"speed="+speed+" native gradient and palette retained");
                label("speed="+speed+" light="+energy.toFixed(2)+" length="+length.toFixed(2),15,60+row*100);row++;
             }
-            controls();
+            native=sample(20,false,5,"visualRainbow");smart=sample(20,true,5,"visualRainbow");
+            log+="RAINBOW native="+JSON.stringify(native)+" smart="+JSON.stringify(smart)+"\n";
+            check(profileError(native,smart)<0.12 && Math.abs(smart.energy/native.energy-1)<0.1,"native rainbow palette and brightness retained");
+            label("Rainbow rounds",15,560);
+            controls();curve();
             png("tracers.png",sheet);finish(failures==0,"");
          }catch(err:*){finish(false,String(err)+"\n"+err.getStackTrace());}
       }
-      private function sample(speed:Number,smart:Boolean,row:int):Object
+      private function sample(speed:Number,smart:Boolean,row:int,visual:String="visualBullet"):Object
       {
-         var b:*=new (cls("fe.weapon.Bullet"))(w.gg,500,300,cls("visualBullet"),true);
+         var b:*=new (cls("fe.weapon.Bullet"))(w.gg,500,300,cls(visual),true);
          b.weap=weapon;b.dx=speed;b.dy=0;b.vel=speed;b.damage=1;b.precision=0;b.miss=0;
          var holder:Sprite=new Sprite();holder.addChild(b.vis);
          var motion:*=new (cls("MSWSmartMotion"))(),shot:Object={turnRadius:100,adaptive:false};
          if(smart)motion.advance(b,shot,[{x:1100,y:300}],Math.PI/5);
          b.step();if(smart)motion.finish();
          check(!b.babah && Math.abs(b.X-500-speed)<0.001,"native movement intact speed="+speed+" smart="+smart);
+         check(b.liv==99 && Math.abs(b.dist-speed)<0.001,"native age and distance unchanged speed="+speed+" smart="+smart);
          var bitmap:BitmapData=new BitmapData(320,60,true,0),matrix:Matrix=new Matrix(1,0,0,1,280-b.X,30-b.Y);
          bitmap.draw(holder,matrix);
          var result:Object=measure(bitmap);
@@ -91,6 +97,16 @@ package
          var c1:uint=bitmap.getPixel32(270,30),c2:uint=bitmap.getPixel32(240,30),c3:uint=bitmap.getPixel32(210,30);
          return {energy:energy,width:maxX-minX+1,peak:peak,brightPixels:bright,profile:[c1.toString(16),c2.toString(16),c3.toString(16)]};
       }
+      private function profileError(a:Object,b:Object):Number
+      {
+         var error:Number=0;
+         for(var i:int=0;i<a.profile.length;i++)
+         {
+            var ac:uint=parseInt(a.profile[i],16),bc:uint=parseInt(b.profile[i],16);
+            for(var shift:int=0;shift<=24;shift+=8)error=Math.max(error,Math.abs(((ac>>>shift)&255)-((bc>>>shift)&255))/255);
+         }
+         return error;
+      }
       private function controls():void
       {
          var b:*=new (cls("fe.weapon.Bullet"))(w.gg,300,300,cls("visualBullet"),true);
@@ -108,15 +124,40 @@ package
          }
          log+="CONTROL 60 native physics steps; 300px travelled; missingOrChangedOnFinish="+missing+" minWidth="+minWidth+" maxWidth="+maxWidth+"\n";
          check(missing==0,"tracer survives every physics step and repeated finish/prune without flicker");
-         // Change just the drawn length, then just opacity, on the actual
-         // production sprite. These are test-only counterfactuals, never source edits.
-         line.graphics.clear();line.graphics.lineStyle(2,0xFFDE91,0.7,false,"normal","round","round");line.graphics.moveTo(b.X-100,b.Y);line.graphics.lineTo(b.X,b.Y);
-         log+="CONTROL lengthOnly=100 "+JSON.stringify(capture(holder,b))+"\n";
-         line.graphics.clear();line.graphics.lineStyle(2,0xFFDE91,1,false,"normal","round","round");line.graphics.moveTo(b.X-5,b.Y);line.graphics.lineTo(b.X,b.Y);
-         log+="CONTROL opacityOnly=1 "+JSON.stringify(capture(holder,b))+"\n";
-         line.graphics.clear();b.vis.scaleX=1;
-         log+="CONTROL nativeVisualOnly "+JSON.stringify(capture(holder,b))+"\n";
+         check(minWidth>=85 && maxWidth<=91,"full native length retained across slow steps");
+         motion.remove(b);check(holder.getChildByName("MSWSmartTrail")==null && b.vis.visible,"stopping guidance restores original visual and clears curved trail");
+         b.step();check(Math.abs(capture(holder,b).energy-27660.30)<10,"ordinary native tracer resumes after guidance");
+         motion.advance(b,shot,[{x:1100,y:300}],Math.PI/5);b.step();motion.finish();
          w.loc.remObj(b);motion.prune();check(holder.getChildByName("MSWSmartTrail")==null,"native removal cleans smart tracer");motion.clear();
+      }
+      private function curve():void
+      {
+         var b:*=new (cls("fe.weapon.Bullet"))(w.gg,420,420,cls("visualBullet"),true);
+         b.weap=weapon;b.dx=20;b.dy=0;b.vel=20;b.damage=1;b.precision=0;b.miss=0;
+         var holder:Sprite=new Sprite();holder.addChild(b.vis);
+         var motion:*=new (cls("MSWSmartMotion"))(),shot:Object={turnRadius:30,adaptive:false},history:Array=[];
+         for(var i:int=0;i<7;i++)
+         {
+            motion.advance(b,shot,[{x:460,y:140}],Math.PI/3);history=history.concat(shot.motionPath);b.step();motion.finish();
+         }
+         check(!b.babah && Math.abs(b.dist-140)<0.001 && b.liv==93,"curved tracer preserves native flight distance and age");
+         var bitmap:BitmapData=new BitmapData(1100,650,true,0);bitmap.draw(holder);
+         var distance:Number=0,tested:int=0,found:int=0;
+         for(i=history.length-2;i>=0;i--)
+         {
+            var p:Object=history[i],q:Object=history[i+1];distance+=Math.sqrt((p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.y-q.y));
+            if(distance<25 || distance>75)continue;
+            tested++;var visible:Boolean=false;
+            for(var x:int=int(p.x)-2;x<=int(p.x)+2;x++)for(var y:int=int(p.y)-2;y<=int(p.y)+2;y++)if((bitmap.getPixel32(x,y)>>>24)>20)visible=true;
+            if(visible)found++;
+         }
+         log+="CURVE old-path visible="+found+"/"+tested+"\n";
+         check(tested>8 && found==tested,"tracer follows earlier curved flight beyond the current 20px step");
+         var bg:BitmapData=new BitmapData(1100,650,false,0x18202B);bg.draw(bitmap);png("curved-tracer.png",bg);bg.dispose();bitmap.dispose();
+         // Impact must show the native impact frame instead of retaining a ribbon.
+         b.babah=true;b.vis.gotoAndStop(2);b.step();motion.prune();
+         check(holder.getChildByName("MSWSmartTrail")==null && b.vis.visible && b.vis.currentFrame==2,"impact restores native artwork and removes history");
+         w.loc.remObj(b);motion.clear();
       }
       private function capture(holder:Sprite,b:*):Object
       {

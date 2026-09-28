@@ -15,6 +15,7 @@ package
       private var frozen:int=0,budgetChecks:int=0,replaySteps:int=0;
       private var preExisting:*,preBudget:Number,heldChecks:int=0;
       private var slowCurves:int=0,replayCurves:int=0,maxKink:Number=0;
+      private var slowTrails:int=0,replayTrails:int=0;
       private var multi:Boolean=false,adaptive:Boolean=false,targetList:Array=[],recordTargets:Array=[],replayTargets:Array=[];
       private var errorHooked:Boolean=false;
       private var domain:ApplicationDomain;
@@ -81,6 +82,15 @@ package
             {
                if(getQualifiedClassName(b)=="fe.weapon::Bullet" && b.owner===w.gg && (s=m.smart.snapshot(b))!=null)
                {
+                  if(b.vis!=null && b.vis.parent!=null && !b.babah && b.vis.visible && b.vis.scaleX==0)
+                  {
+                     for(var vi:int=0;vi<b.vis.parent.numChildren;vi++)
+                     {
+                        var trail:*=b.vis.parent.getChildAt(vi);
+                        if(trail.name=="MSWSmartTrail" && trail.visible && Math.max(trail.width,trail.height)>30)
+                        {if(phase==1)slowTrails++;else if(initial[b]==null)replayTrails++;break;}
+                     }
+                  }
                   if((!multi || b===preExisting) && s.turnRadius!=30)throw new Error("recorded/replayed shot lost radius snapshot");
                   if(s.motionPath!=null && s.motionPath.length>2)
                   {
@@ -162,6 +172,7 @@ package
                ok(target.hp<target.maxhp,"replayed smart bullets settle real target damage");
                ok(!w.godMode,"Sandevistan restores normal world state");
                ok(slowCurves>0 && replayCurves>0 && maxKink<=Math.PI/60+0.00001,"real slow/replay trajectories use adaptive native substeps; peak kink="+(maxKink*180/Math.PI));
+               ok(slowTrails>0 && replayTrails>0,"native curved tracers render in actual slow phase and replay; samples="+slowTrails+"/"+replayTrails);
                finish("PASS smart Sandevistan integration",0);
             }
          }

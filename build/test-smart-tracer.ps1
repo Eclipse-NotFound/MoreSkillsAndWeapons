@@ -39,7 +39,7 @@ try {
         $result=Join-Path $env:APPDATA "$testId\Local Store\smart-tracer.txt"
         if(!(Test-Path -LiteralPath $result)){throw 'No production-shot result'}
         Copy-Item -LiteralPath $result -Destination (Join-Path $output 'results.txt')
-        foreach ($name in @('tracers.png')) {
+        foreach ($name in @('tracers.png','curved-tracer.png')) {
             $artifact=Join-Path $env:APPDATA "$testId\Local Store\$name"
             if(Test-Path -LiteralPath $artifact){Copy-Item -LiteralPath $artifact -Destination $output}
         }

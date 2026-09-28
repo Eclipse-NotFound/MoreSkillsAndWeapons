@@ -51,7 +51,7 @@ package
             var endX:Number=b.X,endY:Number=b.Y;
             b.step();m.smart.afterProjectiles();
             ok(b.X==endX && b.Y==endY && b.liv==99 && Math.abs(b.dist-160)<0.001 && !b.babah,"native step ages once without moving twice or leaving false impact");
-            ok(b.vis.scaleX==0.04 && b.vis.parent.getChildByName("MSWSmartTrail")!=null,"curved tracer replaces long native straight strip");
+            ok(b.vis.scaleX==0 && b.vis.parent.getChildByName("MSWSmartTrail")!=null,"curved native-art tracer replaces the straight strip");
             var image:BitmapData=new BitmapData(1100,650,false,0x18202B);image.draw(b.vis.parent);
             var enc:Class=MSWU.cls("flash.display.PNGEncoderOptions");var bytes:*=Object(image)["encode"](image.rect,new enc());
             var F:Class=MSWU.cls("flash.filesystem.File"),S:Class=MSWU.cls("flash.filesystem.FileStream"),fs:*=new S();fs.open(F["applicationStorageDirectory"].resolvePath("curve.png"),"write");fs.writeBytes(bytes);fs.close();image.dispose();
